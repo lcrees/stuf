@@ -6,7 +6,7 @@ try:
 except ImportError:
     from stuff.compat import OrderedDict
 
-from stuff.util import lru_cache
+from stuff.util import lru_cache, lazy
 
 
 class switchdict(dict):
@@ -82,7 +82,9 @@ class frozenstuff(_commonstuff):
 
     def __new__(cls, *arg, **kw):
         if isinstance(arg[0], dict): kw.update(arg)
-        slotter = dict(('__slots__', kw.keys()+cls.__dict__.keys()+['_store']))
+        slotter = dict(
+            ('__slots__', kw.keys()+cls.__dict__.keys()+['_store', '_fetcher'])
+        )
         return type('frozenstuff', (super(frozenstuff, cls),), slotter)(kw)
 
     def __init__(self, kw):
@@ -94,8 +96,7 @@ class frozenstuff(_commonstuff):
             return self[k]
         except KeyError:
             try:
-                value = self._store[k]
-                self[k] = value
+                value = self[k]
                 object.__setattr__(self, k, value)
                 return value
             except KeyError:
@@ -103,13 +104,25 @@ class frozenstuff(_commonstuff):
 
     @lru_cache
     def __getitem__(self, k):
-        return super(frozenstuff, self).__getitem__(k)
+        try:
+            return super(frozenstuff, self).__getitem__(k)
+        except KeyError:
+            value = self._fetcher[k]
+            self[k] = value
+            return value
 
-    def __delattr__(self, k, w):
+    def __setattr__(self, k, w):
+        raise AttributeError('__setattr__')
+
+    def __delattr__(self, k):
         raise AttributeError('__delattr__')
 
-    def __delitem__(self, k, w):
+    def __delitem__(self, k):
         raise AttributeError('__delitem__')
+
+    @lazy
+    def _fetcher(self):
+        return self._store
 
 
 class stuff(_commonstuff):
