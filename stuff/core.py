@@ -9,44 +9,40 @@ except ImportError:
 from stuff.util import lru_cache, lazy
 
 
-class switchdict(dict):
+def switchdict(**kw):
+    factory = kw.pop('factory', False)
+    order = kw.pop('order', False)
+    if factory:
+        sdict = defaultdict(factory)
+    elif order:
+        sdict = OrderedDict
+    else:
+        sdict = dict
+    return sdict
 
-    def __new__(cls, **kw):
-        factory = kw.pop('factory', False)
-        if factory: return defaultdict(factory)
-        order = kw.pop('order', False)
-        if order: return OrderedDict
-        return dict
 
-
-class stuffdict(switchdict):
+class stuffdict(object):
 
     def __new__(cls, *arg, **kw):
-        if isinstance(arg[0], dict):
+        obj = switchdict(**kw)
+        if arg and isinstance(arg[0], dict):
             if len(arg) > 1: raise TypeError('Invalid number of arguments')
             kw.update(arg[0])
-            return super(cls, stuffdict).__new__(**kw).__init__(
-                (k, v) for k, v in kw.iteritems()
-            )
+            return obj((k, v) for k, v in kw.iteritems())
         elif isinstance(arg, (list, tuple)):
-            return super(cls, stuffdict).__new__(**kw).__init__(
-                (k, v) for k, v in arg
-            )
+            return obj((k, v) for k, v in arg)
         raise TypeError('Invalid type for stuff')
 
 
-class _commonstuff(switchdict):
+class _commonstuff(object):
 
     def __new__(cls, *arg, **kw):
+        obj = switchdict(**kw)
         if isinstance(arg[0], dict):
             kw.update(arg[0])
-            return super(cls, stuffdict).__new__(**kw).__init__(
-                (k, cls.__init__(v)) for k, v in kw.iteritems()
-            )
+            return obj((k, cls.__init__(v)) for k, v in kw.iteritems())
         elif isinstance(arg, (list, tuple)):
-            return super(cls, stuffdict).__new__(**kw).__init__(
-                (k, cls.__init__(v)) for k, v in arg
-            )
+            return obj((k, cls.__init__(v)) for k, v in arg)
         raise TypeError('Invalid type for stuff')
 
     def __contains__(self, k):
