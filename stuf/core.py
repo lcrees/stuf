@@ -1,4 +1,4 @@
-'''stuff'''
+'''stuf'''
 
 from collections import defaultdict
 try:
@@ -6,7 +6,7 @@ try:
 except ImportError:
     from stuff.compat import OrderedDict
 
-from stuff.util import lru_cache, lazy
+from stuf.util import lru_cache, lazy
 
 
 def _switchdict(**kw):
@@ -21,7 +21,7 @@ def _switchdict(**kw):
     return sdict
 
 
-class _commonstuff(object):
+class _commonstuf(object):
 
     def __new__(cls, *arg, **kw):
         obj = _switchdict(**kw)
@@ -30,11 +30,11 @@ class _commonstuff(object):
             return obj((k, cls.__init__(v)) for k, v in kw.iteritems())
         elif isinstance(arg, (list, tuple)):
             return obj((k, cls.__init__(v)) for k, v in arg)
-        raise TypeError('Invalid type for stuff')
+        raise TypeError('Invalid type for stuf')
 
     def __contains__(self, k):
         try:
-            return hasattr(self, k) or super(_commonstuff, self).__contains__(k)
+            return hasattr(self, k) or super(_commonstuf, self).__contains__(k)
         except:
             return False
 
@@ -59,14 +59,14 @@ class _commonstuff(object):
             object.__setattr__(self, k, v)
 
 
-class frozenstuff(_commonstuff):
+class frozenstuf(_commonstuf):
 
     def __new__(cls, *arg, **kw):
         if isinstance(arg[0], dict): kw.update(arg)
         slotter = dict(
             ('__slots__', kw.keys()+cls.__dict__.keys()+['_store', '_fetcher'])
         )
-        return type('frozenstuff', (super(frozenstuff, cls),), slotter)(kw)
+        return type('frozenstuf', (super(frozenstuf, cls),), slotter)(kw)
 
     def __init__(self, kw):
         self._store = kw
@@ -86,7 +86,7 @@ class frozenstuff(_commonstuff):
     @lru_cache
     def __getitem__(self, k):
         try:
-            return super(frozenstuff, self).__getitem__(k)
+            return super(frozenstuf, self).__getitem__(k)
         except KeyError:
             value = self._fetcher[k]
             self[k] = value
@@ -106,9 +106,9 @@ class frozenstuff(_commonstuff):
         return self._store
 
 
-class stuff(_commonstuff):
+class stuf(_commonstuf):
 
-    '''A bunch of stuff.'''
+    '''A bunch of stuf'''
 
     def __getattr__(self, k):
         try:
@@ -128,7 +128,7 @@ class stuff(_commonstuff):
             object.__delattr__(self, k)
 
 
-class stuffdict(object):
+class stufdict(object):
 
     def __new__(cls, *arg, **kw):
         obj = _switchdict(**kw)
@@ -138,4 +138,4 @@ class stuffdict(object):
             return obj((k, v) for k, v in kw.iteritems())
         elif isinstance(arg, (list, tuple)):
             return obj((k, v) for k, v in arg)
-        raise TypeError('Invalid type for stuff')
+        raise TypeError('Invalid type for stuf')

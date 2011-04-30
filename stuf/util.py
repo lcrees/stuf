@@ -2,7 +2,7 @@ from functools import wraps
 try:
     from collections import OrderedDict
 except ImportError:
-    from stuff.compat import OrderedDict
+    from stuf.compat import OrderedDict
 
 def lru_cache(maxsize=100):
     '''Least-recently-used cache decorator.
