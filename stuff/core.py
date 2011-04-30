@@ -9,7 +9,7 @@ except ImportError:
 from stuff.util import lru_cache, lazy
 
 
-def switchdict(**kw):
+def _switchdict(**kw):
     factory = kw.pop('factory', False)
     order = kw.pop('order', False)
     if factory:
@@ -21,23 +21,10 @@ def switchdict(**kw):
     return sdict
 
 
-class stuffdict(object):
-
-    def __new__(cls, *arg, **kw):
-        obj = switchdict(**kw)
-        if arg and isinstance(arg[0], dict):
-            if len(arg) > 1: raise TypeError('Invalid number of arguments')
-            kw.update(arg[0])
-            return obj((k, v) for k, v in kw.iteritems())
-        elif isinstance(arg, (list, tuple)):
-            return obj((k, v) for k, v in arg)
-        raise TypeError('Invalid type for stuff')
-
-
 class _commonstuff(object):
 
     def __new__(cls, *arg, **kw):
-        obj = switchdict(**kw)
+        obj = _switchdict(**kw)
         if isinstance(arg[0], dict):
             kw.update(arg[0])
             return obj((k, cls.__init__(v)) for k, v in kw.iteritems())
@@ -52,9 +39,7 @@ class _commonstuff(object):
             return False
 
     def __iter__(self):
-        return tuple(
-            (k, tuple(v.__iter__())) for k, v in self.iteritems()
-        )
+        for k, v in self.iteritems(): yield (k, tuple(v.__iter__()))
 
     def __repr__(self):
         args = ', '.join(
@@ -141,3 +126,16 @@ class stuff(_commonstuff):
                 raise AttributeError(k)
         else:
             object.__delattr__(self, k)
+
+
+class stuffdict(object):
+
+    def __new__(cls, *arg, **kw):
+        obj = _switchdict(**kw)
+        if arg and isinstance(arg[0], dict):
+            if len(arg) > 1: raise TypeError('Invalid number of arguments')
+            kw.update(arg[0])
+            return obj((k, v) for k, v in kw.iteritems())
+        elif isinstance(arg, (list, tuple)):
+            return obj((k, v) for k, v in arg)
+        raise TypeError('Invalid type for stuff')
