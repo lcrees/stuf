@@ -310,8 +310,7 @@ class TestFrozenStuf(unittest.TestCase):
         self.assertRaises(AttributeError, lambda: self.stuf.popitem())
 
     def test_setdefault(self):
-        self.assertEqual(self.stuf.setdefault('test1', 8), 'test1')
-        self.assertEqual(self.stuf.setdefault('pow', 8), 8)
+        self.assertRaises(AttributeError, lambda: self.stuf.setdefault('test1', 8))
 
     def test_update(self):
         tstuf = self._makeone(test1='test1', test2='test2')

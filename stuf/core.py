@@ -1,6 +1,7 @@
 '''stuf'''
 
 from collections import defaultdict
+from _pyio import __metaclass__
 try:
     from collections import OrderedDict
 except ImportError:
@@ -23,6 +24,7 @@ class _basestuf(object):
             sdict = dict
         return sdict
 
+
 class _commonstuf(_basestuf):
 
     def __contains__(self, k):
@@ -41,95 +43,99 @@ class _commonstuf(_basestuf):
         return '%s(%s)' % (self.__class__.__name__, args)
 
 
-class frozenstuf(_basestuf):
+
+class frozenstuf(object):
 
     def __new__(cls, *arg, **kw):
-        base = cls._switchdict(kw)
-        kw = base(**kw)
-        if arg and isinstance(arg[0], dict):
-            if len(arg) > 1: raise TypeError('Invalid number of arguments')
-            kw.update(base(**arg))
-        elif arg and isinstance(arg, (list, tuple)):
-            kw.update(**base((k, v) for k, v in arg))
-        @lazy
-        def _fetcher(self):
-            return self.__class__(self._store)
-        kw['_fetcher'] = _fetcher
-        def __init__(self, kw):
-            self._store = kw
-        kw['__init__'] = __init__
-        def __getattr__(self, k):
-            try:
-                value = self[k]
-                object.__setattr__(self, k, value)
-                return value
-            except KeyError:
-                raise AttributeError(k)
-        kw['__init__'] = __getattr__
-        @lru_cache
-        def __getitem__(self, k):
-            return self._fetcher[k]
-        kw['__getitem__'] = __getitem__
-        def __contains__(self, key):
-            try:
-                self[key]
-                return True
-            except KeyError:
-                return False
-            return True
-        kw['__contains__'] = __contains__
-        def __cmp__(self, other):
-            if other is None: return False
-            if isinstance(other, frozenstuf):
-                return self._fetcher, dict(other.iteritems())
-        kw['__cmp__'] = __cmp__
-        def __iter__(self):
-            for k in self._fetcher.iterkeys(): yield k
-        kw['__iter__'] = __iter__
-        def __len__(self):
-            return len(self._fetcher.keys())
-        kw['__len__'] = __len__
-        def __repr__(self):
-            args = ', '.join(
-                list('%s=%r' % (k, self[k]) for k in sorted(self.iterkeys()))
-            )
-            return '%s(%s)' % (self.__class__.__name__, args)
-        kw['__repr__'] = __repr__
-        def get(self, key, default=None):
-            '''Fetch a given key from the mapping. If the key does not exist,
-            return the default.
-
-            @param key Keyword of item in mapping.
-            @param default Default value (default: None)
-            '''
-            try:
-                return self[key]
-            except KeyError:
-                return default
-        kw['get'] = get
-        def items(self):
-            '''Returns a list with all key/value pairs in the store.'''
-            return list(self.iteritems())
-        kw['__item'] = __iter__
-        def iteritems(self):
-            '''Lazily returns all key/value pairs in a store.'''
-            for k in self: yield (k, self[k])
-        kw['iteritems'] = iteritems
-        kw['iterkeys'] = __iter__
-        def itervalues(self):
-            '''Lazily returns all values in a store.'''
-            for _, v in self.iteritems(): yield v
-        kw['itervalues'] = itervalues
-        def keys(self):
-            '''Returns a list with all keys in a store.'''
-            return list(self.iterkeys())
-        kw['keys'] = keys
-        def values(self):
-            '''Returns a list with all values in a store.'''
-            return list(self.itervalues())
-        kw['values'] = values
+        base = _basestuf._switchdict(kw)
+        oldkw = kw = base(**kw.copy())
+        if arg:
+            if isinstance(arg[0], dict):
+                if len(arg) > 1: raise TypeError('Invalid number of arguments')
+                kw.update(**arg)
+                oldkw.update(base(**arg))
+            elif isinstance(arg, (list, tuple)):
+                kw.update(**dict((k, v) for k, v in arg))
+                oldkw.update(**base((k, v) for k, v in arg))
         kw['__slots__'] = kw.keys() + ['_store']
-        return type(cls.__name__, (), kw)
+        newcls = type(cls.__name__, (cls,), kw)
+        return newcls(oldkw)
+
+    @lazy
+    def _fetcher(self):
+        return self.__class__(self._store)
+
+    def __init__(self, kw):
+        self._store = kw
+
+    def __getattr__(self, k):
+        try:
+            value = self[k]
+            object.__setattr__(self, k, value)
+            return value
+        except KeyError:
+            raise AttributeError(k)
+
+    @lru_cache
+    def __getitem__(self, k):
+        return self._fetcher[k]
+
+    def __contains__(self, key):
+        try:
+            self[key]
+            return True
+        except KeyError:
+            return False
+        return True
+
+    def __cmp__(self, other):
+        if other is None: return False
+        if isinstance(other, frozenstuf):
+            return self._fetcher, dict(other.iteritems())
+
+    def __iter__(self):
+        for k in self._fetcher.iterkeys(): yield k
+
+    def __len__(self):
+        return len(self._fetcher.keys())
+
+    def __repr__(self):
+        args = ', '.join(
+            list('%s=%r' % (k, self[k]) for k in sorted(self.iterkeys()))
+        )
+        return '%s(%s)' % (self.__class__.__name__, args)
+
+    def get(self, key, default=None):
+        '''Fetch a given key from the mapping. If the key does not exist,
+        return the default.
+
+        @param key Keyword of item in mapping.
+        @param default Default value (default: None)
+        '''
+        try:
+            return self[key]
+        except KeyError:
+            return default
+
+    def items(self):
+        '''Returns a list with all key/value pairs in the store.'''
+        return list(self.iteritems())
+
+    def iteritems(self):
+        '''Lazily returns all key/value pairs in a store.'''
+        for k in self: yield (k, self[k])
+
+    def itervalues(self):
+        '''Lazily returns all values in a store.'''
+        for _, v in self.iteritems(): yield v
+
+    def keys(self):
+        '''Returns a list with all keys in a store.'''
+        return list(self.iterkeys())
+
+    def values(self):
+        '''Returns a list with all values in a store.'''
+        return list(self.itervalues())
 
 
 class stuf(_commonstuf):
