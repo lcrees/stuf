@@ -8,7 +8,6 @@ except ImportError:
 
 from stuf.util import lru_cache, lazy
 
-
 def _switchdict(**kw):
     factory = kw.pop('factory', False)
     order = kw.pop('order', False)

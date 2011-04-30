@@ -1,1 +1,1 @@
-from stuff.core import stuffdict, stuff, frozenstuff
+from stuf.core import frozenstuf, stuf, stufdict

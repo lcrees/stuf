@@ -5,8 +5,8 @@ class TestStufDict(unittest.TestCase):
 
     @property
     def _makeone(self):
-        from stuf import stuffdict
-        return stuffdict
+        from stuf import stufdict
+        return stufdict
 
     def setUp(self):
         self.stuf = self._makeone()
