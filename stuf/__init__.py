@@ -1,1 +1,1 @@
-from stuf.core import frozenstuf, stuf, stufdict
+from stuf.collections import  stuf, stufdict #frozenstuf,
