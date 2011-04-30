@@ -1,7 +1,6 @@
 '''stuf'''
 
 from collections import defaultdict
-from _pyio import __metaclass__
 try:
     from collections import OrderedDict
 except ImportError:
@@ -45,14 +44,16 @@ class _commonstuf(_basestuf):
 class frozenstuf(_basestuf):
 
     def __new__(cls, *arg, **kw):
+        base = cls._switchdict(kw)
+        kw = base(**kw)
         if arg and isinstance(arg[0], dict):
             if len(arg) > 1: raise TypeError('Invalid number of arguments')
-            kw.update(arg)
+            kw.update(base(**arg))
         elif arg and isinstance(arg, (list, tuple)):
-            kw.update((k, cls.__init__(v)) for k, v in arg)
+            kw.update(**base((k, v) for k, v in arg))
         @lazy
         def _fetcher(self):
-            return self._store
+            return self.__class__(self._store)
         kw['_fetcher'] = _fetcher
         def __init__(self, kw):
             self._store = kw
@@ -71,10 +72,29 @@ class frozenstuf(_basestuf):
         kw['__getitem__'] = __getitem__
         def __contains__(self, key):
             try:
-                value = self[key]
+                self[key]
+                return True
             except KeyError:
                 return False
             return True
+        kw['__contains__'] = __contains__
+        def __cmp__(self, other):
+            if other is None: return False
+            if isinstance(other, frozenstuf):
+                return self._fetcher, dict(other.iteritems())
+        kw['__cmp__'] = __cmp__
+        def __iter__(self):
+            for k in self._fetcher.iterkeys(): yield k
+        kw['__iter__'] = __iter__
+        def __len__(self):
+            return len(self._fetcher.keys())
+        kw['__len__'] = __len__
+        def __repr__(self):
+            args = ', '.join(
+                list('%s=%r' % (k, self[k]) for k in sorted(self.iterkeys()))
+            )
+            return '%s(%s)' % (self.__class__.__name__, args)
+        kw['__repr__'] = __repr__
         def get(self, key, default=None):
             '''Fetch a given key from the mapping. If the key does not exist,
             return the default.
@@ -86,37 +106,28 @@ class frozenstuf(_basestuf):
                 return self[key]
             except KeyError:
                 return default
-        def __cmp__(self, other):
-            if other is None: return False
-            if isinstance(other, frozenstuf):
-                return cmp(dict(self.iteritems()), dict(other.iteritems()))
-        def __iter__(self):
-            for k in self.keys(): yield k
-        def __len__(self):
-            return len(self.keys())
-        def __repr__(self):
-            return repr(dict(self.iteritems()))
-        def clear(self):
-            '''Removes all keys and values from a store.'''
-            for key in self.keys(): del self[key]
+        kw['get'] = get
         def items(self):
             '''Returns a list with all key/value pairs in the store.'''
             return list(self.iteritems())
+        kw['__item'] = __iter__
         def iteritems(self):
             '''Lazily returns all key/value pairs in a store.'''
             for k in self: yield (k, self[k])
-        def iterkeys(self):
-            '''Lazy returns all keys in a store.'''
-            return self.__iter__()
+        kw['iteritems'] = iteritems
+        kw['iterkeys'] = __iter__
         def itervalues(self):
             '''Lazily returns all values in a store.'''
             for _, v in self.iteritems(): yield v
+        kw['itervalues'] = itervalues
         def keys(self):
             '''Returns a list with all keys in a store.'''
-            raise NotImplementedError()
+            return list(self.iterkeys())
+        kw['keys'] = keys
         def values(self):
             '''Returns a list with all values in a store.'''
-            return list(v for _, v in self.iteritems())
+            return list(self.itervalues())
+        kw['values'] = values
         kw['__slots__'] = kw.keys() + ['_store']
         return type(cls.__name__, (), kw)
 
