@@ -120,8 +120,6 @@ class TestStufDict(unittest.TestCase):
         self.assertEqual('min' in slist, True)
 
 
-
-
 class TestStuf(unittest.TestCase):
 
     @property
@@ -237,7 +235,7 @@ class TestFrozenStuf(unittest.TestCase):
 
     @property
     def _makeone(self):
-        from stuf import frozenstuf
+        from stuf.core import frozenstuf
         return frozenstuf
 
     def setUp(self):
@@ -252,23 +250,23 @@ class TestFrozenStuf(unittest.TestCase):
         self.assertEqual(self.stuf['test2'], 'test2')
 
     def test__setattr__(self):
-        self.assertRaises(AttributeError, lambda: setattr(self.stuf, 'max', 3))
-        self.assertRaises(AttributeError, lambda: setattr(self.stuf, 'test1', 3))
-        self.assertRaises(AttributeError, lambda: setattr(self.stuf, 'test1', 3))
+        self.assertRaises(TypeError, lambda: setattr(self.stuf, 'max', 3))
+        self.assertRaises(TypeError, lambda: setattr(self.stuf, 'test1', 3))
+        self.assertRaises(TypeError, lambda: setattr(self.stuf, 'test1', 3))
 
     def test__setitem__(self):
-        self.assertRaises(AttributeError, lambda: self.stuf.__setitem__('max', 3))
-        self.assertRaises(AttributeError, lambda: self.stuf.__setitem__('test1', 3))
-        self.assertRaises(AttributeError, lambda: self.stuf.__setitem__('test1', 3))
+        self.assertRaises(TypeError, lambda: self.stuf.__setitem__('max', 3))
+        self.assertRaises(TypeError, lambda: self.stuf.__setitem__('test1', 3))
+        self.assertRaises(TypeError, lambda: self.stuf.__setitem__('test1', 3))
 
     def test__delattr__(self):
-        self.assertRaises(AttributeError, lambda: delattr(self.stuf, 'test1'))
-        self.assertRaises(AttributeError, lambda: delattr(self.stuf, 'test2'))
+        self.assertRaises(TypeError, lambda: delattr(self.stuf, 'test1'))
+        self.assertRaises(TypeError, lambda: delattr(self.stuf, 'test2'))
         self.assertTrue(len(self.stuf)==2)
 
     def test__delitem__(self):
-        self.assertRaises(AttributeError, lambda: self.stuf.__delitem__('test1'))
-        self.assertRaises(AttributeError, lambda: self.stuf.__delitem__('test2'))
+        self.assertRaises(TypeError, lambda: self.stuf.__delitem__('test1'))
+        self.assertRaises(TypeError, lambda: self.stuf.__delitem__('test2'))
         self.assertTrue(len(self.stuf)==2)
 
     def test_get(self):
@@ -284,7 +282,7 @@ class TestFrozenStuf(unittest.TestCase):
         self.assertEqual(len(self.stuf), 2)
 
     def test_clear(self):
-        self.assertRaises(AttributeError, lambda: self.stuf.clear())
+        self.assertRaises(TypeError, lambda: self.stuf.clear())
 
     def test_items(self):
         slist = list(self.stuf.items())
@@ -304,17 +302,17 @@ class TestFrozenStuf(unittest.TestCase):
 
     def test_pop(self):
         self.assertEqual(self.stuf.pop, dict.pop, self.stuf.pop)
-        self.assertRaises(AttributeError, lambda: self.stuf.pop('test1', None))
+        self.assertRaises(TypeError, lambda: self.stuf.pop('test1', None))
 
     def test_popitem(self):
-        self.assertRaises(AttributeError, lambda: self.stuf.popitem())
+        self.assertRaises(TypeError, lambda: self.stuf.popitem())
 
     def test_setdefault(self):
-        self.assertRaises(AttributeError, lambda: self.stuf.setdefault('test1', 8))
+        self.assertRaises(TypeError, lambda: self.stuf.setdefault('test1', 8))
 
     def test_update(self):
         tstuf = self._makeone(test1='test1', test2='test2')
-        self.assertRaises(AttributeError, lambda: self.stuf.update(tstuf))
+        self.assertRaises(TypeError, lambda: self.stuf.update(tstuf))
 
     def test_values(self):
         slist = self.stuf.values()

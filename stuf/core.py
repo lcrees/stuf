@@ -1,7 +1,6 @@
 '''stuf'''
 
 from collections import defaultdict
-from _pyio import __metaclass__
 try:
     from collections import OrderedDict
 except ImportError:
@@ -25,120 +24,52 @@ class _basestuf(object):
         return sdict
 
 
-class _commonstuf(_basestuf):
+class _metafrozenstuf(type):
 
-    def __contains__(self, k):
-        try:
-            return hasattr(self, k) or super(_commonstuf, self).__contains__(k)
-        except:
-            return False
-
-    def __iter__(self):
-        for k, v in self.iteritems(): yield (k, tuple(v.__iter__()))
-
-    def __repr__(self):
-        args = ', '.join(
-            list('%s=%r' % (k, self[k]) for k in sorted(self.iterkeys()))
+    def __new__(cls, name, base, classdict):
+        def __init__(self, **kw):
+            for k, v in kw.iteritems(): setattr(self, k, v)
+        def __getattr__(self, k):
+            return object.__getattribute__(self, k)
+        @lru_cache()
+        def __getitem__(self, k):
+            return self.__getattr__(k)
+        def __setattr__(self, k, v):
+            object.__setattr__(self, k, v)
+        def __repr__(self):
+            return '%s(%r)' % (
+                self.__class__.__name__,
+                ', '.join(list('%s=%r' % (k, getattr(self, k))
+                    for k in self.__slots__
+                ))
+            )
+        newdict = dict(
+            (k, v) for k, v in locals().iteritems() if k.startswith('__')
         )
-        return '%s(%s)' % (self.__class__.__name__, args)
-
+        newdict['__slots__'] = classdict.keys() + newdict.keys()
+        obj = type.__new__(cls, name, base, newdict)
+        return obj
 
 
 class frozenstuf(object):
 
     def __new__(cls, *arg, **kw):
-        base = _basestuf._switchdict(kw)
-        oldkw = kw = base(**kw.copy())
         if arg:
             if isinstance(arg[0], dict):
                 if len(arg) > 1: raise TypeError('Invalid number of arguments')
-                kw.update(**arg)
-                oldkw.update(base(**arg))
+                kw.update(dict(**arg))
             elif isinstance(arg, (list, tuple)):
                 kw.update(**dict((k, v) for k, v in arg))
-                oldkw.update(**base((k, v) for k, v in arg))
-        kw['__slots__'] = kw.keys() + ['_store']
-        newcls = type(cls.__name__, (cls,), kw)
-        return newcls(oldkw)
-
-    @lazy
-    def _fetcher(self):
-        return self.__class__(self._store)
-
-    def __init__(self, kw):
-        self._store = kw
-
-    def __getattr__(self, k):
-        try:
-            value = self[k]
-            object.__setattr__(self, k, value)
-            return value
-        except KeyError:
-            raise AttributeError(k)
-
-    @lru_cache
-    def __getitem__(self, k):
-        return self._fetcher[k]
-
-    def __contains__(self, key):
-        try:
-            self[key]
-            return True
-        except KeyError:
-            return False
-        return True
-
-    def __cmp__(self, other):
-        if other is None: return False
-        if isinstance(other, frozenstuf):
-            return self._fetcher, dict(other.iteritems())
-
-    def __iter__(self):
-        for k in self._fetcher.iterkeys(): yield k
-
-    def __len__(self):
-        return len(self._fetcher.keys())
-
-    def __repr__(self):
-        args = ', '.join(
-            list('%s=%r' % (k, self[k]) for k in sorted(self.iterkeys()))
+        clsdict = dict(
+            (k, v) for k, v in cls.__dict__.iteritems()
+            if not k.startswith('__')
         )
-        return '%s(%s)' % (self.__class__.__name__, args)
-
-    def get(self, key, default=None):
-        '''Fetch a given key from the mapping. If the key does not exist,
-        return the default.
-
-        @param key Keyword of item in mapping.
-        @param default Default value (default: None)
-        '''
-        try:
-            return self[key]
-        except KeyError:
-            return default
-
-    def items(self):
-        '''Returns a list with all key/value pairs in the store.'''
-        return list(self.iteritems())
-
-    def iteritems(self):
-        '''Lazily returns all key/value pairs in a store.'''
-        for k in self: yield (k, self[k])
-
-    def itervalues(self):
-        '''Lazily returns all values in a store.'''
-        for _, v in self.iteritems(): yield v
-
-    def keys(self):
-        '''Returns a list with all keys in a store.'''
-        return list(self.iterkeys())
-
-    def values(self):
-        '''Returns a list with all values in a store.'''
-        return list(self.itervalues())
+        kw.update(clsdict)
+        obj = _metafrozenstuf(cls.__name__, (object, ), kw)
+        return obj(**kw)
 
 
-class stuf(_commonstuf):
+class stuf(_basestuf):
 
     '''A bunch of stuf'''
 
@@ -148,17 +79,11 @@ class stuf(_commonstuf):
             if isinstance(arg[0], dict):
                 if len(arg) > 1: raise TypeError('Invalid number of arguments')
                 kw.update(arg[0])
-                return type(cls.__name__, (obj, cls), {})(
-                    **dict((k, cls.__init__(v)) for k, v in kw.iteritems()
-                ))
+                return obj(**dict((k, v) for k, v in kw.iteritems()))
             elif isinstance(arg, (list, tuple)):
-                return type(cls.__name__, (obj, cls), {})(
-                    **dict((k, cls.__init__(v)) for k, v in arg)
-                )
+                return obj(**dict((k, v) for k, v in arg))
         else:
-            return type(cls.__name__, (obj, cls), {})(
-                **dict((k, cls.__init__(v)) for k, v in kw.iteritems())
-            )
+            return obj(**dict((k, v) for k, v in kw.iteritems()))
         raise TypeError('Invalid type for stuf')
 
     def __getattr__(self, k):
@@ -189,6 +114,21 @@ class stuf(_commonstuf):
         else:
             object.__delattr__(self, k)
 
+    def __contains__(self, k):
+        try:
+            return hasattr(self, k) or super(stuf, self).__contains__(k)
+        except:
+            return False
+
+    def __iter__(self):
+        for k, v in self.iteritems(): yield (k, tuple(v.__iter__()))
+
+    def __repr__(self):
+        args = ', '.join(
+            list('%s=%r' % (k, self[k]) for k in sorted(self.iterkeys()))
+        )
+        return '%s(%s)' % (self.__class__.__name__, args)
+
 
 class stufdict(_basestuf):
 
@@ -200,4 +140,4 @@ class stufdict(_basestuf):
             return obj((k, v) for k, v in kw.iteritems())
         elif isinstance(arg, (list, tuple)):
             return obj((k, v) for k, v in arg)
-        raise TypeError('Invalid type for stuf')
+        return obj((k, v) for k, v in kw)
