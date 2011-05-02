@@ -1,125 +1,6 @@
 import unittest
 
 
-class TestStufDict(unittest.TestCase):
-
-    @property
-    def _makeone(self):
-        from stuf import stufdict
-        return stufdict
-
-    def setUp(self):
-        self.stuf = self._makeone()
-
-    def test__getitem__(self):
-        self.stuf['max'] = 3
-        self.assertEqual(self.stuf['max'], 3)
-
-    def test__setitem__(self):
-        self.stuf['max'] = 3
-        self.assertEqual(self.stuf['max'], 3)
-
-    def test__delitem__(self):
-        self.stuf['max'] = 3
-        del self.stuf['max']
-        self.assertEqual('max' in self.stuf, False)
-
-    def test_get(self):
-        self.stuf['max'] = 3
-        self.assertEqual(self.stuf.get('min'), None)
-
-    def test__cmp__(self):
-        tstuff = self._makeone()
-        self.stuf['max'] = 3
-        tstuff['max'] = 3
-        self.assertEqual(self.stuf, tstuff)
-
-    def test__len__(self):
-        self.stuf['max'] = 3
-        self.stuf['min'] = 6
-        self.assertEqual(len(self.stuf), 2)
-
-    def test_clear(self):
-        self.stuf['max'] = 3
-        self.stuf['min'] = 6
-        self.stuf['pow'] = 7
-        self.stuf.clear()
-        self.assertEqual(len(self.stuf), 0)
-
-    def test_items(self):
-        self.stuf['max'] = 3
-        self.stuf['min'] = 6
-        self.stuf['pow'] = 7
-        slist = list(self.stuf.items())
-        self.assertEqual(('min', 6) in slist, True)
-
-    def test_iteritems(self):
-        self.stuf['max'] = 3
-        self.stuf['min'] = 6
-        self.stuf['pow'] = 7
-        slist = list(self.stuf.iteritems())
-        self.assertEqual(('min', 6) in slist, True)
-
-    def test_iterkeys(self):
-        self.stuf['max'] = 3
-        self.stuf['min'] = 6
-        self.stuf['pow'] = 7
-        slist = list(self.stuf.iterkeys())
-        self.assertEqual('min' in slist, True)
-
-    def test_itervalues(self):
-        self.stuf['max'] = 3
-        self.stuf['min'] = 6
-        self.stuf['pow'] = 7
-        slist = list(self.stuf.itervalues())
-        self.assertEqual(6 in slist, True)
-
-    def test_pop(self):
-        self.stuf['max'] = 3
-        self.stuf['min'] = 6
-        item = self.stuf.pop('min')
-        self.assertEqual(item, 6)
-
-    def test_popitem(self):
-        self.stuf['max'] = 3
-        self.stuf['min'] = 6
-        self.stuf['pow'] = 7
-        item = self.stuf.popitem()
-        self.assertEqual(len(item) + len(self.stuf), 4)
-
-    def test_setdefault(self):
-        self.stuf['max'] = 3
-        self.stuf['min'] = 6
-        self.stuf['powl'] = 7
-        self.stuf.setdefault('pow', 8)
-        self.assertEqual(self.stuf['pow'], 8)
-
-    def test_update(self):
-        tstuff = self._makeone()
-        tstuff['max'] = 3
-        tstuff['min'] = 6
-        tstuff['pow'] = 7
-        self.stuf['max'] = 2
-        self.stuf['min'] = 3
-        self.stuf['pow'] = 7
-        self.stuf.update(tstuff)
-        self.assertEqual(self.stuf['min'], 6)
-
-    def test_values(self):
-        self.stuf['max'] = 3
-        self.stuf['min'] = 6
-        self.stuf['pow'] = 7
-        slist = self.stuf.values()
-        self.assertEqual(6 in slist, True)
-
-    def test_keys(self):
-        self.stuf['max'] = 3
-        self.stuf['min'] = 6
-        self.stuf['pow'] = 7
-        slist = self.stuf.keys()
-        self.assertEqual('min' in slist, True)
-
-
 class TestStuf(unittest.TestCase):
 
     @property
@@ -128,201 +9,585 @@ class TestStuf(unittest.TestCase):
         return stuf
 
     def setUp(self):
-        self.stuf = self._makeone(test1='test1', test2='test2')
+        self.stuf = self._makeone(test1='test1', test2='test2', test3=dict(e=1))
 
     def test__getattr__(self):
         self.assertEqual(self.stuf.test1, 'test1')
         self.assertEqual(self.stuf.test2, 'test2')
+        self.assertEqual(self.stuf.test3.e, 1)
 
     def test__getitem__(self):
         self.assertEqual(self.stuf['test1'], 'test1')
         self.assertEqual(self.stuf['test2'], 'test2')
+        self.assertEqual(self.stuf['test3']['e'], 1)
 
     def test__setattr__(self):
         self.stuf.max = 3
         self.stuf.test1 = 'test1again'
         self.stuf.test2 = 'test2again'
+        self.stuf.test3.e = 5
         self.assertEqual(self.stuf.max, 3)
         self.assertEqual(self.stuf.test1, 'test1again')
         self.assertEqual(self.stuf.test2, 'test2again')
+        self.assertEqual(self.stuf.test3.e, 5)
 
     def test__setitem__(self):
         self.stuf['max'] = 3
         self.stuf['test1'] = 'test1again'
         self.stuf['test2'] = 'test2again'
+        self.stuf['test3']['e'] = 5
         self.assertEqual(self.stuf['max'], 3)
         self.assertEqual(self.stuf['test1'], 'test1again')
         self.assertEqual(self.stuf['test2'], 'test2again')
+        self.assertEqual(self.stuf['test3']['e'], 5)
 
     def test__delattr__(self):
         del self.stuf.test1
         del self.stuf.test2
+        del self.stuf.test3.e
+        self.assertTrue(len(self.stuf.test3)==0)
+        del self.stuf.test3
         self.assertTrue(len(self.stuf)==0)
         self.assertRaises(AttributeError, lambda: self.stuf.test1)
         self.assertRaises(AttributeError, lambda: self.stuf.test2)
+        self.assertRaises(AttributeError, lambda: self.stuf.test3)
+        self.assertRaises(AttributeError, lambda: self.stuf.test3.e)
 
     def test__delitem__(self):
         del self.stuf['test1']
         del self.stuf['test2']
+        del self.stuf['test3']['e']
+        self.assertFalse('e' in self.stuf['test3'])
+        self.assertTrue(len(self.stuf['test3'])==0)
+        del self.stuf['test3']
         self.assertTrue(len(self.stuf)==0)
         self.assertFalse('test1' in self.stuf)
         self.assertFalse('test2' in self.stuf)
+        self.assertFalse('test3' in self.stuf)
 
     def test_get(self):
         self.assertEqual(self.stuf.get('test1'), 'test1')
         self.assertEqual(self.stuf.get('test2'), 'test2')
-        self.assertIsNone(self.stuf.get('test3'))
+        self.assertIsNone(self.stuf.get('test4'), 'test4')
+        self.assertEqual(self.stuf.get('test3').get('e'), 1)
+        self.assertIsNone(self.stuf.get('test3').get('r'))
 
     def test__cmp__(self):
-        tstuff = self._makeone(test1='test1', test2='test2')
+        tstuff = self._makeone(
+            (('test1', 'test1'), ('test2', 'test2'), ('test3', dict(e=1)))
+        )
         self.assertEqual(self.stuf, tstuff)
 
     def test__len__(self):
-        self.assertEqual(len(self.stuf), 2)
+        self.assertEqual(len(self.stuf), 3)
+        self.assertEqual(len(self.stuf.test3), 1)
 
     def test_clear(self):
+        self.stuf.test3.clear()
+        self.assertEqual(len(self.stuf.test3), 0)
         self.stuf.clear()
         self.assertEqual(len(self.stuf), 0)
 
     def test_items(self):
         slist = list(self.stuf.items())
-        self.assertEqual(('test1', 'test1') in slist, True)
+        self.assertTrue(('test1', 'test1') in slist)
+        self.assertTrue(('test2', 'test2') in slist)
+        self.assertTrue(('test3', {'e': 1}) in slist)
 
     def test_iteritems(self):
         slist = list(self.stuf.iteritems())
-        self.assertEqual(('test1', 'test1') in slist, True)
+        self.assertTrue(('test1', 'test1') in slist)
+        self.assertTrue(('test2', 'test2') in slist)
+        self.assertTrue(('test3', {'e': 1}) in slist)
 
     def test_iterkeys(self):
         slist = list(self.stuf.iterkeys())
-        self.assertEqual('test1' in slist, True)
+        slist2 = list(self.stuf.test3.iterkeys())
+        self.assertTrue('test1' in slist)
+        self.assertTrue('test2' in slist)
+        self.assertTrue('test3' in slist)
+        self.assertTrue('e' in slist2)
 
     def test_itervalues(self):
         slist = list(self.stuf.itervalues())
-        self.assertEqual('test1' in slist, True)
+        slist2 = list(self.stuf.test3.itervalues())
+        self.assertTrue('test1' in slist)
+        self.assertTrue('test2' in slist)
+        self.assertTrue({'e': 1} in slist)
+        self.assertTrue(1 in slist2)
 
     def test_pop(self):
-        item = self.stuf.pop('test1')
-        self.assertEqual(item, 'test1')
+        self.assertEqual(self.stuf.test3.pop('e'), 1)
+        self.assertEqual(self.stuf.pop('test1'), 'test1')
+        self.assertEqual(self.stuf.pop('test2'), 'test2')
+        self.assertEqual(self.stuf.pop('test3'), {})
 
     def test_popitem(self):
         item = self.stuf.popitem()
-        self.assertEqual(len(item) + len(self.stuf), 3)
+        self.assertEqual(len(item) + len(self.stuf), 4, item)
 
     def test_setdefault(self):
+        self.assertEqual(self.stuf.test3.setdefault('e', 8), 1)
+        self.assertEqual(self.stuf.test3.setdefault('r', 8), 8)
         self.assertEqual(self.stuf.setdefault('test1', 8), 'test1')
         self.assertEqual(self.stuf.setdefault('pow', 8), 8)
 
     def test_update(self):
-        tstuff = self._makeone(test1='test1', test2='test2')
+        tstuff = self._makeone(test1='test1', test2='test2', test3=dict(e=1))
         tstuff['test1'] = 3
         tstuff['test2'] = 6
+        tstuff['test3'] = dict(f=2)
         self.stuf.update(tstuff)
         self.assertEqual(self.stuf['test1'], 3)
         self.assertEqual(self.stuf['test2'], 6)
+        self.assertEqual(self.stuf['test3'], dict(f=2), self.stuf)
 
     def test_values(self):
-        slist = self.stuf.values()
-        self.assertEqual('test1' in slist, True)
-        self.assertEqual('test2' in slist, True)
+        slist1 = self.stuf.test3.values()
+        slist2 = self.stuf.values()
+        self.assertTrue(1 in slist1)
+        self.assertTrue('test1' in slist2)
+        self.assertTrue('test2' in slist2)
+        self.assertTrue({'e': 1} in slist2)
 
     def test_keys(self):
-        slist = self.stuf.keys()
-        self.assertEqual('test1' in slist, True)
-        self.assertEqual('test2' in slist, True)
+        slist1 = self.stuf.test3.keys()
+        slist2 = self.stuf.keys()
+        self.assertTrue('e' in slist1)
+        self.assertTrue('test1' in slist2)
+        self.assertTrue('test2' in slist2)
+        self.assertTrue('test3' in slist2)
 
 
-class TestFrozenStuf(unittest.TestCase):
+class TestOrderedStuf(unittest.TestCase):
 
     @property
     def _makeone(self):
-        from stuf.core import frozenstuf
-        return frozenstuf
+        from stuf import orderedstuf
+        return orderedstuf
 
     def setUp(self):
-        self.stuf = self._makeone(test1='test1', test2='test2')
+        self.stuf = self._makeone(test1='test1', test2='test2', test3=dict(e=1))
 
     def test__getattr__(self):
         self.assertEqual(self.stuf.test1, 'test1')
         self.assertEqual(self.stuf.test2, 'test2')
+        self.assertEqual(self.stuf.test3.e, 1)
 
     def test__getitem__(self):
         self.assertEqual(self.stuf['test1'], 'test1')
         self.assertEqual(self.stuf['test2'], 'test2')
+        self.assertEqual(self.stuf['test3']['e'], 1)
 
     def test__setattr__(self):
-        self.assertRaises(TypeError, lambda: setattr(self.stuf, 'max', 3))
-        self.assertRaises(TypeError, lambda: setattr(self.stuf, 'test1', 3))
-        self.assertRaises(TypeError, lambda: setattr(self.stuf, 'test1', 3))
+        self.stuf.max = 3
+        self.stuf.test1 = 'test1again'
+        self.stuf.test2 = 'test2again'
+        self.stuf.test3.e = 5
+        self.assertEqual(self.stuf.max, 3)
+        self.assertEqual(self.stuf.test1, 'test1again')
+        self.assertEqual(self.stuf.test2, 'test2again')
+        self.assertEqual(self.stuf.test3.e, 5)
 
     def test__setitem__(self):
-        self.assertRaises(TypeError, lambda: self.stuf.__setitem__('max', 3))
-        self.assertRaises(TypeError, lambda: self.stuf.__setitem__('test1', 3))
-        self.assertRaises(TypeError, lambda: self.stuf.__setitem__('test1', 3))
+        self.stuf['max'] = 3
+        self.stuf['test1'] = 'test1again'
+        self.stuf['test2'] = 'test2again'
+        self.stuf['test3']['e'] = 5
+        self.assertEqual(self.stuf['max'], 3)
+        self.assertEqual(self.stuf['test1'], 'test1again')
+        self.assertEqual(self.stuf['test2'], 'test2again')
+        self.assertEqual(self.stuf['test3']['e'], 5)
 
     def test__delattr__(self):
-        self.assertRaises(TypeError, lambda: delattr(self.stuf, 'test1'))
-        self.assertRaises(TypeError, lambda: delattr(self.stuf, 'test2'))
-        self.assertTrue(len(self.stuf)==2)
+        del self.stuf.test1
+        del self.stuf.test2
+        del self.stuf.test3.e
+        self.assertTrue(len(self.stuf.test3)==0)
+        del self.stuf.test3
+        self.assertTrue(len(self.stuf)==0)
+        self.assertRaises(AttributeError, lambda: self.stuf.test1)
+        self.assertRaises(AttributeError, lambda: self.stuf.test2)
+        self.assertRaises(AttributeError, lambda: self.stuf.test3)
+        self.assertRaises(AttributeError, lambda: self.stuf.test3.e)
 
     def test__delitem__(self):
-        self.assertRaises(TypeError, lambda: self.stuf.__delitem__('test1'))
-        self.assertRaises(TypeError, lambda: self.stuf.__delitem__('test2'))
-        self.assertTrue(len(self.stuf)==2)
+        del self.stuf['test1']
+        del self.stuf['test2']
+        del self.stuf['test3']['e']
+        self.assertFalse('e' in self.stuf['test3'])
+        self.assertTrue(len(self.stuf['test3'])==0)
+        del self.stuf['test3']
+        self.assertTrue(len(self.stuf)==0)
+        self.assertFalse('test1' in self.stuf)
+        self.assertFalse('test2' in self.stuf)
+        self.assertFalse('test3' in self.stuf)
 
     def test_get(self):
         self.assertEqual(self.stuf.get('test1'), 'test1')
         self.assertEqual(self.stuf.get('test2'), 'test2')
-        self.assertIsNone(self.stuf.get('test3'))
+        self.assertIsNone(self.stuf.get('test4'), 'test4')
+        self.assertEqual(self.stuf.get('test3').get('e'), 1)
+        self.assertIsNone(self.stuf.get('test3').get('r'))
 
     def test__cmp__(self):
-        tstuff = self._makeone(test1='test1', test2='test2')
+        tstuff = self._makeone(
+            (('test1', 'test1'), ('test2', 'test2'), ('test3', dict(e=1)))
+        )
         self.assertEqual(self.stuf, tstuff)
 
     def test__len__(self):
-        self.assertEqual(len(self.stuf), 2)
+        self.assertEqual(len(self.stuf), 3)
+        self.assertEqual(len(self.stuf.test3), 1)
 
     def test_clear(self):
-        self.assertRaises(TypeError, lambda: self.stuf.clear())
+        self.stuf.test3.clear()
+        self.assertEqual(len(self.stuf.test3), 0)
+        self.stuf.clear()
+        self.assertEqual(len(self.stuf), 0)
 
     def test_items(self):
         slist = list(self.stuf.items())
-        self.assertEqual(('test1', 'test1') in slist, True)
+        self.assertTrue(('test1', 'test1') in slist)
+        self.assertTrue(('test2', 'test2') in slist)
+        self.assertTrue(('test3', {'e': 1}) in slist)
 
     def test_iteritems(self):
         slist = list(self.stuf.iteritems())
-        self.assertEqual(('test1', 'test1') in slist, True)
+        self.assertTrue(('test1', 'test1') in slist)
+        self.assertTrue(('test2', 'test2') in slist)
+        self.assertTrue(('test3', {'e': 1}) in slist)
 
     def test_iterkeys(self):
         slist = list(self.stuf.iterkeys())
-        self.assertEqual('test1' in slist, True)
+        slist2 = list(self.stuf.test3.iterkeys())
+        self.assertTrue('test1' in slist)
+        self.assertTrue('test2' in slist)
+        self.assertTrue('test3' in slist)
+        self.assertTrue('e' in slist2)
 
     def test_itervalues(self):
         slist = list(self.stuf.itervalues())
-        self.assertEqual('test1' in slist, True)
+        slist2 = list(self.stuf.test3.itervalues())
+        self.assertTrue('test1' in slist)
+        self.assertTrue('test2' in slist)
+        self.assertTrue({'e': 1} in slist)
+        self.assertTrue(1 in slist2)
 
     def test_pop(self):
-        self.assertEqual(self.stuf.pop, dict.pop, self.stuf.pop)
-        self.assertRaises(TypeError, lambda: self.stuf.pop('test1', None))
+        self.assertEqual(self.stuf.test3.pop('e'), 1)
+        self.assertEqual(self.stuf.pop('test1'), 'test1')
+        self.assertEqual(self.stuf.pop('test2'), 'test2')
+        self.assertEqual(self.stuf.pop('test3'), {})
 
     def test_popitem(self):
-        self.assertRaises(TypeError, lambda: self.stuf.popitem())
+        item = self.stuf.popitem()
+        self.assertEqual(len(item) + len(self.stuf), 4, item)
 
     def test_setdefault(self):
-        self.assertRaises(TypeError, lambda: self.stuf.setdefault('test1', 8))
+        self.assertEqual(self.stuf.test3.setdefault('e', 8), 1)
+        self.assertEqual(self.stuf.test3.setdefault('r', 8), 8)
+        self.assertEqual(self.stuf.setdefault('test1', 8), 'test1')
+        self.assertEqual(self.stuf.setdefault('pow', 8), 8)
 
     def test_update(self):
-        tstuf = self._makeone(test1='test1', test2='test2')
-        self.assertRaises(TypeError, lambda: self.stuf.update(tstuf))
+        tstuff = self._makeone(test1='test1', test2='test2', test3=dict(e=1))
+        tstuff['test1'] = 3
+        tstuff['test2'] = 6
+        tstuff['test3'] = dict(f=2)
+        self.stuf.update(tstuff)
+        self.assertEqual(self.stuf['test1'], 3)
+        self.assertEqual(self.stuf['test2'], 6)
+        self.assertEqual(self.stuf['test3'], dict(f=2), self.stuf)
 
     def test_values(self):
-        slist = self.stuf.values()
-        self.assertEqual('test1' in slist, True)
-        self.assertEqual('test2' in slist, True)
+        slist1 = self.stuf.test3.values()
+        slist2 = self.stuf.values()
+        self.assertTrue(1 in slist1)
+        self.assertTrue('test1' in slist2)
+        self.assertTrue('test2' in slist2)
+        self.assertTrue({'e': 1} in slist2)
 
     def test_keys(self):
-        slist = self.stuf.keys()
-        self.assertEqual('test1' in slist, True)
-        self.assertEqual('test2' in slist, True)
+        slist1 = self.stuf.test3.keys()
+        slist2 = self.stuf.keys()
+        self.assertTrue('e' in slist1)
+        self.assertTrue('test1' in slist2)
+        self.assertTrue('test2' in slist2)
+        self.assertTrue('test3' in slist2)
+
+
+class TestDefaultStuf(unittest.TestCase):
+
+    @property
+    def _makeone(self):
+        from stuf import defaultstuf
+        return defaultstuf
+
+    def setUp(self):
+        self.stuf = self._makeone(
+            list, ([1, 2],), test1='test1', test2='test2', test3=dict(e=1)
+        )
+
+    def test__getattr__(self):
+        self.assertEqual(self.stuf.test1, 'test1')
+        self.assertEqual(self.stuf.test2, 'test2')
+        self.assertEqual(self.stuf.test4, [1, 2])
+        self.assertEqual(self.stuf.test3.e, 1)
+        self.assertEqual(self.stuf.test3.f, [1, 2])
+
+    def test__getitem__(self):
+        self.assertEqual(self.stuf['test1'], 'test1')
+        self.assertEqual(self.stuf['test2'], 'test2')
+        self.assertEqual(self.stuf['test4'], [1, 2])
+        self.assertEqual(self.stuf['test3']['e'], 1)
+        self.assertEqual(self.stuf['test3']['f'], [1, 2])
+
+    def test__setattr__(self):
+        self.stuf.max = 3
+        self.stuf.test1 = 'test1again'
+        self.stuf.test2 = 'test2again'
+        self.stuf.test3.e = 5
+        self.assertEqual(self.stuf.max, 3)
+        self.assertEqual(self.stuf.test1, 'test1again')
+        self.assertEqual(self.stuf.test2, 'test2again')
+        self.assertEqual(self.stuf.test3.e, 5)
+
+    def test__setitem__(self):
+        self.stuf['max'] = 3
+        self.stuf['test1'] = 'test1again'
+        self.stuf['test2'] = 'test2again'
+        self.stuf['test3']['e'] = 5
+        self.assertEqual(self.stuf['max'], 3)
+        self.assertEqual(self.stuf['test1'], 'test1again')
+        self.assertEqual(self.stuf['test2'], 'test2again')
+        self.assertEqual(self.stuf['test3']['e'], 5)
+
+    def test__delattr__(self):
+        del self.stuf.test1
+        del self.stuf.test2
+        del self.stuf.test3.e
+        self.assertTrue(len(self.stuf.test3)==0)
+        del self.stuf.test3
+        self.assertTrue(len(self.stuf)==0)
+        self.assertEqual(self.stuf.test1, [1, 2])
+        self.assertEqual(self.stuf.test2, [1, 2])
+        self.assertEqual(self.stuf.test3, [1, 2])
+        self.assertRaises(AttributeError, lambda: self.stuf.test3.e)
+
+    def test__delitem__(self):
+        del self.stuf['test1']
+        del self.stuf['test2']
+        del self.stuf['test3']['e']
+        self.assertFalse('e' in self.stuf['test3'])
+        self.assertTrue(len(self.stuf['test3'])==0)
+        self.assertEqual(self.stuf['test3']['e'], [1, 2])
+        del self.stuf['test3']
+        self.assertTrue(len(self.stuf)==0)
+        self.assertFalse('test1' in self.stuf)
+        self.assertFalse('test2' in self.stuf)
+        self.assertFalse('test3' in self.stuf)
+        self.assertEqual(self.stuf['test1'], [1, 2])
+        self.assertEqual(self.stuf['test2'], [1, 2])
+        self.assertEqual(self.stuf['test3'], [1, 2])
+        self.assertRaises(TypeError, lambda: self.stuf['test3']['e'])
+
+    def test_get(self):
+        self.assertEqual(self.stuf.get('test1'), 'test1')
+        self.assertEqual(self.stuf.get('test2'), 'test2')
+        self.assertIsNone(self.stuf.get('test4'), 'test4')
+        self.assertEqual(self.stuf.get('test3').get('e'), 1)
+        self.assertIsNone(self.stuf.get('test3').get('r'))
+
+    def test__cmp__(self):
+        tstuff = self._makeone(
+            list,
+            (1, 2),
+            (('test1', 'test1'), ('test2', 'test2'), ('test3', dict(e=1)))
+        )
+        self.assertEqual(self.stuf, tstuff)
+
+    def test__len__(self):
+        self.assertEqual(len(self.stuf), 3)
+        self.assertEqual(len(self.stuf.test3), 1)
+
+    def test_clear(self):
+        self.stuf.test3.clear()
+        self.assertEqual(len(self.stuf.test3), 0)
+        self.assertEqual(self.stuf['test3']['e'], [1, 2])
+        self.stuf.clear()
+        self.assertEqual(len(self.stuf), 0)
+        self.assertEqual(self.stuf['test1'], [1, 2])
+        self.assertEqual(self.stuf['test2'], [1, 2])
+        self.assertEqual(self.stuf['test3'], [1, 2])
+
+    def test_items(self):
+        self.assertEqual(self.stuf['test4'], [1, 2])
+        slist = list(self.stuf.items())
+        self.assertTrue(('test1', 'test1') in slist)
+        self.assertTrue(('test2', 'test2') in slist)
+        self.assertTrue(('test3', {'e': 1}) in slist)
+        self.assertTrue(('test4', [1, 2]) in slist)
+
+    def test_iteritems(self):
+        slist = list(self.stuf.iteritems())
+        self.assertTrue(('test1', 'test1') in slist)
+        self.assertTrue(('test2', 'test2') in slist)
+        self.assertTrue(('test3', {'e': 1}) in slist)
+
+    def test_iterkeys(self):
+        slist = list(self.stuf.iterkeys())
+        slist2 = list(self.stuf.test3.iterkeys())
+        self.assertTrue('test1' in slist)
+        self.assertTrue('test2' in slist)
+        self.assertTrue('test3' in slist)
+        self.assertTrue('e' in slist2)
+
+    def test_itervalues(self):
+        slist = list(self.stuf.itervalues())
+        slist2 = list(self.stuf.test3.itervalues())
+        self.assertTrue('test1' in slist)
+        self.assertTrue('test2' in slist)
+        self.assertTrue({'e': 1} in slist)
+        self.assertTrue(1 in slist2)
+
+    def test_pop(self):
+        self.assertEqual(self.stuf.test3.pop('e'), 1)
+        self.assertEqual(self.stuf.pop('test1'), 'test1')
+        self.assertEqual(self.stuf.pop('test2'), 'test2')
+        self.assertEqual(self.stuf.pop('test3'), {})
+
+    def test_popitem(self):
+        item = self.stuf.popitem()
+        self.assertEqual(len(item) + len(self.stuf), 4, item)
+
+    def test_setdefault(self):
+        self.assertEqual(self.stuf.test3.setdefault('e', 8), 1)
+        self.assertEqual(self.stuf.test3.setdefault('r', 8), 8)
+        self.assertEqual(self.stuf.setdefault('test1', 8), 'test1')
+        self.assertEqual(self.stuf.setdefault('pow', 8), 8)
+
+    def test_update(self):
+        tstuff = self._makeone(
+            list, (1, 2), test1='test1', test2='test2', test3=dict(e=1)
+        )
+        tstuff['test1'] = 3
+        tstuff['test2'] = 6
+        tstuff['test3'] = dict(f=2)
+        self.stuf.update(tstuff)
+        self.assertEqual(self.stuf['test1'], 3)
+        self.assertEqual(self.stuf['test2'], 6)
+        self.assertEqual(self.stuf['test3'], dict(f=2), self.stuf)
+
+    def test_values(self):
+        slist1 = self.stuf.test3.values()
+        slist2 = self.stuf.values()
+        self.assertTrue(1 in slist1)
+        self.assertTrue('test1' in slist2)
+        self.assertTrue('test2' in slist2)
+        self.assertTrue({'e': 1} in slist2)
+
+    def test_keys(self):
+        slist1 = self.stuf.test3.keys()
+        slist2 = self.stuf.keys()
+        self.assertTrue('e' in slist1)
+        self.assertTrue('test1' in slist2)
+        self.assertTrue('test2' in slist2)
+        self.assertTrue('test3' in slist2)
+
+
+#class TestFrozenStuf(unittest.TestCase):
+#
+#    @property
+#    def _makeone(self):
+#        from stuf.core import frozenstuf
+#        return frozenstuf
+#
+#    def setUp(self):
+#        self.stuf = self._makeone(test1='test1', test2='test2')
+#
+#    def test__getattr__(self):
+#        self.assertEqual(self.stuf.test1, 'test1')
+#        self.assertEqual(self.stuf.test2, 'test2')
+#
+#    def test__getitem__(self):
+#        self.assertEqual(self.stuf['test1'], 'test1')
+#        self.assertEqual(self.stuf['test2'], 'test2')
+#
+#    def test__setattr__(self):
+#        self.assertRaises(TypeError, lambda: setattr(self.stuf, 'max', 3))
+#        self.assertRaises(TypeError, lambda: setattr(self.stuf, 'test1', 3))
+#        self.assertRaises(TypeError, lambda: setattr(self.stuf, 'test1', 3))
+#
+#    def test__setitem__(self):
+#        self.assertRaises(TypeError, lambda: self.stuf.__setitem__('max', 3))
+#        self.assertRaises(TypeError, lambda: self.stuf.__setitem__('test1', 3))
+#        self.assertRaises(TypeError, lambda: self.stuf.__setitem__('test1', 3))
+#
+#    def test__delattr__(self):
+#        self.assertRaises(TypeError, lambda: delattr(self.stuf, 'test1'))
+#        self.assertRaises(TypeError, lambda: delattr(self.stuf, 'test2'))
+#        self.assertTrue(len(self.stuf)==2)
+#
+#    def test__delitem__(self):
+#        self.assertRaises(TypeError, lambda: self.stuf.__delitem__('test1'))
+#        self.assertRaises(TypeError, lambda: self.stuf.__delitem__('test2'))
+#        self.assertTrue(len(self.stuf)==2)
+#
+#    def test_get(self):
+#        self.assertEqual(self.stuf.get('test1'), 'test1')
+#        self.assertEqual(self.stuf.get('test2'), 'test2')
+#        self.assertIsNone(self.stuf.get('test3'))
+#
+#    def test__cmp__(self):
+#        tstuff = self._makeone(test1='test1', test2='test2')
+#        self.assertEqual(self.stuf, tstuff)
+#
+#    def test__len__(self):
+#        self.assertEqual(len(self.stuf), 2)
+#
+#    def test_clear(self):
+#        self.assertRaises(TypeError, lambda: self.stuf.clear())
+#
+#    def test_items(self):
+#        slist = list(self.stuf.items())
+#        self.assertTrue(('test1', 'test1') in slist)
+#
+#    def test_iteritems(self):
+#        slist = list(self.stuf.iteritems())
+#        self.assertTrue(('test1', 'test1') in slist)
+#
+#    def test_iterkeys(self):
+#        slist = list(self.stuf.iterkeys())
+#        self.assertTrue('test1' in slist)
+#
+#    def test_itervalues(self):
+#        slist = list(self.stuf.itervalues())
+#        self.assertTrue('test1' in slist)
+#
+#    def test_pop(self):
+#        self.assertEqual(self.stuf.pop, dict.pop, self.stuf.pop)
+#        self.assertRaises(TypeError, lambda: self.stuf.pop('test1', None))
+#
+#    def test_popitem(self):
+#        self.assertRaises(TypeError, lambda: self.stuf.popitem())
+#
+#    def test_setdefault(self):
+#        self.assertRaises(TypeError, lambda: self.stuf.setdefault('test1', 8))
+#
+#    def test_update(self):
+#        tstuf = self._makeone(test1='test1', test2='test2')
+#        self.assertRaises(TypeError, lambda: self.stuf.update(tstuf))
+#
+#    def test_values(self):
+#        slist = self.stuf.values()
+#        self.assertTrue('test1' in slist)
+#        self.assertTrue('test2' in slist)
+#
+#    def test_keys(self):
+#        slist = self.stuf.keys()
+#        self.assertTrue('test1' in slist)
+#        self.assertTrue('test2' in slist)
 
 
 if __name__ == '__main__':
