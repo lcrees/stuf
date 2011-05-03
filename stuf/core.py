@@ -77,14 +77,11 @@ class stuf(dict):
 class defaultstuf(stuf):
 
     _factory = None
-    _fargs = None
+    _fargs = ()
 
     def __init__(self, factory, *args, **kw):
         self._factory = factory
-        if args:
-            self._fargs = args[0]
-        else:
-            self._fargs = ()
+        if args: self._fargs = args[0]
         self.update(*args[1:], **kw)
 
     def __missing__(self, key):
@@ -113,7 +110,7 @@ class orderedstuf(OrderedDict):
         self.update(*args, **kw)
 
     def __getattr__(self, k):
-        if k in self._methods:
+        if k in self.__methods:
             return object.__getattribute__(self, k)
         else:
             try:
@@ -122,7 +119,7 @@ class orderedstuf(OrderedDict):
                 raise AttributeError(k)
 
     def __setattr__(self, k, v):
-        if k in self._methods:
+        if k in self.__methods:
             object.__setattr__(self, k, v)
         else:
             try:
@@ -131,7 +128,7 @@ class orderedstuf(OrderedDict):
                 raise AttributeError(k)
 
     def __delattr__(self, k):
-        if k in self._methods:
+        if k in self.__methods:
             object.__delattr__(self, k)
         else:
             try:
@@ -159,11 +156,11 @@ class orderedstuf(OrderedDict):
         return newdict
 
     @property
-    def _methods(self):
-        first = ['__map', '__root'] + list(
+    def __methods(self):
+        first =  ['__map', '__root'] + list(
             k for k, v in self.__dict__.iteritems() if ismethod(v)
         )
-        first += list('_OrderedDict'+k for k in first)
+        first += list('_OrderedDict' + k for k in first)
         return frozenset(first)
 
     def update(self, *args, **kw):
@@ -207,17 +204,13 @@ class fixedstuf(object):
         else:
             raise KeyError(k)
 
-    def __delitem__(self, k):
-        pass
-
     def __getattr__(self, k):
-#        if k in self._methods:
         try:
             return object.__getattribute__(self, k)
         except AttributeError:
             if k in self._keys:
                 try:
-                    return self[k]
+                    return self._stuf[k]
                 except KeyError:
                     raise AttributeError(k)
             else:
@@ -230,7 +223,7 @@ class fixedstuf(object):
         return self._stuf.__contains__(k)
 
     def __setattr__(self, k, v):
-        if k in self._methods:
+        if k in set(self.__dict__.keys()+self.__class__.__dict__.keys()):
             object.__setattr__(self, k, v)
         elif k in self._keys:
             try:
@@ -240,8 +233,10 @@ class fixedstuf(object):
         else:
             raise AttributeError(k)
 
-    def __delattr__(self, *args, **kwargs):
-        pass
+    def __delattr__(self, k):
+        raise TypeError(
+            '%s does not support attribute deletion'%self.__class__.__name__
+        )
 
     def __gt__(self, *args):
         return self._stuf.__gt__(*args)
@@ -284,13 +279,8 @@ class fixedstuf(object):
                         kw[arg[0]] = arg[-1]
         return kw
 
-    @property
-    def _methods(self):
-#        if self._basekeys is not None: return self._basekeys
-        return frozenset(list(
-            k for k, v in self.__dict__.iteritems() if ismethod(v)
-        ) + ['_keys', '_stuf'])
-#        return self._basekeys
+    def get(self, k, default=None):
+        return self._stuf.get(k, default)
 
     def items(self):
         return self._stuf.items()
@@ -307,12 +297,6 @@ class fixedstuf(object):
     def keys(self):
         return self._stuf.keys()
 
-    def pop(self, k):
-        pass
-
-    def popitem(self, *args, **kwargs):
-        pass
-
     def setdefault(self, k, default):
         return self._stuf.setdefault(k, default)
 
@@ -328,6 +312,129 @@ class fixedstuf(object):
                     stf[k] = v
             else:
                 stf[k] = v
+
+    def values(self):
+        return self._stuf.values()
+
+
+class frozenstuf(object):
+
+    '''fixed stuf'''
+
+    _keys = None
+    _stuf = None
+
+    def __init__(self, *args, **kw):
+        kw = self._args2dict(*args, **kw)
+        self._keys = frozenset(kw.keys())
+        stf = self._stuf = dict()
+        cls = self.__class__
+        for k, v in self._args2dict(*args, **kw).iteritems():
+            if isinstance(v, (tuple, dict, list)):
+                trial = cls(v)
+                if len(trial) > 0:
+                    stf[k] = trial
+                else:
+                    stf[k] = v
+            else:
+                stf[k] = v
+
+    @lru_cache()
+    def __getitem__(self, k):
+        if k in self._keys:
+            return self._stuf[k]
+        else:
+            raise KeyError(k)
+
+    @lru_cache()
+    def __getattr__(self, k):
+        try:
+            return object.__getattribute__(self, k)
+        except AttributeError:
+            if k in self._keys:
+                try:
+                    return self[k]
+                except KeyError:
+                    raise AttributeError(k)
+            else:
+                raise AttributeError(k)
+
+    def __cmp__(self, *args):
+        return self._stuf.__cmp__(*args)
+
+    def __contains__(self, k):
+        return self._stuf.__contains__(k)
+
+    def __setattr__(self, k, v):
+        if k in set(self.__dict__.keys()+self.__class__.__dict__.keys()):
+            object.__setattr__(self, k, v)
+
+    def __delattr__(self, k):
+        raise TypeError(
+            '%s does not support attribute deletion'%self.__class__.__name__
+        )
+
+    def __gt__(self, *args):
+        return self._stuf.__gt__(*args)
+
+    def __iter__(self):
+        return self._stuf.__iter__()
+
+    def __len__(self):
+        return self._stuf.__len__()
+
+    def __lt__(self, *args):
+        return self._stuf.__lt__(*args)
+
+    def __reduce__(self):
+        return self._stuf.__reduce__()
+
+    def __reduce_ex__(self):
+        return self._stuf.__reduce_ex__()
+
+    def __repr__(self):
+        return self._stuf.__repr__()
+
+    def __sizeof__(self):
+        return self._stuf.__sizeof__()
+
+    def __str__(self):
+        return self._stuf.__str__()
+
+    @staticmethod
+    def _args2dict(*args, **kw):
+        if args:
+            if len(args) > 1:
+                raise TypeError('Invalid number of arguments %s' % len(args))
+            source = args[0]
+            if isinstance(source, dict):
+                kw.update(source)
+            elif isinstance(source, (list, tuple)):
+                for arg in source:
+                    if isinstance(arg, (list, tuple)) and len(arg) == 2:
+                        kw[arg[0]] = arg[-1]
+        return kw
+
+    def get(self, k, default=None):
+        return self._stuf.get(k, default)
+
+    def items(self):
+        return self._stuf.items()
+
+    def iteritems(self):
+        return self._stuf.iteritems()
+
+    def iterkeys(self):
+        return self._stuf.iterkeys()
+
+    def itervalues(self):
+        return self._stuf.itervalues()
+
+    def keys(self):
+        return self._stuf.keys()
+
+    def setdefault(self, k, default):
+        return self._stuf.setdefault(k, default)
 
     def values(self):
         return self._stuf.values()
