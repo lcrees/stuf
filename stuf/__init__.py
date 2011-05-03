@@ -1,1 +1,1 @@
-from stuf.core import  stuf, defaultstuf, orderedstuf #, fixedstuf
+from stuf.core import  stuf, defaultstuf, fixedstuf #, orderedstuf #
