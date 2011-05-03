@@ -119,8 +119,7 @@ class OrderedDict(dict, MutableMapping):
     @_recursive_repr
     def __repr__(self):
         'od.__repr__() <==> repr(od)'
-        if not self:
-            return '%s()' % (self.__class__.__name__,)
+        if not self: return '%s()' % (self.__class__.__name__,)
         return '%s(%r)' % (self.__class__.__name__, self.items())
 
     def copy(self):
@@ -131,7 +130,6 @@ class OrderedDict(dict, MutableMapping):
     def fromkeys(cls, iterable, value=None):
         '''OD.fromkeys(S[, v]) -> New ordered dictionary with keys from S
         and values equal to v (which defaults to None).
-
         '''
         d = cls()
         for key in iterable:
@@ -141,7 +139,6 @@ class OrderedDict(dict, MutableMapping):
     def __eq__(self, other):
         '''od.__eq__(y) <==> od==y.  Comparison to another OD is order-sensitive
         while comparison to a regular mapping is order-insensitive.
-
         '''
         if isinstance(other, OrderedDict):
             return len(self)==len(other) and \
