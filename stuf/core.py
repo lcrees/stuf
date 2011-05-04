@@ -5,7 +5,7 @@ from itertools import imap as _imap
 try:
     from collections import OrderedDict
 except ImportError:
-    from stuf.compat import OrderedDict
+    from ordereddict import OrderedDict
 from collections import _recursive_repr
 
 from stuf.util import lru_cache, lazy
