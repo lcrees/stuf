@@ -428,12 +428,12 @@ class TestFixedStuf(unittest.TestCase):
         self.assertTrue('e' in slist2)
 
     def test_itervalues(self):
-        slist = list(self.stuf.itervalues())
-        slist2 = list(self.stuf.test3.itervalues())
-        self.assertTrue('test1' in slist)
-        self.assertTrue('test2' in slist)
-        self.assertTrue({'e': 1} in slist)
+        slist1 = list(i for i in self.stuf.itervalues())
+        slist2 = list(i for i in self.stuf.test3.itervalues())
         self.assertTrue(1 in slist2)
+        self.assertTrue('test1' in slist1)
+        self.assertTrue({'e': 1} in slist1)
+        self.assertTrue('test2' in slist1)
 
     def test_pop(self):
         self.assertRaises(AttributeError, lambda: self.stuf.test3.pop('e'))
@@ -498,19 +498,11 @@ class TestFrozenStuf(unittest.TestCase):
         self.assertEqual(self.stuf['test3']['e'], 1)
 
     def test__setattr__(self):
-        self.assertRaises(AttributeError, lambda: setattr(self.stuf, 'max', 3))
+        self.assertRaises(TypeError, lambda: setattr(self.stuf, 'max', 3))
         self.assertRaises(
-            AttributeError, lambda: setattr(self.stuf, 'test1', 'test1again')
+            TypeError, lambda: setattr(self.stuf, 'test1', 'test1again')
         )
-        self.assertRaises(
-            AttributeError, lambda: setattr(self.stuf, 'test2', 'test2again')
-        )
-        self.assertRaises(
-            AttributeError, lambda: setattr(self.stuf.test3, 'e', 5)
-        )
-        self.assertEqual(self.stuf.test1, 'test1again')
-        self.assertEqual(self.stuf.test2, 'test2again')
-        self.assertEqual(self.stuf.test3.e, 5)
+        self.assertRaises(TypeError, lambda: setattr(self.stuf.test3, 'e', 5))
 
     def test__setitem__(self):
         self.assertRaises(
@@ -573,12 +565,12 @@ class TestFrozenStuf(unittest.TestCase):
         self.assertTrue('e' in slist2)
 
     def test_itervalues(self):
-        slist = list(self.stuf.itervalues())
+        slist1 = list(self.stuf.itervalues())
         slist2 = list(self.stuf.test3.itervalues())
-        self.assertTrue('test1' in slist)
-        self.assertTrue('test2' in slist)
-        self.assertTrue({'e': 1} in slist)
+        self.assertTrue('test2' in slist1)
+        self.assertTrue({'e': 1} in slist1)
         self.assertTrue(1 in slist2)
+        self.assertTrue('test1' in slist1)
 
     def test_pop(self):
         self.assertRaises(AttributeError, lambda: self.stuf.test3.pop('e'))
@@ -603,9 +595,9 @@ class TestFrozenStuf(unittest.TestCase):
         slist1 = self.stuf.test3.values()
         slist2 = self.stuf.values()
         self.assertTrue(1 in slist1)
-        self.assertTrue('test1' in slist2)
-        self.assertTrue('test2' in slist2)
         self.assertTrue({'e': 1} in slist2)
+        self.assertTrue('test2' in slist2)
+        self.assertTrue('test1' in slist2)
 
     def test_keys(self):
         slist1 = self.stuf.test3.keys()
@@ -774,5 +766,4 @@ class TestOrderedStuf(unittest.TestCase):
         self.assertTrue('test3' in slist2)
 
 
-if __name__ == '__main__':
-    unittest.main()
+if __name__ == '__main__': unittest.main()
