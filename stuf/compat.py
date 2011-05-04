@@ -1,3 +1,4 @@
+'''compatibility stuf'''
 try:
     from thread import get_ident as _get_ident
 except ImportError:
@@ -6,7 +7,7 @@ except ImportError:
 
 class OrderedDict(dict):
 
-    'Dictionary that remembers insertion order'
+    '''Dictionary that remembers insertion order'''
 
     def __init__(self, *args, **kwds):
         '''Initialize an ordered dictionary.  Signature is the same as for
@@ -18,7 +19,7 @@ class OrderedDict(dict):
         try:
             self._root
         except AttributeError:
-            self._root = root = []                     # sentinel node
+            self._root = root = []
             root[:] = [root, root, None]
             self._map = {}
         self._update(*args, **kwds)
