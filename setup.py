@@ -30,6 +30,7 @@ setup(
     description='''stuf has attributes''',
     long_description='''miscellaneous dot accessible dictionaries''',
     author='L. C. Rees',
+    url='https://bitbucket.org/lcrees/stuf/',
     author_email='lcrees@gmail.com',
     license='MIT',
     packages = ['stuf'],
