@@ -89,6 +89,27 @@ class lazy(object):
 
     def __get__(self, instance, cls=None):
         if instance is None: return self
-        value = self.method(instance)
-        setattr(instance, self.method.__name__, value)
+        meth = self.method
+        value = meth(instance)
+        setattr(instance, meth.__name__, value)
+        return value
+
+
+class lazycls(object):
+
+    '''Lazily assign attributes on an class upon first use.'''
+
+    def __init__(self, method):
+        self.method = method
+        try:
+            self.__doc__ = method.__doc__
+            self.__module__ = method.__module__
+            self.__name__ = method.__name__
+        except:
+            pass
+
+    def __get__(self, instance, cls):
+        meth = self.method
+        value = meth(cls)
+        setattr(cls, meth.__name__, value)
         return value

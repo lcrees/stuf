@@ -4,7 +4,7 @@ from functools import partial
 from operator import eq as _eq
 from itertools import imap as _imap
 
-from stuf.util import OrderedDict, lazy, lru_wrapped, recursive_repr
+from stuf.util import OrderedDict, lazy, lru_wrapped, recursive_repr, lazycls
 
 _osettr = object.__setattr__
 _ogettr = object.__getattribute__
@@ -12,8 +12,8 @@ _ogettr = object.__getattribute__
 
 class _basestuf(object):
 
-    def __init__(self, *args, **kw):
-        self._update(self._preprep(*args, **kw))
+    def __init__(self, arg):
+        self._saddle(src=self._preprep(arg))
 
     def __iter__(self):
         cls = self.__class__
@@ -39,43 +39,47 @@ class _basestuf(object):
         return frozenset(vars(self).keys()+self.__class__.__dict__.keys())
 
     @classmethod
-    def _fromiter(cls, src=(), typ=dict, types=(list, tuple)):
-        return cls(cls._todict(src, type, types))
+    def _fromiter(cls, src=(), typ=dict, sq=[list, tuple]):
+        return cls(cls._todict(src=src, typ=typ, sq=sq))
 
     @classmethod
-    def _fromkw(cls, typ=dict, types=(list, tuple), **kw):
-        return cls._fromiter(kw, typ, types)
+    def _fromkw(cls, typ=dict, sq=[list, tuple], **kw):
+        return cls._fromiter(src=kw, typ=typ, sq=sq)
 
-    def _prep(self, *args, **kw):
-        if args: kw = self._todict(args)
+    def _prep(self, arg, **kw):
+        if arg: kw.update(self._todict(src=arg))
         return kw
 
-    def _preprep(self, *args, **kw):
-        return self._prep(*args, **kw)
+    def _preprep(self, arg):
+        return arg
 
     @classmethod
-    def _todict(cls, src=(), typ=dict, maps=(cls, dict), seqs=(list, tuple)):
+    def _todict(cls, src=(), typ=dict, maps=[dict], sq=[list, tuple]):
         kw = typ()
-        if len(src) > 1:
-            raise TypeError(u'takes one argument')
-        elif isinstance(src, maps):
+        maps = tuple(maps+[cls])
+        sq = tuple(sq+[cls])
+        if isinstance(src, tuple(maps)):
             kw.update(src)
-        elif isinstance(src, seqs):
+        elif isinstance(src, tuple(sq)):
             for arg in src:
-                if isinstance(arg, seqs) and len(arg) == 2: kw[arg[0]] = arg[-1]
+                if isinstance(arg, sq) and len(arg) == 2: kw[arg[0]] = arg[-1]
         return kw
 
-    def _update(self, src={}, setit=dict.__setitem__, seqs=(tuple, dict, list)):
-        cls = self.__class__
+    def _saddle(self, src={}, setit=dict.__setitem__, sq=[tuple, dict, list]):
+        fromiter = self.__class__._fromiter
+        tsq = tuple(sq)
         for k, v in src.iteritems():
-            if isinstance(v, seqs):
-                trial = cls._fromiter(v, types=seqs)
+            if isinstance(v, tsq):
+                trial = fromiter(v, sq=sq)
                 if len(trial) > 0:
-                    setit(k, trial)
+                    setit(self, k, trial)
                 else:
-                    setit(k, v)
+                    setit(self, k, v)
             else:
-                setit(k, v)
+                setit(self, k, v)
+
+    def _update(self, *args, **kw):
+        return self._saddle(src=self._prep(*args, **kw))
 
     def copy(self):
         return self._fromiter(dict(i for i in self))
@@ -87,6 +91,7 @@ class _basestuf(object):
     _b_fromkw = _fromkw
     _b_prep = _prep
     _b_preprep = _preprep
+    _b_saddle = _saddle
     _b_todict = _todict
     _b_update = _update
     _b_copy = copy
@@ -101,15 +106,13 @@ class _openstuf(_basestuf, dict):
             raise AttributeError(k)
 
     def __setattr__(self, k, v):
-        try:
-            _ogettr(self, k)
-        except AttributeError:
+        if k == '_classkeys' or k in self._classkeys:
+            _osettr(self, k, v)
+        else:
             try:
-                super(_openstuf, self).__setitem__(k, v)
+                return super(_openstuf, self).__setitem__(k, v)
             except:
                 raise AttributeError(k)
-        else:
-            _osettr(self, k, v)
 
     def __delattr__(self, k):
         try:
@@ -122,16 +125,20 @@ class _openstuf(_basestuf, dict):
         else:
             object.__delattr__(self, k)
 
+    @lazy
+    def update(self):
+        return self._b_update
+
     _o_getattr = __getattr__
     _o_setattr = __setattr__
     _o_delattr = __delattr__
-    update = _openstuf._update
 
 
 class _defaultstuf(_openstuf):
 
     _factory = None
     _fargs = ()
+    _fkw = {}
 
     def __missing__(self, k):
         factory = self._factory
@@ -140,13 +147,16 @@ class _defaultstuf(_openstuf):
             return self[k]
         return None
 
+    @lazycls
+    def _p_fromiter(self):
+        return partial(self._b_fromiter, typ=dict, sq=[list, tuple])
+
     @classmethod
     def _fromiter(cls, factory=None, fargs=(), fkw={}, src=()):
-        oset = _osettr
-        if cls._factory is not None: oset(cls, '_factory', factory)
-        if cls._fargs is not None: oset(cls, '_fargs', fargs)
-        if cls._fkw is not None: oset(cls, '_fkw', fkw)
-        return cls._b_fromiter(src=cls._todict(src))
+        if cls._factory is not None: cls._factory = factory
+        if cls._fargs is not None: cls._fargs = fargs
+        if cls._fkw is not None: cls._fkw = fkw
+        return cls._p_fromiter(src=cls._todict(src=src))
 
     @classmethod
     def _fromkw(cls, factory=None, fargs=(), fkw={}, **kw):
@@ -207,15 +217,29 @@ class _orderedstuf(_openstuf):
             yield curr[2]
             curr = curr[0]
 
-    _todict = partial(
-        _orderedstuf._b_todict, typ=OrderedDict, maps=(OrderedDict,  dict),
-    )
+    @lazy
+    def _update(self):
+        return partial(
+            self._b_update,
+            setit=self.__setitem__,
+            seqs=(OrderedDict, tuple, dict, list)
+        )
 
-    def _preprep(self, *args, **kw):
+    @lazy
+    def update(self, *args, **kw):
+        return self._r_update
+
+    @lazycls
+    def _todict(self):
+        return partial(
+            self._b_todict, typ=OrderedDict, maps=[OrderedDict, dict],
+        )
+
+    def _preprep(self, arg):
         self._root = root = [None, None, None]
         root[0] = root[1] = root
         self._map = {}
-        return self._b_preprep(*args, **kw)
+        return arg
 
     def clear(self):
         try:
@@ -232,11 +256,7 @@ class _orderedstuf(_openstuf):
         v = self.pop(k)
         return k, v
 
-    update = _update = partial(
-        _orderedstuf._update,
-        setit=__setitem__,
-        seqs=(OrderedDict, tuple, dict, list)
-    )
+    _r_update = _update
 
 
 class _closedstuf(_basestuf):
@@ -262,25 +282,42 @@ class _closedstuf(_basestuf):
             if other[k] != v: return False
         return False
 
-    def __contains__(self, k):
-        return self._stuf.__contains__(k)
+    @lazy
+    def __contains__(self):
+        return self._stuf.__contains__
 
+    @lazy
     def __len__(self):
-        return self._stuf.__len__()
+        return self._stuf.__len__
 
+    @lazy
     def __reduce__(self):
-        return self._stuf.__reduce__()
+        return self._stuf.__reduce__
 
-    def _preprep(self, *args, **kw):
-        kw = self._b_prep(*args, **kw)
-        self._keys = frozenset(kw.keys())
+    @lazy
+    def _update(self):
+        return partial(self._b_update, setit=self._stuf.__setitem__)
+
+    @lazy
+    def get(self):
+        return self._stuf.get
+
+    @lazy
+    def iterkeys(self):
+        return self._stuf.iterkeys
+
+    @lazy
+    def keys(self):
+        return self._stuf.keys
+
+    @lazy
+    def setdefault(self):
+        return self._stuf.setdefault
+
+    def _preprep(self, arg):
+        self._keys = frozenset(arg.keys())
         self._stuf = dict()
-        return kw
-
-    _update = partial(_closedstuf._b_update, setit=_stuf.__setitem__)
-
-    def get(self, k, default=None):
-        return self._stuf.get(k, default)
+        return arg
 
     def items(self):
         return list(self.iteritems())
@@ -293,21 +330,12 @@ class _closedstuf(_basestuf):
             else:
                 yield v
 
-    def iterkeys(self):
-        return self._stuf.iterkeys()
-
     def itervalues(self):
         for v in self._stuf.itervalues():
             if isinstance(v, self.__class__):
                 yield dict(v.__iter__())
             else:
                 yield v
-
-    def keys(self):
-        return self._stuf.keys()
-
-    def setdefault(self, k, default):
-        return self._stuf.setdefault(k, default)
 
     def values(self):
         return list(self.itervalues())
@@ -332,8 +360,6 @@ class _closedstuf(_basestuf):
 
 class _fixedstuf(_closedstuf):
 
-    '''fixed stuf'''
-
     _keys = None
     _stuf = None
 
@@ -354,7 +380,9 @@ class _fixedstuf(_closedstuf):
         else:
             raise AttributeError(k)
 
-    update = _fixedstuf._c_update
+    @lazy
+    def update(self):
+        return self._c_update
 
 
 class _frozenstuf(_closedstuf):
@@ -368,8 +396,13 @@ class _frozenstuf(_closedstuf):
         else:
             raise TypeError(u'%s is immutable' % self.__class__.__name__)
 
-    __getitem__ = lru_wrapped(_frozenstuf._c_getitem, 100)
-    __getattr__ = lru_wrapped(_frozenstuf._c_getattr, 100)
+    @lazy
+    def __getitem__(self):
+        return lru_wrapped(self._c_getitem, 100)
+
+    @lazy
+    def __getattr__(self):
+        return lru_wrapped(self._c_getattr, 100)
 
 
 # stuf from keywords
