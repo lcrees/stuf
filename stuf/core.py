@@ -59,7 +59,7 @@ class _basestuf(object):
         maps = tuple(maps+[cls])
         sq = tuple(sq+[cls])
         if isinstance(src, tuple(maps)):
-            kw.update(src)
+            kw.update(typ(src))
         elif isinstance(src, tuple(sq)):
             for arg in src:
                 if isinstance(arg, sq) and len(arg) == 2: kw[arg[0]] = arg[-1]
@@ -101,7 +101,7 @@ class _openstuf(_basestuf, dict):
 
     def __getattr__(self, k):
         try:
-            return super(_openstuf, self).__getitem__(k)
+            return self.__getitem__(k)
         except KeyError:
             raise AttributeError(k)
 
@@ -110,20 +110,16 @@ class _openstuf(_basestuf, dict):
             _osettr(self, k, v)
         else:
             try:
-                return super(_openstuf, self).__setitem__(k, v)
+                return self.__setitem__(k, v)
             except:
                 raise AttributeError(k)
 
     def __delattr__(self, k):
-        try:
-            _ogettr(self, k)
-        except AttributeError:
+        if not k == '_classkeys' or k in self._classkeys:
             try:
-                super(_openstuf, self).__delitem__(k)
+                self.__delitem__(k)
             except KeyError:
                 raise AttributeError(k)
-        else:
-            object.__delattr__(self, k)
 
     @lazy
     def update(self):
@@ -218,6 +214,20 @@ class _orderedstuf(_openstuf):
             curr = curr[0]
 
     @lazy
+    def _saddle(self):
+        return partial(
+            self._b_saddle,
+            setit=_orderedstuf.__setitem__,
+            sq=[tuple, dict, list],
+        )
+
+    @lazycls
+    def _todict(self):
+        return partial(
+            self._b_todict, typ=OrderedDict, maps=[OrderedDict, dict],
+        )
+
+    @lazy
     def _update(self):
         return partial(
             self._b_update,
@@ -228,12 +238,6 @@ class _orderedstuf(_openstuf):
     @lazy
     def update(self, *args, **kw):
         return self._r_update
-
-    @lazycls
-    def _todict(self):
-        return partial(
-            self._b_todict, typ=OrderedDict, maps=[OrderedDict, dict],
-        )
 
     def _preprep(self, arg):
         self._root = root = [None, None, None]
