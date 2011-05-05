@@ -36,18 +36,18 @@ class _basestuf(object):
 
     @lazy
     def _classkeys(self):
-        return frozenset(self.__dict__.keys()+self.__class__.__dict__.keys())
+        return frozenset(vars(self).keys()+self.__class__.__dict__.keys())
 
     @classmethod
-    def _fromiter(cls, source=(), typ=dict, types=(list, tuple)):
-        return cls(cls._todict(source, type, types))
+    def _fromiter(cls, src=(), typ=dict, types=(list, tuple)):
+        return cls(cls._todict(src, type, types))
 
     @classmethod
-    def _fromkw(cls, source=(), typ=dict, types=(list, tuple), **kw):
+    def _fromkw(cls, typ=dict, types=(list, tuple), **kw):
         return cls._fromiter(kw, typ, types)
 
     def _prep(self, *args, **kw):
-        if args:  kw = self._todict(args)
+        if args: kw = self._todict(args)
         return kw
 
     def _preprep(self, *args, **kw):
@@ -56,8 +56,9 @@ class _basestuf(object):
     @classmethod
     def _todict(cls, src=(), typ=dict, maps=(cls, dict), seqs=(list, tuple)):
         kw = typ()
-        if len(src) > 1: raise TypeError(u'takes one argument')
-        if isinstance(src, ):
+        if len(src) > 1:
+            raise TypeError(u'takes one argument')
+        elif isinstance(src, maps):
             kw.update(src)
         elif isinstance(src, seqs):
             for arg in src:
