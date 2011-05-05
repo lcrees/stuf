@@ -26,7 +26,7 @@ from setuptools import setup
 
 setup(
     name='stuf',
-    version='0.1',
+    version='0.2',
     description='''stuf has attributes''',
     long_description='''miscellaneous dot accessible dictionaries''',
     author='L. C. Rees',
