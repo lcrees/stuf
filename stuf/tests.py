@@ -10,6 +10,11 @@ class TestStuf(unittest.TestCase):
         from stuf import stuf
         return stuf
 
+    @property
+    def _maketwo(self):
+        from stuf import istuf
+        return istuf
+
     def setUp(self):
         self.stuf = self._makeone(test1='test1', test2='test2', test3=dict(e=1))
 
@@ -75,7 +80,7 @@ class TestStuf(unittest.TestCase):
         self.assertIsNone(self.stuf.get('test3').get('r'))
 
     def test__cmp__(self):
-        tstuff = self._makeone(
+        tstuff = self._maketwo(
             (('test1', 'test1'), ('test2', 'test2'), ('test3', dict(e=1)))
         )
         self.assertEqual(self.stuf, tstuff)
@@ -140,7 +145,7 @@ class TestStuf(unittest.TestCase):
         tstuff['test2'] = 6
         tstuff['test3'] = dict(f=2)
         self.stuf.update(tstuff)
-        self.assertEqual(self.stuf['test1'], 3)
+        self.assertEqual(self.stuf['test1'], 3, self.stuf.items())
         self.assertEqual(self.stuf['test2'], 6)
         self.assertEqual(self.stuf['test3'], dict(f=2), self.stuf)
 
@@ -167,6 +172,11 @@ class TestDefaultStuf(unittest.TestCase):
     def _makeone(self):
         from stuf import defaultstuf
         return defaultstuf
+
+    @property
+    def _maketwo(self):
+        from stuf import idefaultstuf
+        return idefaultstuf
 
     def setUp(self):
         self.stuf = self._makeone(
@@ -244,10 +254,11 @@ class TestDefaultStuf(unittest.TestCase):
         self.assertIsNone(self.stuf.get('test3').get('r'))
 
     def test__cmp__(self):
-        tstuff = self._makeone(
+        tstuff = self._maketwo(
             list,
             (1, 2),
-            (('test1', 'test1'), ('test2', 'test2'), ('test3', dict(e=1)))
+            {},
+            src=(('test1', 'test1'), ('test2', 'test2'), ('test3', dict(e=1))),
         )
         self.assertEqual(self.stuf, tstuff)
 
@@ -347,6 +358,11 @@ class TestFixedStuf(unittest.TestCase):
         from stuf import fixedstuf
         return fixedstuf
 
+    @property
+    def _maketwo(self):
+        from stuf import ifixedstuf
+        return ifixedstuf
+
     def setUp(self):
         self.stuf = self._makeone(test1='test1', test2='test2', test3=dict(e=1))
 
@@ -396,7 +412,7 @@ class TestFixedStuf(unittest.TestCase):
         self.assertIsNone(self.stuf.get('test3').get('r'))
 
     def test__cmp__(self):
-        tstuff = self._makeone(
+        tstuff = self._maketwo(
             (('test1', 'test1'), ('test2', 'test2'), ('test3', dict(e=1)))
         )
         self.assertEqual(self.stuf, tstuff)
@@ -478,13 +494,17 @@ class TestFixedStuf(unittest.TestCase):
         self.assertTrue('test3' in slist2)
 
 
-
 class TestFrozenStuf(unittest.TestCase):
 
     @property
     def _makeone(self):
         from stuf import frozenstuf
         return frozenstuf
+
+    @property
+    def _maketwo(self):
+        from stuf import ifrozenstuf
+        return ifrozenstuf
 
     def setUp(self):
         self.stuf = self._makeone(test1='test1', test2='test2', test3=dict(e=1))
@@ -522,8 +542,12 @@ class TestFrozenStuf(unittest.TestCase):
         self.assertRaises(TypeError, lambda: delattr(self.stuf.test3.e))
 
     def test__delitem__(self):
-        self.assertRaises(AttributeError, lambda: self.stuf.__delitem__('test1'))
-        self.assertRaises(AttributeError, lambda: self.stuf.test3.__delitem__('test1'))
+        self.assertRaises(
+            AttributeError, lambda: self.stuf.__delitem__('test1'),
+        )
+        self.assertRaises(
+            AttributeError, lambda: self.stuf.test3.__delitem__('test1'),
+        )
 
     def test_get(self):
         self.assertEqual(self.stuf.get('test1'), 'test1')
@@ -533,7 +557,7 @@ class TestFrozenStuf(unittest.TestCase):
         self.assertIsNone(self.stuf.get('test3').get('r'))
 
     def test__cmp__(self):
-        tstuff = self._makeone(
+        tstuff = self._maketwo(
             (('test1', 'test1'), ('test2', 'test2'), ('test3', dict(e=1)))
         )
         self.assertEqual(self.stuf, tstuff)
@@ -590,7 +614,9 @@ class TestFrozenStuf(unittest.TestCase):
 
     def test_update(self):
         tstuff = self._makeone(test1='test1', test2='test2', test3=dict(e=1))
-        self.assertRaises(AttributeError, lambda: self.stuf.test3.update(tstuff))
+        self.assertRaises(
+            AttributeError, lambda: self.stuf.test3.update(tstuff),
+        )
         self.assertRaises(AttributeError, lambda: self.stuf.update(tstuff))
 
     def test_values(self):
@@ -616,6 +642,11 @@ class TestOrderedStuf(unittest.TestCase):
     def _makeone(self):
         from stuf import orderedstuf
         return orderedstuf
+
+    @property
+    def _maketwo(self):
+        from stuf import iorderedstuf
+        return iorderedstuf
 
     def setUp(self):
         self.stuf = self._makeone(test1='test1', test2='test2', test3=dict(e=1))
@@ -682,7 +713,7 @@ class TestOrderedStuf(unittest.TestCase):
         self.assertIsNone(self.stuf.get('test3').get('r'))
 
     def test__cmp__(self):
-        tstuff = self._makeone(
+        tstuff = self._maketwo(
             (('test1', 'test1'), ('test2', 'test2'), ('test3', dict(e=1)))
         )
         self.assertEqual(self.stuf, tstuff)
