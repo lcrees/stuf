@@ -254,10 +254,11 @@ class TestDefaultStuf(unittest.TestCase):
         self.assertIsNone(self.stuf.get('test3').get('r'))
 
     def test__cmp__(self):
-        tstuff = self._makeone(
+        tstuff = self._maketwo(
             list,
             (1, 2),
-            (('test1', 'test1'), ('test2', 'test2'), ('test3', dict(e=1)))
+            {},
+            src=(('test1', 'test1'), ('test2', 'test2'), ('test3', dict(e=1))),
         )
         self.assertEqual(self.stuf, tstuff)
 

@@ -1,8 +1,8 @@
 '''core stuf of stuf'''
 
+from operator import eq
+from itertools import imap
 from functools import partial
-from operator import eq as _eq
-from itertools import imap as _imap
 
 from stuf.util import OrderedDict, lazy, lru_wrapped, recursive_repr, lazycls
 
@@ -63,19 +63,19 @@ class _basestuf(object):
         maps = tuple(maps+[cls])
         sq = tuple(sq+[cls])
         if isinstance(src, tuple(maps)):
-            kw.update(typ(src))
+            kw.update(typ(i for i in src.iteritems()))
         elif isinstance(src, tuple(sq)):
             for arg in src:
                 if isinstance(arg, sq) and len(arg) == 2: kw[arg[0]] = arg[-1]
         return kw
 
     def _saddle(self, src={}, sq=[tuple, dict, list]):
-        fromiter = self.__class__._fromiter
+        fromiter = self._fromiter
         setit = self._setit
         tsq = tuple(sq)
         for k, v in src.iteritems():
             if isinstance(v, tsq):
-                trial = fromiter(v, sq=sq)
+                trial = fromiter(src=v, sq=sq)
                 if len(trial) > 0:
                     setit(k, trial)
                 else:
@@ -89,8 +89,10 @@ class _basestuf(object):
     def copy(self):
         return self._fromiter(dict(i for i in self))
 
+    # inheritance protection
     _b_iter = __iter__
     _b_repr = __repr__
+    _b_reduce = __reduce__
     _b_classkeys = _classkeys
     _b_copy = copy
     _b_fromiter = _fromiter
@@ -131,9 +133,11 @@ class _openstuf(_basestuf, dict):
     def update(self):
         return self._b_update
 
+    # inheritance protection
     _o_getattr = __getattr__
     _o_setattr = __setattr__
     _o_delattr = __delattr__
+    _o_update = update
 
 
 class _defaultstuf(_openstuf):
@@ -149,24 +153,36 @@ class _defaultstuf(_openstuf):
             return self[k]
         return None
 
-    @lazycls
-    def _p_fromiter(self):
-        return partial(self._b_fromiter, typ=dict, sq=[list, tuple])
-
     @classmethod
-    def _fromiter(cls, factory=None, fargs=(), fkw={}, src=()):
-        if cls._factory is not None: cls._factory = factory
-        if cls._fargs is not None: cls._fargs = fargs
-        if cls._fkw is not None: cls._fkw = fkw
-        return cls._p_fromiter(src=cls._todict(src=src))
+    def _fromiter(cls, factory=None, fargs=(), fkw={}, src=(), sq=[list, tuple]):
+        src = cls._todict(src=src)
+        src.update(fargs=fargs, factory=factory, fkw=fkw)
+        return cls(src)
 
     @classmethod
     def _fromkw(cls, factory=None, fargs=(), fkw={}, **kw):
         return cls._d_fromiter(factory, fargs, fkw, kw)
 
+    def _preprep(self, arg):
+        factory = arg.pop('factory')
+        fargs = arg.pop('fargs')
+        fkw = arg.pop('fkw')
+        self._factory = factory
+        self._fargs = fargs
+        self._fkw = fkw
+        self._fromiter = partial(
+            self._d_fromiter,
+            factory=factory,
+            fargs=fargs,
+            fkw=fkw,
+        )
+        return arg
+
+    # inheritance protection
     _d_missing = __missing__
     _d_fromiter = _fromiter
     _d_fromkw = _fromkw
+    _d_preprep = _preprep
 
 
 class _orderedstuf(_openstuf):
@@ -192,7 +208,7 @@ class _orderedstuf(_openstuf):
     def __eq__(self, other):
         if isinstance(other, _orderedstuf):
             return len(self)==len(other) and all(
-                _imap(_eq, self.iteritems(), other.iteritems())
+                imap(eq, self.iteritems(), other.iteritems())
             )
         return super(_orderedstuf, self).__eq__(other)
 
@@ -200,7 +216,11 @@ class _orderedstuf(_openstuf):
         root = self._root
         curr = root[1]
         while curr is not root:
-            yield curr[2]
+            cr = curr[2]
+            if isinstance(cr, self.__class__):
+                yield cr, tuple(i for i in self[cr])
+            else:
+                yield cr, self[cr]
             curr = curr[1]
 
     def __reduce__(self):
@@ -221,23 +241,17 @@ class _orderedstuf(_openstuf):
 
     @lazy
     def _saddle(self):
-        return partial(
-            self._b_saddle,
-            sq=[tuple, dict, list],
-        )
+        return partial(self._b_saddle, sq=[tuple, dict, list])
 
     @lazycls
     def _todict(self):
         return partial(
-            self._b_todict, typ=OrderedDict, maps=[OrderedDict, dict],
+            self._b_todict, typ=OrderedDict, maps=[dict],
         )
 
     @lazy
     def _update(self):
-        return partial(
-            self._b_update,
-            seqs=(OrderedDict, tuple, dict, list),
-        )
+        return partial(self._b_update, seqs=(OrderedDict, tuple, dict, list))
 
     def _preprep(self, arg):
         self._root = root = [None, None, None]
@@ -260,6 +274,17 @@ class _orderedstuf(_openstuf):
         v = self.pop(k)
         return k, v
 
+    _r_setitem = __setitem__
+    _r_delitem = __delitem__
+    _r_eq = __eq__
+    _r_iter = __iter__
+    _r_reduce = __reduce__
+    _r_reversed = __reversed__
+    _r_clear = clear
+    _r_popitem = popitem
+    _r_preprep = _preprep
+    _r_saddle = _saddle
+    _r_todict = _todict
     _r_update = update = _update
 
 
@@ -388,6 +413,10 @@ class _fixedstuf(_closedstuf):
     def update(self):
         return self._c_update
 
+    _fs1_setattr = __setattr__
+    _fs1_setitem = __setitem__
+    _fs1_update = update
+
 
 class _frozenstuf(_closedstuf):
 
@@ -411,6 +440,11 @@ class _frozenstuf(_closedstuf):
     @lazy
     def _setit(self):
         return self._stuf.__setitem__
+
+    _fs2_setattr = __setattr__
+    _fs2_getitem = __getitem__
+    _fs2_getattr = __getattr__
+    _fs2_setit = _setit
 
 
 # stuf from keywords
