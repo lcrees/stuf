@@ -38,6 +38,10 @@ class _basestuf(object):
     def _classkeys(self):
         return frozenset(vars(self).keys()+self.__class__.__dict__.keys())
 
+    @lazy
+    def _setit(self):
+        return self.__setitem__
+
     @classmethod
     def _fromiter(cls, src=(), typ=dict, sq=[list, tuple]):
         return cls(cls._todict(src=src, typ=typ, sq=sq))
@@ -65,18 +69,19 @@ class _basestuf(object):
                 if isinstance(arg, sq) and len(arg) == 2: kw[arg[0]] = arg[-1]
         return kw
 
-    def _saddle(self, src={}, setit=dict.__setitem__, sq=[tuple, dict, list]):
+    def _saddle(self, src={}, sq=[tuple, dict, list]):
         fromiter = self.__class__._fromiter
+        setit = self._setit
         tsq = tuple(sq)
         for k, v in src.iteritems():
             if isinstance(v, tsq):
                 trial = fromiter(v, sq=sq)
                 if len(trial) > 0:
-                    setit(self, k, trial)
+                    setit(k, trial)
                 else:
-                    setit(self, k, v)
+                    setit(k, v)
             else:
-                setit(self, k, v)
+                setit(k, v)
 
     def _update(self, *args, **kw):
         return self._saddle(src=self._prep(*args, **kw))
@@ -87,14 +92,15 @@ class _basestuf(object):
     _b_iter = __iter__
     _b_repr = __repr__
     _b_classkeys = _classkeys
+    _b_copy = copy
     _b_fromiter = _fromiter
     _b_fromkw = _fromkw
     _b_prep = _prep
     _b_preprep = _preprep
     _b_saddle = _saddle
+    _b_setit = _setit
     _b_todict = _todict
     _b_update = _update
-    _b_copy = copy
 
 
 class _openstuf(_basestuf, dict):
@@ -217,7 +223,6 @@ class _orderedstuf(_openstuf):
     def _saddle(self):
         return partial(
             self._b_saddle,
-            setit=_orderedstuf.__setitem__,
             sq=[tuple, dict, list],
         )
 
@@ -231,13 +236,8 @@ class _orderedstuf(_openstuf):
     def _update(self):
         return partial(
             self._b_update,
-            setit=self.__setitem__,
-            seqs=(OrderedDict, tuple, dict, list)
+            seqs=(OrderedDict, tuple, dict, list),
         )
-
-    @lazy
-    def update(self, *args, **kw):
-        return self._r_update
 
     def _preprep(self, arg):
         self._root = root = [None, None, None]
@@ -260,7 +260,7 @@ class _orderedstuf(_openstuf):
         v = self.pop(k)
         return k, v
 
-    _r_update = _update
+    _r_update = update = _update
 
 
 class _closedstuf(_basestuf):
@@ -300,7 +300,7 @@ class _closedstuf(_basestuf):
 
     @lazy
     def _update(self):
-        return partial(self._b_update, setit=self._stuf.__setitem__)
+        return self._b_update
 
     @lazy
     def get(self):
@@ -407,6 +407,10 @@ class _frozenstuf(_closedstuf):
     @lazy
     def __getattr__(self):
         return lru_wrapped(self._c_getattr, 100)
+
+    @lazy
+    def _setit(self):
+        return self._stuf.__setitem__
 
 
 # stuf from keywords

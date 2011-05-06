@@ -91,7 +91,7 @@ class lazy(object):
         if instance is None: return self
         meth = self.method
         value = meth(instance)
-        setattr(instance, meth.__name__, value)
+        object.__setattr__(instance, meth.__name__, value)
         return value
 
 
