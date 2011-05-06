@@ -1,1 +1,4 @@
-from stuf.core import  stuf, defaultstuf, orderedstuf, fixedstuf, frozenstuf
+from stuf.core import (
+    stuf, istuf, defaultstuf, idefaultstuf, iorderedstuf, orderedstuf,
+    fixedstuf, ifixedstuf, frozenstuf, ifrozenstuf,
+)
