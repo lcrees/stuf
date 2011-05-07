@@ -24,9 +24,9 @@ class _basestuf(object):
                 yield (k, v)
 
     def __reduce__(self):
-        items = list([k, self[k]] for k in self)
-        inst_dict = vars(self).copy()
-        if inst_dict: return (self.__class__, (items,), inst_dict)
+        items = list(k for k in self)
+#        inst_dict = vars(self).copy()
+#        if inst_dict: return (self.__class__, (items,), inst_dict)
         return self.__class__, (items,)
 
     @recursive_repr
@@ -154,7 +154,9 @@ class _defaultstuf(_openstuf):
         return None
 
     @classmethod
-    def _fromiter(cls, factory=None, fargs=(), fkw={}, src=(), sq=[list, tuple]):
+    def _fromiter(
+        cls, factory=None, fargs=(), fkw={}, src=(), sq=[list, tuple],
+    ):
         src = cls._todict(src=src)
         src.update(fargs=fargs, factory=factory, fkw=fkw)
         return cls(src)
@@ -224,7 +226,7 @@ class _orderedstuf(_openstuf):
             curr = curr[1]
 
     def __reduce__(self):
-        items = list([k, self[k]] for k in self)
+        items = list(i for i in self)
         tmp = self._map, self._root
         del self._map, self._root
         inst_dict = vars(self).copy()
@@ -274,6 +276,7 @@ class _orderedstuf(_openstuf):
         v = self.pop(k)
         return k, v
 
+    # inheritance protection
     _r_setitem = __setitem__
     _r_delitem = __delitem__
     _r_eq = __eq__
@@ -355,7 +358,7 @@ class _closedstuf(_basestuf):
         cls = self.__class__
         for v in self._stuf.iteritems():
             if isinstance(v, cls):
-                yield list(v.__iter__())
+                yield list(i for i in v.__iter__())
             else:
                 yield v
 
@@ -369,6 +372,7 @@ class _closedstuf(_basestuf):
     def values(self):
         return list(self.itervalues())
 
+    # inheritance protection
     _c_getitem = __getitem__
     _c_getattr = __getattr__
     _c_delattr = __delattr__
@@ -413,6 +417,7 @@ class _fixedstuf(_closedstuf):
     def update(self):
         return self._c_update
 
+    # inheritance protection
     _fs1_setattr = __setattr__
     _fs1_setitem = __setitem__
     _fs1_update = update
@@ -441,6 +446,7 @@ class _frozenstuf(_closedstuf):
     def _setit(self):
         return self._stuf.__setitem__
 
+    # inheritance protection
     _fs2_setattr = __setattr__
     _fs2_getitem = __getitem__
     _fs2_getattr = __getattr__

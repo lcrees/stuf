@@ -165,6 +165,18 @@ class TestStuf(unittest.TestCase):
         self.assertTrue('test2' in slist2)
         self.assertTrue('test3' in slist2)
 
+    def test_pickle(self):
+        import pickle
+        tstuf = self._makeone(test1='test1', test2='test2', test3=dict(e=1))
+        pkle = pickle.dumps(tstuf)
+        nstuf = pickle.loads(pkle)
+        self.assertEquals(tstuf, nstuf)
+
+    def test_copy(self):
+        tstuf = self._makeone(test1='test1', test2='test2', test3=dict(e=1))
+        nstuf = tstuf.copy()
+        self.assertEquals(tstuf, nstuf)
+
 
 class TestDefaultStuf(unittest.TestCase):
 
@@ -350,6 +362,22 @@ class TestDefaultStuf(unittest.TestCase):
         self.assertTrue('test2' in slist2)
         self.assertTrue('test3' in slist2)
 
+    def test_pickle(self):
+        import pickle
+        tstuf = self._makeone(
+            list, ([1, 2],), test1='test1', test2='test2', test3=dict(e=1)
+        )
+        pkle = pickle.dumps(tstuf)
+        nstuf = pickle.loads(pkle)
+        self.assertEquals(tstuf, nstuf)
+
+    def test_copy(self):
+        tstuf = self._makeone(
+            list, ([1, 2],), test1='test1', test2='test2', test3=dict(e=1)
+        )
+        nstuf = tstuf.copy()
+        self.assertEquals(tstuf, nstuf)
+
 
 class TestFixedStuf(unittest.TestCase):
 
@@ -493,6 +521,18 @@ class TestFixedStuf(unittest.TestCase):
         self.assertTrue('test2' in slist2)
         self.assertTrue('test3' in slist2)
 
+    def test_copy(self):
+        tstuf = self._makeone(test1='test1', test2='test2', test3=dict(e=1))
+        nstuf = tstuf.copy()
+        self.assertEquals(tstuf, nstuf)
+
+    def test_pickle(self):
+        import pickle
+        tstuf = self._makeone(test1='test1', test2='test2', test3=dict(e=1))
+        pkle = pickle.dumps(tstuf)
+        nstuf = pickle.loads(pkle)
+        self.assertEquals(tstuf, nstuf)
+
 
 class TestFrozenStuf(unittest.TestCase):
 
@@ -634,6 +674,18 @@ class TestFrozenStuf(unittest.TestCase):
         self.assertTrue('test1' in slist2)
         self.assertTrue('test2' in slist2)
         self.assertTrue('test3' in slist2)
+
+    def test_copy(self):
+        tstuf = self._makeone(test1='test1', test2='test2', test3=dict(e=1))
+        nstuf = tstuf.copy()
+        self.assertEquals(tstuf, nstuf)
+
+    def test_pickle(self):
+        import pickle
+        tstuf = self._makeone(test1='test1', test2='test2', test3=dict(e=1))
+        pkle = pickle.dumps(tstuf)
+        nstuf = pickle.loads(pkle)
+        self.assertEquals(tstuf, nstuf)
 
 
 class TestOrderedStuf(unittest.TestCase):
@@ -798,5 +850,16 @@ class TestOrderedStuf(unittest.TestCase):
         self.assertTrue('test2' in slist2)
         self.assertTrue('test3' in slist2)
 
+    def test_copy(self):
+        tstuf = self._makeone(test1='test1', test2='test2', test3=dict(e=1))
+        nstuf = tstuf.copy()
+        self.assertEquals(tstuf, nstuf)
+
+    def test_pickle(self):
+        import pickle
+        tstuf = self._makeone(test1='test1', test2='test2', test3=dict(e=1))
+        pkle = pickle.dumps(tstuf)
+        nstuf = pickle.loads(pkle)
+        self.assertEquals(tstuf, nstuf)
 
 if __name__ == '__main__': unittest.main()

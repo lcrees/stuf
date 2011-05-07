@@ -1,12 +1,12 @@
 from functools import wraps
 try:
-    from collections import OrderedDict
-except ImportError:
-    from stuf.compat import OrderedDict
-try:
     from thread import get_ident
 except ImportError:
     from dummy_thread import get_ident
+try:
+    from collections import OrderedDict
+except ImportError:
+    from stuf.compat import OrderedDict
 
 def lru_cache(maxsize=100):
     '''Least-recently-used cache decorator.
