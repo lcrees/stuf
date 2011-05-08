@@ -26,7 +26,7 @@ from setuptools import setup
 
 setup(
     name='stuf',
-    version='0.2',
+    version='0.3',
     description='''stuf has attributes''',
     long_description='''miscellaneous dot accessible dictionaries''',
     author='L. C. Rees',
@@ -38,7 +38,7 @@ setup(
     zip_safe = False,
     keywords='dict attribute collection mapping',
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Intended Audience :: Developers',
