@@ -21,7 +21,7 @@ class _BaseStuf(object):
         cls = self.__class__
         for k, v in self.iteritems():
             if isinstance(v, cls):
-                yield (k, tuple(i for i in v))
+                yield (k, dict(i for i in v))
             else:
                 yield (k, v)
 
@@ -29,7 +29,7 @@ class _BaseStuf(object):
         return dict(i for i in self)
 
     def __setstate__(self, state):
-        return self._b_fromiter(state)
+        return self._fromiter(state)
 
     @recursive_repr
     def __repr__(self):
@@ -232,7 +232,7 @@ class OrderedStuf(Stuf):
             root = self._root
             last = root[0]
             last[1] = root[0] = self._map[k] = [last, root, k]
-        super(OrderedStuf, self).__setitem__(k, v)
+        super(self.__class__, self).__setitem__(k, v)
 
     def __delitem__(self, k):
         super(OrderedStuf, self).__delitem__(k)
@@ -249,11 +249,11 @@ class OrderedStuf(Stuf):
         return self._b_fromiter(state)
 
     def __eq__(self, other):
-        if isinstance(other, OrderedStuf):
+        if isinstance(other, self.__class__):
             return len(self)==len(other) and all(
                 imap(eq, self.iteritems(), other.iteritems())
             )
-        return super(OrderedStuf, self).__eq__(other)
+        return super(self.__class__, self).__eq__(other)
 
     def __iter__(self):
         root = self._root
@@ -299,7 +299,7 @@ class OrderedStuf(Stuf):
             self._map.clear()
         except AttributeError:
             pass
-        super(OrderedStuf, self).clear()
+        super(self.__class__, self).clear()
 
     def copy(self):
         return self._b_fromiter(list(i for i in self))
@@ -366,14 +366,15 @@ class _ClosedStuf(_BaseStuf):
     def __delattr__(self, k):
         raise TypeError(u'%ss are immutable' % self.__class__.__name__)
 
-    def __getstate__(self):
-        return self._stuf.copy()
-
-    def __cmp__(self, other):
-        if len(self) == len(other):
-            for k, v in self.iteritems():
-                if other[k] != v: return False
-            return True
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return len(self)==len(other) and all(
+                imap(eq, iter(self), iter(other))
+            )
+        elif isinstance(other, dict):
+            return len(self)==len(other) and all(
+                imap(eq, self.iteritems(), other.iteritems())
+            )
         return False
 
     @lazy
@@ -383,6 +384,10 @@ class _ClosedStuf(_BaseStuf):
     @lazy
     def __len__(self):
         return self._stuf.__len__
+
+    @lazy
+    def _stuf(self):
+        return {}
 
     @lazy
     def _update(self):
@@ -422,11 +427,10 @@ class _ClosedStuf(_BaseStuf):
 
     def _preprep(self, arg):
         self._keys = frozenset(arg.keys())
-        self._stuf = dict()
         return arg
 
     # inheritance protection
-    _c_cmp = __cmp__
+    _c_eq = __eq__
     _c_contains = __contains__
     _c_delattr = __delattr__
     _c_get = get
@@ -439,6 +443,7 @@ class _ClosedStuf(_BaseStuf):
     _c_keys = keys
     _c_prep = _preprep
     _c_setdefault = setdefault
+    _c_stuf = _stuf
     _c_update = _update
     _c_values = values
 
@@ -448,7 +453,6 @@ class FixedStuf(_ClosedStuf):
     '''dict with dot attributes and mutability restricted to initial keys'''
 
     _keys = None
-    _stuf = None
 
     def __setitem__(self, k, v):
         if k in self._keys:
@@ -482,7 +486,6 @@ class FrozenStuf(_ClosedStuf):
     '''Immutable dict with dot attributes'''
 
     _keys = None
-    _stuf = None
 
     def __setattr__(self, k, v):
         if k == '_classkeys' or k in self._classkeys:
