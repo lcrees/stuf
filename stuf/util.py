@@ -8,34 +8,6 @@ try:
 except ImportError:
     from stuf.compat import OrderedDict
 
-def lru_cache(maxsize=100):
-    '''Least-recently-used cache decorator.
-
-    From Raymond Hettinger
-
-    Arguments to the cached function must be hashable.
-
-    @param maxsize: maximum number of results in LRU cache
-    '''
-    def wrapped(func):
-        # order: least recent to most recent
-        cache = OrderedDict()
-        @wraps(func)
-        def wrapper(*args, **kw):
-            key = args
-            if kw: key += tuple(sorted(kw.items()))
-            try:
-                result = cache.pop(key)
-            except KeyError:
-                result = func(*args, **kw)
-                # purge least recently used cache entry
-                if len(cache) >= maxsize: cache.popitem(0)
-            # record recent use of this key
-            cache[key] = result
-            return result
-        return wrapper
-    return wrapped
-
 def lru_wrapped(func, maxsize=100):
     # order: least recent to most recent
     cache = OrderedDict()
