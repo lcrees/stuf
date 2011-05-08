@@ -29,7 +29,7 @@ class _BaseStuf(object):
         return dict(i for i in self)
 
     def __setstate__(self, state):
-        return self._fromiter(state)
+        return self._fromiter(src=state)
 
     @recursive_repr
     def __repr__(self):
@@ -38,7 +38,11 @@ class _BaseStuf(object):
 
     @lazy
     def _classkeys(self):
-        return frozenset(vars(self).keys()+self.__class__.__dict__.keys())
+        return frozenset(
+            vars(self).keys()+self.__class__.__dict__.keys()+[
+                '_keys', '_factory', '_fargs', '_fkw', '_root', '_map',
+            ]
+        )
 
     @lazy
     def _setit(self):
@@ -107,7 +111,7 @@ class _BaseStuf(object):
     _b_update = _update
 
 
-class Stuf(_BaseStuf, dict):
+class IStuf(_BaseStuf, dict):
 
     '''dict with dot attributes'''
 
@@ -144,13 +148,17 @@ class Stuf(_BaseStuf, dict):
     _o_update = update
 
 
-class DefaultStuf(Stuf):
+class Stuf(IStuf):
+
+    '''IStuf taking keyword arguments'''
+
+    def __init__(self, **kw):
+        self._saddle(src=self._preprep(kw))
+
+
+class IDefaultStuf(IStuf):
 
     '''dict with dot attributes and a default function'''
-
-    _factory = None
-    _fargs = ()
-    _fkw = {}
 
     def __getstate__(self):
         return dict(
@@ -220,12 +228,17 @@ class DefaultStuf(Stuf):
     _d_setstate = __setstate__
 
 
-class OrderedStuf(Stuf):
+class DefaultStuf(IDefaultStuf):
+
+    '''IDefaultStuf taking keyword arguments'''
+
+    def __init__(self, **kw):
+        self._saddle(src=self._preprep(kw))
+
+
+class IOrderedStuf(IStuf):
 
     '''dict with dot attributes that remembers insertion order'''
-
-    _root = None
-    _map = None
 
     def __setitem__(self, k, v):
         if k not in self:
@@ -235,7 +248,7 @@ class OrderedStuf(Stuf):
         super(self.__class__, self).__setitem__(k, v)
 
     def __delitem__(self, k):
-        super(OrderedStuf, self).__delitem__(k)
+        super(IOrderedStuf, self).__delitem__(k)
         link = self._map.pop(k)
         link_prev = link[0]
         link_next = link[1]
@@ -245,8 +258,8 @@ class OrderedStuf(Stuf):
     def __getstate__(self):
         return tuple(i for i in self)
 
-    def __setstate__(self, state):
-        return self._b_fromiter(state)
+    def __reduce__(self):
+        return _pickleorderedstuf, (tuple(i for i in self),)
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
@@ -340,12 +353,21 @@ class OrderedStuf(Stuf):
     _r_keys = keys
     _r_popitem = popitem
     _r_preprep = _preprep
+    _r_reduce = __reduce__
     _r_reversed = __reversed__
     _r_saddle = _saddle
     _r_setitem = __setitem__
     _r_todict = _todict
     _r_update = update = _update
     _r_values = values
+
+
+class OrderedStuf(IOrderedStuf):
+
+    '''IOrderedStuf taking keyword arguments'''
+
+    def __init__(self, **kw):
+        self._saddle(src=self._preprep(kw))
 
 
 class _ClosedStuf(_BaseStuf):
@@ -448,11 +470,9 @@ class _ClosedStuf(_BaseStuf):
     _c_values = values
 
 
-class FixedStuf(_ClosedStuf):
+class IFixedStuf(_ClosedStuf):
 
     '''dict with dot attributes and mutability restricted to initial keys'''
-
-    _keys = None
 
     def __setitem__(self, k, v):
         if k in self._keys:
@@ -471,27 +491,40 @@ class FixedStuf(_ClosedStuf):
         else:
             raise AttributeError(k)
 
+    def __reduce__(self):
+        return _picklefixedstuf, (dict(i for i in self),)
+
     @lazy
     def update(self):
         return self._c_update
 
     # inheritance protection
+    _fs1_reduce = __reduce__
     _fs1_setattr = __setattr__
     _fs1_setitem = __setitem__
     _fs1_update = update
 
 
-class FrozenStuf(_ClosedStuf):
+class FixedStuf(IFixedStuf):
+
+    '''IFixedStuf taking keyword arguments'''
+
+    def __init__(self, **kw):
+        self._saddle(src=self._preprep(kw))
+
+
+class IFrozenStuf(_ClosedStuf):
 
     '''Immutable dict with dot attributes'''
-
-    _keys = None
 
     def __setattr__(self, k, v):
         if k == '_classkeys' or k in self._classkeys:
             _osettr(self, k, v)
         else:
             raise TypeError(u'%s is immutable' % self.__class__.__name__)
+
+    def __reduce__(self):
+        return _picklefrozenstuf, (dict(i for i in self),)
 
     @lazy
     def __getitem__(self):
@@ -508,19 +541,38 @@ class FrozenStuf(_ClosedStuf):
     # inheritance protection
     _fs2_getitem = __getitem__
     _fs2_getattr = __getattr__
+    _fs2_reduce = __reduce__
     _fs2_setattr = __setattr__
     _fs2_setit = _setit
 
 
+class FrozenStuf(IFrozenStuf):
+
+    '''IFixedStuf taking keyword arguments'''
+
+    def __init__(self, **kw):
+        self._saddle(src=self._preprep(kw))
+
+
 # factories for stuf from keywords
-stuf = Stuf._fromkw
-defaultstuf = DefaultStuf._fromkw
-orderedstuf = OrderedStuf._fromkw
-fixedstuf = FixedStuf._fromkw
-frozenstuf = FrozenStuf._fromkw
+stuf = IStuf._fromkw
+defaultstuf = IDefaultStuf._fromkw
+orderedstuf = IOrderedStuf._fromkw
+fixedstuf = IFixedStuf._fromkw
+frozenstuf = IFrozenStuf._fromkw
 # factories for stuf from iterables
-istuf = Stuf._fromiter
-iorderedstuf = OrderedStuf._fromiter
-ifixedstuf = FixedStuf._fromiter
-idefaultstuf = DefaultStuf._fromiter
-ifrozenstuf = FrozenStuf._fromiter
+istuf = IStuf._fromiter
+iorderedstuf = IOrderedStuf._fromiter
+ifixedstuf = IFixedStuf._fromiter
+idefaultstuf = IDefaultStuf._fromiter
+ifrozenstuf = IFrozenStuf._fromiter
+
+# pickle helpers
+def _pickleorderedstuf(it):
+    return iorderedstuf(it)
+
+def _picklefixedstuf(it):
+    return ifixedstuf(it)
+
+def _picklefrozenstuf(it):
+    return ifrozenstuf(it)
