@@ -6,7 +6,7 @@ except ImportError:
 try:
     from collections import OrderedDict
 except ImportError:
-    from stuf.compat import OrderedDict
+    from ordereddict import OrderedDict
 
 def lru_wrapped(func, maxsize=100):
     # order: least recent to most recent
