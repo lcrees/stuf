@@ -26,7 +26,7 @@ from setuptools import setup
 
 setup(
     name='stuf',
-    version='0.3',
+    version='0.4',
     description='''stuf has attributes''',
     long_description='''miscellaneous dot accessible dictionaries''',
     author='L. C. Rees',
@@ -37,6 +37,7 @@ setup(
     test_suite='stuf.test',
     zip_safe = False,
     keywords='dict attribute collection mapping',
+    required=['ordereddict'],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Programming Language :: Python :: 2.6',
