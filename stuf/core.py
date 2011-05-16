@@ -126,7 +126,7 @@ class IStuf(_BaseStuf, dict):
             _osettr(self, k, v)
         else:
             try:
-                return self.__setitem__(k, v)
+                self.__setitem__(k, v)
             except:
                 raise AttributeError(k)
 
