@@ -1,4 +1,5 @@
 from functools import wraps
+
 try:
     from thread import get_ident
 except ImportError:
