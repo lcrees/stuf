@@ -29,9 +29,9 @@ except ImportError:
 
 setup(
     name='stuf',
-    version='0.4',
+    version='0.5',
     description='''stuf has attributes''',
-    long_description='''miscellaneous dot accessible dictionaries''',
+    long_description='''collection of miscellaneous dot accessible dictionaries''',
     author='L. C. Rees',
     url='https://bitbucket.org/lcrees/stuf/',
     author_email='lcrees@gmail.com',
@@ -39,8 +39,8 @@ setup(
     packages = ['stuf'],
     test_suite='stuf.test',
     zip_safe = False,
-    keywords='dict attribute collection mapping',
-    required=['ordereddict'],
+    keywords='dict attribute collection mapping dot accessible',
+    install_requires=['ordereddict'],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Programming Language :: Python :: 2.6',
