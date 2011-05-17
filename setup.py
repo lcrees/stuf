@@ -31,7 +31,9 @@ setup(
     name='stuf',
     version='0.5',
     description='''stuf has attributes''',
-    long_description='''collection of miscellaneous dot accessible dictionaries''',
+    long_description='Collection of dictionaries that can be accessed using '
+    'dot notation like JavaScript objects. Includes defaultdict and '
+    'OrderedDict equivalents plus restricted and immutable dictionary types',
     author='L. C. Rees',
     url='https://bitbucket.org/lcrees/stuf/',
     author_email='lcrees@gmail.com',
