@@ -41,7 +41,7 @@ setup(
     packages = ['stuf'],
     test_suite='stuf.test',
     zip_safe = False,
-    keywords='dict attribute collection mapping dot accessible',
+    keywords='dict attribute collection mapping dot notation access',
     install_requires=['ordereddict'],
     classifiers=[
         'Development Status :: 4 - Beta',
