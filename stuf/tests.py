@@ -1,6 +1,6 @@
 '''test stuf'''
 
-import unittest
+import unittest2 as unittest
 
 
 class TestStuf(unittest.TestCase):
@@ -52,9 +52,9 @@ class TestStuf(unittest.TestCase):
         del self.stuf.test1
         del self.stuf.test2
         del self.stuf.test3.e
-        self.assertTrue(len(self.stuf.test3)==0)
+        self.assertTrue(len(self.stuf.test3) == 0)
         del self.stuf.test3
-        self.assertTrue(len(self.stuf)==0)
+        self.assertTrue(len(self.stuf) == 0)
         self.assertRaises(AttributeError, lambda: self.stuf.test1)
         self.assertRaises(AttributeError, lambda: self.stuf.test2)
         self.assertRaises(AttributeError, lambda: self.stuf.test3)
@@ -65,9 +65,9 @@ class TestStuf(unittest.TestCase):
         del self.stuf['test2']
         del self.stuf['test3']['e']
         self.assertFalse('e' in self.stuf['test3'])
-        self.assertTrue(len(self.stuf['test3'])==0)
+        self.assertTrue(len(self.stuf['test3']) == 0)
         del self.stuf['test3']
-        self.assertTrue(len(self.stuf)==0)
+        self.assertTrue(len(self.stuf) == 0)
         self.assertFalse('test1' in self.stuf)
         self.assertFalse('test2' in self.stuf)
         self.assertFalse('test3' in self.stuf)
@@ -233,9 +233,9 @@ class TestDefaultStuf(unittest.TestCase):
         del self.stuf.test1
         del self.stuf.test2
         del self.stuf.test3.e
-        self.assertTrue(len(self.stuf.test3)==0)
+        self.assertTrue(len(self.stuf.test3) == 0)
         del self.stuf.test3
-        self.assertTrue(len(self.stuf)==0)
+        self.assertTrue(len(self.stuf) == 0)
         self.assertEqual(self.stuf.test1, [1, 2])
         self.assertEqual(self.stuf.test2, [1, 2])
         self.assertEqual(self.stuf.test3, [1, 2])
@@ -246,10 +246,10 @@ class TestDefaultStuf(unittest.TestCase):
         del self.stuf['test2']
         del self.stuf['test3']['e']
         self.assertFalse('e' in self.stuf['test3'])
-        self.assertTrue(len(self.stuf['test3'])==0)
+        self.assertTrue(len(self.stuf['test3']) == 0)
         self.assertEqual(self.stuf['test3']['e'], [1, 2])
         del self.stuf['test3']
-        self.assertTrue(len(self.stuf)==0)
+        self.assertTrue(len(self.stuf) == 0)
         self.assertFalse('test1' in self.stuf)
         self.assertFalse('test2' in self.stuf)
         self.assertFalse('test3' in self.stuf)
@@ -738,9 +738,9 @@ class TestOrderedStuf(unittest.TestCase):
         del self.stuf.test1
         del self.stuf.test2
         del self.stuf.test3.e
-        self.assertTrue(len(self.stuf.test3)==0)
+        self.assertTrue(len(self.stuf.test3) == 0)
         del self.stuf.test3
-        self.assertTrue(len(self.stuf)==0)
+        self.assertTrue(len(self.stuf) == 0)
         self.assertRaises(AttributeError, lambda: self.stuf.test1)
         self.assertRaises(AttributeError, lambda: self.stuf.test2)
         self.assertRaises(AttributeError, lambda: self.stuf.test3)
@@ -751,9 +751,9 @@ class TestOrderedStuf(unittest.TestCase):
         del self.stuf['test2']
         del self.stuf['test3']['e']
         self.assertFalse('e' in self.stuf['test3'])
-        self.assertTrue(len(self.stuf['test3'])==0)
+        self.assertTrue(len(self.stuf['test3']) == 0)
         del self.stuf['test3']
-        self.assertTrue(len(self.stuf)==0)
+        self.assertTrue(len(self.stuf) == 0)
         self.assertFalse('test1' in self.stuf)
         self.assertFalse('test2' in self.stuf)
         self.assertFalse('test3' in self.stuf)

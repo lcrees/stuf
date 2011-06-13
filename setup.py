@@ -22,14 +22,21 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #THE SOFTWARE.
 
+import sys
+
 try:
     from setuptools import setup
 except ImportError:
     from distutils.core import setup
 
+install_requires = []
+if sys.version_info[0] == 2 and sys.version_info[1] < 7:
+    install_requires.append('ordereddict')
+    install_requires.append('unittest2')
+
 setup(
     name='stuf',
-    version='0.5',
+    version='0.5.1',
     description='''stuf has attributes''',
     long_description='Collection of dictionaries that support access through '
     'dot notation. Includes defaultdict and OrderedDict equivalents and '
@@ -38,11 +45,11 @@ setup(
     url='https://bitbucket.org/lcrees/stuf/',
     author_email='lcrees@gmail.com',
     license='MIT',
-    packages = ['stuf'],
+    packages=['stuf'],
     test_suite='stuf.test',
-    zip_safe = False,
+    zip_safe=False,
     keywords='dict attribute collection mapping dot notation access',
-    install_requires=['ordereddict'],
+    install_requires=install_requires,
     classifiers=[
         'Development Status :: 4 - Beta',
         'Programming Language :: Python :: 2.6',
