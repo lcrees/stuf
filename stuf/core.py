@@ -1,10 +1,12 @@
+# -*- coding: utf-8 -*-
+## pylint: disable-msg=w0702,w0212,w0201,w0221
 '''core stuf'''
 
 from operator import eq
 from itertools import imap
 from functools import partial
 
-from stuf.util import OrderedDict, lazy, lru_wrapped, recursive_repr, lazycls
+from stuf.util import OrderedDict, lazy, lru_wrapped, recursive_repr, lazy_class
 
 # object setters
 _osettr = object.__setattr__
@@ -23,7 +25,7 @@ class _BaseStuf(object):
 
     def __iter__(self):
         cls = self.__class__
-        for k, v in self.iteritems():
+        for k, v in self.iteritems(): ##pylint: disable-msg=e1101
             # nested stuf of some sort
             if isinstance(v, cls):
                 yield (k, dict(i for i in v))
@@ -39,8 +41,9 @@ class _BaseStuf(object):
 
     @recursive_repr
     def __repr__(self):
-        if not self: return '%s()' % (self.__class__.__name__,)
-        return '%s(%r)' % (self.__class__.__name__, self.items())
+        if not self: 
+            return '%s()' % (self.__class__.__name__,) 
+        return '%s(%r)' % (self.__class__.__name__, self.items()) ##pylint: disable-msg=e1101
 
     @lazy
     def _classkeys(self):
@@ -54,10 +57,10 @@ class _BaseStuf(object):
     @lazy
     def _setit(self):
         '''hidden setitem, crouching setter'''
-        return self.__setitem__
+        return self.__setitem__ ##pylint: disable-msg=e1101
 
     @classmethod
-    def _fromiter(cls, src=(), type_=dict, sq=[list, tuple]):
+    def _fromiter(cls, src=None, type_=dict, sq=None):
         '''
         creates stuf from iterable sequence
 
@@ -65,16 +68,22 @@ class _BaseStuf(object):
         @param type_: type of key-value data structure
         @param sq: sequence types
         '''
+        if src is None:
+            src = ()
+        if sq is None:
+            sq = [list, tuple]
         return cls(cls._todict(src=src, type_=type_, sq=sq))
 
     @classmethod
-    def _fromkw(cls, type_=dict, sq=[list, tuple], **kw):
+    def _fromkw(cls, type_=dict, sq=None, **kw):
         '''
         creates stuf from keywords
 
         @param type_: type of key-value data structure
         @param sq: sequence types
         '''
+        if sq is None:
+            sq = [list, tuple]
         return cls._b_fromiter(src=kw, type_=type_, sq=sq)
 
     def _prep(self, arg, **kw):
@@ -96,7 +105,7 @@ class _BaseStuf(object):
         return arg
 
     @classmethod
-    def _todict(cls, src=(), type_=dict, maps=[dict], sq=[list, tuple]):
+    def _todict(cls, src=None, type_=None, maps=None, sq=None):
         '''
         converts stuff into some sort of dict
 
@@ -105,6 +114,14 @@ class _BaseStuf(object):
         @params maps: some kind of list of mapping types
         @params sq: some kind of list of sequence types
         '''
+        if src is None:
+            src = {}
+        if maps is None:
+            maps = [dict]
+        if sq is None:
+            sq = [list, tuple]
+        if type_ is None:
+            type_ = dict
         # add class to handle potential nested objects of the same class
         maps = tuple(maps+[cls])
         sq = tuple(sq+[cls])
@@ -117,13 +134,17 @@ class _BaseStuf(object):
                 if isinstance(arg, sq) and len(arg) == 2: kw[arg[0]] = arg[-1]
         return kw
 
-    def _saddle(self, src={}, sq=[tuple, dict, list]):
+    def _saddle(self, src=None, sq=None):
         '''
         converts stuf into stuf key/attrs and values
 
         @param src: source mapping object
         @param sq: sequence of types to check
         '''
+        if src is None:
+            src = {}
+        if sq is None:
+            sq = [tuple, dict, list]
         fromiter = self._fromiter
         setit = self._setit
         tsq = tuple(sq)
@@ -132,11 +153,11 @@ class _BaseStuf(object):
                 # see if stuf can be converted to nested stuf
                 trial = fromiter(src=v, sq=sq)
                 if len(trial) > 0:
-                    setit(k, trial)
+                    setit(k, trial) ##pylint: disable-msg=e1121
                 else:
-                    setit(k, v)
+                    setit(k, v) ##pylint: disable-msg=e1121
             else:
-                setit(k, v)
+                setit(k, v) ##pylint: disable-msg=e1121
 
     def _update(self, *args, **kw):
         '''updates stuf with iterables and keywor arguments'''
@@ -207,7 +228,7 @@ class Stuf(IStuf):
     '''IStuf that takes keyword arguments'''
 
     def __init__(self, **kw):
-        self._saddle(src=self._preprep(kw))
+        super(Stuf, self).__init__(kw)
 
 
 class IDefaultStuf(IStuf):
@@ -241,10 +262,9 @@ class IDefaultStuf(IStuf):
             return self[k]
         return None
 
+    ## pylint: disable-msg=e0202
     @classmethod
-    def _fromiter(
-        cls, factory=None, fargs=(), fkw={}, src=(), sq=[list, tuple],
-    ):
+    def _fromiter(cls, factory=None, fargs=None, fkw=None, src=None, sq=None): 
         '''
         builds stuf from stuff with a factory function/arguments/keywords
 
@@ -254,12 +274,21 @@ class IDefaultStuf(IStuf):
         @param src: iterable of key-value pairs
         @param sq: list of sequence types
         '''
+        if fargs is None:
+            fargs = ()
+        if fkw is None:
+            fkw = {}
+        if src is None:
+            src = ()
+        if sq is None:
+            sq = [list, tuple]
         src = cls._todict(src=src)
         src.update(fargs=fargs, factory=factory, fkw=fkw)
         return cls(src)
+    ## pylint: enable-msg=e0202
 
     @classmethod
-    def _fromkw(cls, factory=None, fargs=(), fkw={}, **kw):
+    def _fromkw(cls, factory=None, fargs=(), fkw=None, **kw):
         '''
         builds stuf from keywords with a factory function/arguments/keywords
 
@@ -267,6 +296,8 @@ class IDefaultStuf(IStuf):
         @param fargs: positional arguments for factory function
         @param fkw: keyword arguments for factory function
         '''
+        if fkw is None:
+            fkw = {}
         return cls._d_fromiter(factory, fargs, fkw, kw)
 
     def _preprep(self, arg):
@@ -310,7 +341,7 @@ class DefaultStuf(IDefaultStuf):
     '''IDefaultStuf taking keyword arguments'''
 
     def __init__(self, **kw):
-        self._saddle(src=self._preprep(kw))
+        super(DefaultStuf, self).__init__(kw)
 
 
 class IOrderedStuf(IStuf):
@@ -370,7 +401,7 @@ class IOrderedStuf(IStuf):
         # extend _BaseStuf._saddle with default sequence
         return partial(self._b_saddle, sq=[tuple, dict, list])
 
-    @lazycls
+    @lazy_class
     def _todict(self):
         # extend _BaseStuf._todict with default sequence and attache to class
         return partial(self._b_todict, type_=OrderedDict, maps=[dict])
@@ -450,7 +481,7 @@ class OrderedStuf(IOrderedStuf):
     '''IOrderedStuf taking keyword arguments'''
 
     def __init__(self, **kw):
-        self._saddle(src=self._preprep(kw))
+        super(OrderedStuf, self).__init__(kw)
 
 
 class _ClosedStuf(_BaseStuf):
@@ -458,14 +489,16 @@ class _ClosedStuf(_BaseStuf):
     '''Restricted stuf'''
 
     def __getitem__(self, k):
-        if k in self._keys: return self._stuf[k]
+        if k in self._keys: 
+            return self._stuf[k]
         raise KeyError(k)
 
     def __getattr__(self, k):
         try:
             return _ogettr(self, k)
         except AttributeError:
-            if k in self._keys: return self._stuf[k]
+            if k in self._keys: 
+                return self._stuf[k]
             raise AttributeError(k)
 
     def __delattr__(self, k):
@@ -600,7 +633,7 @@ class FixedStuf(IFixedStuf):
     '''IFixedStuf taking keyword arguments'''
 
     def __init__(self, **kw):
-        self._saddle(src=self._preprep(kw))
+        super(FixedStuf, self).__init__(kw)
 
 
 class IFrozenStuf(_ClosedStuf):
@@ -644,7 +677,7 @@ class FrozenStuf(IFrozenStuf):
     '''IFixedStuf taking keyword arguments'''
 
     def __init__(self, **kw):
-        self._saddle(src=self._preprep(kw))
+        super(FrozenStuf, self).__init__(kw)
 
 
 # factories for stuf from keywords
