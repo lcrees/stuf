@@ -1,5 +1,16 @@
 # -*- coding: utf-8 -*-
-from stuf.core import (
-    stuf, istuf, defaultstuf, idefaultstuf, iorderedstuf, orderedstuf,
-    fixedstuf, ifixedstuf, frozenstuf, ifrozenstuf,
-)
+from __future__ import absolute_import
+
+from .core import stuf
+
+istuf = stuf 
+    
+from .special import defaultstuf, orderedstuf
+
+idefaultstuf = defaultstuf
+iorderedstuf = orderedstuf
+
+from .restricted import fixedstuf, frozenstuf
+
+ifixedstuf = fixedstuf
+ifrozenstuf = frozenstuf

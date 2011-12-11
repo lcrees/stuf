@@ -13,10 +13,10 @@ try:
 except  ImportError:
     from ordereddict import OrderedDict
 
-def lru_wrapped(func, maxsize=100):
+def lru_wrapped(this, maxsize=100):
     # order: least recent to most recent
     cache = OrderedDict()
-    @wraps(func)
+    @wraps(this)
     def wrapper(*args, **kw):
         key = args
         if kw: 
@@ -24,7 +24,7 @@ def lru_wrapped(func, maxsize=100):
         try:
             result = cache.pop(key)
         except KeyError:
-            result = func(*args, **kw)
+            result = this(*args, **kw)
             # purge least recently used cache entry
             if len(cache) >= maxsize: 
                 cache.popitem(0)
@@ -33,7 +33,23 @@ def lru_wrapped(func, maxsize=100):
         return result
     return wrapper
 
-def recursive_repr(user_function):
+def class_name(this):
+    '''
+    get class name
+    
+    @param this: object
+    '''
+    return getattr(this.__class__, '__name__')
+
+def object_name(this):
+    '''
+    get object name
+    
+    @param this: object
+    '''
+    return getattr(this, '__name__')
+
+def recursive_repr(this):
     '''Decorator to make a repr function return "..." for a recursive call'''
     repr_running = set()
     def wrapper(self):
@@ -42,14 +58,14 @@ def recursive_repr(user_function):
             return '...'
         repr_running.add(key)
         try:
-            result = user_function(self)
+            result = this(self)
         finally:
             repr_running.discard(key)
         return result
     # Can't use functools.wraps() here because of bootstrap issues
-    wrapper.__module__ = getattr(user_function, '__module__')
-    wrapper.__doc__ = getattr(user_function, '__doc__')
-    wrapper.__name__ = getattr(user_function, '__name__')
+    wrapper.__module__ = getattr(this, '__module__')
+    wrapper.__doc__ = getattr(this, '__doc__')
+    wrapper.__name__ = object_name(this)
     return wrapper
 
 
@@ -60,7 +76,7 @@ class lazybase(object):
         try:
             self.__doc__ = method.__doc__
             self.__module__ = method.__module__
-            self.__name__ = method.__name__
+            self.__name__ = object_name(method)
         except:
             pass
 
@@ -72,7 +88,8 @@ class lazy(lazybase):
     def __get__(self, instance, owner):
         if instance is None: 
             return self
-        value = instance.__dict__[self.__name__] = self.method(instance)
+        value = self.method(instance)
+        object.__setattr__(instance, self.__name__, value)
         return value
 
 
