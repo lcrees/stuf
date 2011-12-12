@@ -12,15 +12,12 @@ class basestuf(object):
     
     _mapping = dict
 
-    def __init__(self, arg=None, **kw):
+    def __init__(self, *args, **kw):
         '''
-        @param arg: iterable of keys, values
+        @param *args: iterable of keys/value pairs
+        @param **kw: keyword arguments
         '''
-        if arg is None:
-            arg = kw
-        else:
-            self._tomapping(arg)
-        self._convert(self._preprepare(arg))
+        self.update(*args, **kw)
         
     def __iter__(self):
         cls = self.__class__
@@ -36,7 +33,7 @@ class basestuf(object):
         return dict(i for i in self)
 
     def __setstate__(self, state):
-        return self._tomapping(state)
+        return self._build(state)
 
     @recursive_repr
     def __repr__(self):
@@ -53,51 +50,35 @@ class basestuf(object):
             ]
         )
 
-    @lazy
-    def _setit(self):
-        '''hidden setitem, crouching setter'''
-        return self.__setitem__ ##pylint: disable-msg=e1101
-
-    def _prep(self, arg, **kw):
+    def _prepare(self, *args, **kw):
         '''
         preps stuff for stuf object construction
 
         @param arg: iterable sequence
         '''
-        # make iterable sequence into dictionary
-        if arg: 
-            kw.update(self._tomapping(arg))
+        kw.update(self._build(args))
         return kw
-
-    def _preprepare(self, arg):
-        '''
-        preps stuff for stuf insertion
-
-        @param arg: iterable sequence
-        '''
-        return arg
     
-    def _convert(self, iterable):
+    def _populate(self, iterable):
         '''
         converts stuff into stuf key/attrs and values
 
         @param iterable: source mapping object
         @param sq: sequence of types to check
         '''
-        setit = self._setit
-        prepare = self._tomapping
+        prepare = self._prepare
         for k, v in iterable.iteritems():
             if isinstance(v, Sequence):
                 # see if stuf can be converted to nested stuf
                 trial = prepare(iterable)
                 if len(trial) > 0:
-                    setit(k, trial) ##pylint: disable-msg=e1121
+                    self[k] = trial
                 else:
-                    setit(k, v) ##pylint: disable-msg=e1121
+                    self[k] = v
             else:
-                setit(k, v) ##pylint: disable-msg=e1121
+                self[k] = v 
 
-    def _tomapping(self, iterable):
+    def _build(self, iterable):
         '''
         converts stuff into some sort of mapping
 
@@ -107,7 +88,7 @@ class basestuf(object):
         # add class to handle potential nested objects of the same class
         kw = kind()
         if isinstance(iterable, Mapping):
-            kw.update(kind(i for i in iterable.iteritems()))
+            kw.update(iterable)
         elif isinstance(iterable, Sequence):
             # extract appropriate key-values from sequence
             for arg in iterable:
@@ -115,9 +96,9 @@ class basestuf(object):
                     kw[arg[0]] = arg[-1]
         return kw
 
-    def _update(self, *args, **kw):
-        '''updates stuf with iterables and keywor arguments'''
-        return self._convert(self._prep(*args, **kw))
+    def update(self, *args, **kw):
+        '''updates stuf with iterables and keyword arguments'''
+        self._populate(self._prepare(*args, **kw))
 
     def copy(self):
-        return self._tomapping(dict(i for i in self))
+        return self._build(dict(i for i in self))

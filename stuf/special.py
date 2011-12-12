@@ -61,7 +61,7 @@ class defaultstuf(stuf):
             src = ()
         if sq is None:
             sq = [list, tuple]
-        src = cls._tomapping(src=src)
+        src = cls._build(src=src)
         src.update(fargs=fargs, factory=factory, fkw=fkw)
         return cls(src)
     ## pylint: enable-msg=e0202
@@ -159,13 +159,13 @@ class orderedstuf(stuf):
             curr = curr[0]
 
     @lazy
-    def _convert(self):
-        # extend _BaseStuf._convert with default sequence
+    def _populate(self):
+        # extend _BaseStuf._populate with default sequence
         return partial(self._b_saddle, sq=[tuple, dict, list])
 
     @lazy_class
-    def _tomapping(self):
-        # extend _BaseStuf._tomapping with default sequence and attache to class
+    def _build(self):
+        # extend _BaseStuf._build with default sequence and attache to class
         return partial(self._b_todict, type_=OrderedDict, maps=[dict])
 
     @lazy
