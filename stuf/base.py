@@ -11,6 +11,9 @@ class basestuf(object):
     '''stuf basestuf'''
     
     _mapping = dict
+    _reserved = [
+        '_keys', '_factory', '_fargs', '_fkw', '_root', '_map',
+    ]
 
     def __init__(self, *args, **kw):
         '''
@@ -45,11 +48,51 @@ class basestuf(object):
     def _classkeys(self):
         '''protected keywords'''
         return frozenset(
-            vars(self).keys()+self.__class__.__dict__.keys()+[
-                '_keys', '_factory', '_fargs', '_fkw', '_root', '_map',
-            ]
+            vars(self).keys()+self.__class__.__dict__.keys()+self._reserved
         )
+        
+    @classmethod
+    def _build(cls, iterable):
+        '''
+        converts stuff into some sort of mapping
 
+        @param iterable: iterable stuff
+        '''
+        kind = cls._mapping
+        # add class to handle potential nested objects of the same class
+        kw = kind()
+        if isinstance(iterable, Mapping):
+            kw.update(kind(iterable))
+        elif isinstance(iterable, Sequence):
+            # extract appropriate key-values from sequence
+            for arg in iterable:
+                if isinstance(arg, (Sequence, cls)) and len(arg) == 2: 
+                    kw[arg[0]] = arg[-1]
+        return kw
+    
+    @classmethod
+    def _new(cls, iterable):
+        return cls(cls._build(iterable))
+    
+    def _populate(self, iterable):
+        '''
+        converts stuff into stuf key/attrs and values
+
+        @param iterable: source mapping object
+        @param sq: sequence of types to check
+        '''
+        new = self._new
+        for k, v in iterable.iteritems():
+            if isinstance(v, Sequence):
+                # see if stuf can be converted to nested stuf
+                trial = new(iterable)
+                if len(trial) > 0:
+                    self[k] = trial
+                else:
+                    self[k] = v
+            else:
+                self[k] = v 
+    
     def _prepare(self, *args, **kw):
         '''
         preps stuff for stuf object construction
@@ -59,46 +102,39 @@ class basestuf(object):
         kw.update(self._build(args))
         return kw
     
-    def _populate(self, iterable):
-        '''
-        converts stuff into stuf key/attrs and values
-
-        @param iterable: source mapping object
-        @param sq: sequence of types to check
-        '''
-        prepare = self._prepare
-        for k, v in iterable.iteritems():
-            if isinstance(v, Sequence):
-                # see if stuf can be converted to nested stuf
-                trial = prepare(iterable)
-                if len(trial) > 0:
-                    self[k] = trial
-                else:
-                    self[k] = v
-            else:
-                self[k] = v 
-
-    def _build(self, iterable):
-        '''
-        converts stuff into some sort of mapping
-
-        @param iterable: iterable stuff
-        '''
-        kind = self._mapping
-        # add class to handle potential nested objects of the same class
-        kw = kind()
-        if isinstance(iterable, Mapping):
-            kw.update(iterable)
-        elif isinstance(iterable, Sequence):
-            # extract appropriate key-values from sequence
-            for arg in iterable:
-                if isinstance(arg, (Sequence, self.__class__)) and len(arg) == 2: 
-                    kw[arg[0]] = arg[-1]
-        return kw
+    def copy(self):
+        return self._build(dict(i for i in self))
 
     def update(self, *args, **kw):
         '''updates stuf with iterables and keyword arguments'''
         self._populate(self._prepare(*args, **kw))
 
-    def copy(self):
-        return self._build(dict(i for i in self))
+
+class writestuf(basestuf):
+
+    '''dictionary with dot attributes'''
+
+    def __getattr__(self, k):
+        try:
+            return self[k]
+        except KeyError:
+            raise AttributeError(k)
+
+    def __setattr__(self, k, v):
+        # handle normal object attributes
+        if k == '_classkeys' or k in self._classkeys:
+            object.__getattribute__(self, k, v)
+        # handle special attributes
+        else:
+            try:
+                self[k] = v
+            except:
+                raise AttributeError(k)
+
+    def __delattr__(self, k):
+        # allow deletion of key-value pairs only
+        if not k == '_classkeys' or k in self._classkeys:
+            try:
+                del self[k]
+            except KeyError:
+                raise AttributeError(k)
