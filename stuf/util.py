@@ -13,45 +13,51 @@ try:
 except  ImportError:
     from ordereddict import OrderedDict
 
+
 def lru_wrapped(this, maxsize=100):
     # order: least recent to most recent
     cache = OrderedDict()
+
     @wraps(this)
     def wrapper(*args, **kw):
         key = args
-        if kw: 
+        if kw:
             key += tuple(sorted(kw.items()))
         try:
             result = cache.pop(key)
         except KeyError:
             result = this(*args, **kw)
             # purge least recently used cache entry
-            if len(cache) >= maxsize: 
+            if len(cache) >= maxsize:
                 cache.popitem(0)
         # record recent use of this key
         cache[key] = result
         return result
     return wrapper
 
+
 def class_name(this):
     '''
     get class name
-    
+
     @param this: object
     '''
     return getattr(this.__class__, '__name__')
 
+
 def object_name(this):
     '''
     get object name
-    
+
     @param this: object
     '''
     return getattr(this, '__name__')
 
+
 def recursive_repr(this):
     '''Decorator to make a repr function return "..." for a recursive call'''
     repr_running = set()
+
     def wrapper(self):
         key = id(self), get_ident()
         if key in repr_running:
@@ -70,7 +76,7 @@ def recursive_repr(this):
 
 
 class lazybase(object):
-    
+
     def __init__(self, method):
         self.method = method
         try:
@@ -86,7 +92,7 @@ class lazy(lazybase):
     '''Lazily assign attributes on an instance upon first use.'''
 
     def __get__(self, instance, owner):
-        if instance is None: 
+        if instance is None:
             return self
         value = self.method(instance)
         object.__setattr__(instance, self.__name__, value)
@@ -99,5 +105,5 @@ class lazy_class(lazybase):
 
     def __get__(self, instance, owner):
         value = self.method(owner)
-        setattr(owner, self.__name__, value) 
+        setattr(owner, self.__name__, value)
         return value
