@@ -1,6 +1,12 @@
+# -*- coding: utf-8 -*-
+# pylint: disable-msg=w0108
 '''test stuf'''
 
-import unittest
+from __future__ import absolute_import
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 
 
 class TestStuf(unittest.TestCase):
@@ -16,7 +22,9 @@ class TestStuf(unittest.TestCase):
         return istuf
 
     def setUp(self):
-        self.stuf = self._makeone(test1='test1', test2='test2', test3=dict(e=1))
+        self.stuf = self._makeone(
+            test1='test1', test2='test2', test3=dict(e=1)
+        )
 
     def test__getattr__(self):
         self.assertEqual(self.stuf.test1, 'test1')
@@ -52,9 +60,9 @@ class TestStuf(unittest.TestCase):
         del self.stuf.test1
         del self.stuf.test2
         del self.stuf.test3.e
-        self.assertTrue(len(self.stuf.test3)==0)
+        self.assertTrue(len(self.stuf.test3) == 0)
         del self.stuf.test3
-        self.assertTrue(len(self.stuf)==0)
+        self.assertTrue(len(self.stuf) == 0)
         self.assertRaises(AttributeError, lambda: self.stuf.test1)
         self.assertRaises(AttributeError, lambda: self.stuf.test2)
         self.assertRaises(AttributeError, lambda: self.stuf.test3)
@@ -65,9 +73,9 @@ class TestStuf(unittest.TestCase):
         del self.stuf['test2']
         del self.stuf['test3']['e']
         self.assertFalse('e' in self.stuf['test3'])
-        self.assertTrue(len(self.stuf['test3'])==0)
+        self.assertTrue(len(self.stuf['test3']) == 0)
         del self.stuf['test3']
-        self.assertTrue(len(self.stuf)==0)
+        self.assertTrue(len(self.stuf) == 0)
         self.assertFalse('test1' in self.stuf)
         self.assertFalse('test2' in self.stuf)
         self.assertFalse('test3' in self.stuf)
@@ -192,22 +200,22 @@ class TestDefaultStuf(unittest.TestCase):
 
     def setUp(self):
         self.stuf = self._makeone(
-            list, ([1, 2],), test1='test1', test2='test2', test3=dict(e=1)
+            list, test1='test1', test2='test2', test3=dict(e=1)
         )
 
     def test__getattr__(self):
         self.assertEqual(self.stuf.test1, 'test1')
         self.assertEqual(self.stuf.test2, 'test2')
-        self.assertEqual(self.stuf.test4, [1, 2])
+        self.assertEqual(self.stuf.test4, [])
         self.assertEqual(self.stuf.test3.e, 1)
-        self.assertEqual(self.stuf.test3.f, [1, 2])
+        self.assertEqual(self.stuf.test3.f, [])
 
     def test__getitem__(self):
         self.assertEqual(self.stuf['test1'], 'test1')
         self.assertEqual(self.stuf['test2'], 'test2')
-        self.assertEqual(self.stuf['test4'], [1, 2])
+        self.assertEqual(self.stuf['test4'], [])
         self.assertEqual(self.stuf['test3']['e'], 1)
-        self.assertEqual(self.stuf['test3']['f'], [1, 2])
+        self.assertEqual(self.stuf['test3']['f'], [])
 
     def test__setattr__(self):
         self.stuf.max = 3
@@ -233,12 +241,12 @@ class TestDefaultStuf(unittest.TestCase):
         del self.stuf.test1
         del self.stuf.test2
         del self.stuf.test3.e
-        self.assertTrue(len(self.stuf.test3)==0)
+        self.assertTrue(len(self.stuf.test3) == 0)
         del self.stuf.test3
-        self.assertTrue(len(self.stuf)==0)
-        self.assertEqual(self.stuf.test1, [1, 2])
-        self.assertEqual(self.stuf.test2, [1, 2])
-        self.assertEqual(self.stuf.test3, [1, 2])
+        self.assertTrue(len(self.stuf) == 0)
+        self.assertEqual(self.stuf.test1, [])
+        self.assertEqual(self.stuf.test2, [])
+        self.assertEqual(self.stuf.test3, [])
         self.assertRaises(AttributeError, lambda: self.stuf.test3.e)
 
     def test__delitem__(self):
@@ -246,16 +254,16 @@ class TestDefaultStuf(unittest.TestCase):
         del self.stuf['test2']
         del self.stuf['test3']['e']
         self.assertFalse('e' in self.stuf['test3'])
-        self.assertTrue(len(self.stuf['test3'])==0)
-        self.assertEqual(self.stuf['test3']['e'], [1, 2])
+        self.assertTrue(len(self.stuf['test3']) == 0)
+        self.assertEqual(self.stuf['test3']['e'], [])
         del self.stuf['test3']
-        self.assertTrue(len(self.stuf)==0)
+        self.assertTrue(len(self.stuf) == 0)
         self.assertFalse('test1' in self.stuf)
         self.assertFalse('test2' in self.stuf)
         self.assertFalse('test3' in self.stuf)
-        self.assertEqual(self.stuf['test1'], [1, 2])
-        self.assertEqual(self.stuf['test2'], [1, 2])
-        self.assertEqual(self.stuf['test3'], [1, 2])
+        self.assertEqual(self.stuf['test1'], [])
+        self.assertEqual(self.stuf['test2'], [])
+        self.assertEqual(self.stuf['test3'], [])
         self.assertRaises(TypeError, lambda: self.stuf['test3']['e'])
 
     def test_get(self):
@@ -270,7 +278,7 @@ class TestDefaultStuf(unittest.TestCase):
             list,
             (1, 2),
             {},
-            src=(('test1', 'test1'), ('test2', 'test2'), ('test3', dict(e=1))),
+            (('test1', 'test1'), ('test2', 'test2'), ('test3', dict(e=1))),
         )
         self.assertEqual(self.stuf, tstuff)
 
@@ -281,20 +289,20 @@ class TestDefaultStuf(unittest.TestCase):
     def test_clear(self):
         self.stuf.test3.clear()
         self.assertEqual(len(self.stuf.test3), 0)
-        self.assertEqual(self.stuf['test3']['e'], [1, 2])
+        self.assertEqual(self.stuf['test3']['e'], [])
         self.stuf.clear()
         self.assertEqual(len(self.stuf), 0)
-        self.assertEqual(self.stuf['test1'], [1, 2])
-        self.assertEqual(self.stuf['test2'], [1, 2])
-        self.assertEqual(self.stuf['test3'], [1, 2])
+        self.assertEqual(self.stuf['test1'], [])
+        self.assertEqual(self.stuf['test2'], [])
+        self.assertEqual(self.stuf['test3'], [])
 
     def test_items(self):
-        self.assertEqual(self.stuf['test4'], [1, 2])
+        self.assertEqual(self.stuf['test4'], [])
         slist = list(self.stuf.items())
         self.assertTrue(('test1', 'test1') in slist)
         self.assertTrue(('test2', 'test2') in slist)
         self.assertTrue(('test3', {'e': 1}) in slist)
-        self.assertTrue(('test4', [1, 2]) in slist)
+        self.assertTrue(('test4', []) in slist)
 
     def test_iteritems(self):
         slist = list(self.stuf.iteritems())
@@ -365,7 +373,7 @@ class TestDefaultStuf(unittest.TestCase):
     def test_pickle(self):
         import pickle
         tstuf = self._makeone(
-            list, ([1, 2],), test1='test1', test2='test2', test3=dict(e=1)
+            list, ([],), test1='test1', test2='test2', test3=dict(e=1)
         )
         pkle = pickle.dumps(tstuf)
         nstuf = pickle.loads(pkle)
@@ -373,7 +381,7 @@ class TestDefaultStuf(unittest.TestCase):
 
     def test_copy(self):
         tstuf = self._makeone(
-            list, ([1, 2],), test1='test1', test2='test2', test3=dict(e=1)
+            list, ([],), test1='test1', test2='test2', test3=dict(e=1)
         )
         nstuf = tstuf.copy()
         self.assertEquals(tstuf, nstuf)
@@ -429,8 +437,10 @@ class TestFixedStuf(unittest.TestCase):
         self.assertRaises(TypeError, lambda: delattr(self.stuf.test3.e))
 
     def test__delitem__(self):
-        self.assertRaises(AttributeError, lambda: self.stuf.__delitem__('test1'))
-        self.assertRaises(AttributeError, lambda: self.stuf.test3.__delitem__('test1'))
+        del self.stuf['test1']
+        self.assertIsNone(self.stuf['test1'])
+        del self.stuf.test3['test1']
+        self.assertIsNone(self.stuf.test3['test1'])
 
     def test_get(self):
         self.assertEqual(self.stuf.get('test1'), 'test1')
@@ -450,8 +460,11 @@ class TestFixedStuf(unittest.TestCase):
         self.assertEqual(len(self.stuf.test3), 1)
 
     def test_clear(self):
-        self.assertRaises(AttributeError, lambda: self.stuf.test3.clear())
-        self.assertRaises(AttributeError, lambda: self.stuf.clear())
+        self.assertRaises(KeyError, lambda: self.stuf.__setitem__('max', 3))
+        self.stuf.clear()
+        self.stuf['test1'] = 'test1again'
+        self.stuf['test3'] = 5
+
 
     def test_items(self):
         slist = list(self.stuf.items())
@@ -492,9 +505,9 @@ class TestFixedStuf(unittest.TestCase):
 
     def test_setdefault(self):
         self.assertEqual(self.stuf.test3.setdefault('e', 8), 1)
-        self.assertEqual(self.stuf.test3.setdefault('r', 8), 8)
+        self.assertRaises(KeyError, lambda: self.stuf.test3.setdefault('r', 8))
         self.assertEqual(self.stuf.setdefault('test1', 8), 'test1')
-        self.assertEqual(self.stuf.setdefault('pow', 8), 8)
+        self.assertRaises(KeyError, lambda: self.stuf.setdefault('pow', 8))
 
     def test_update(self):
         tstuff = self._makeone(test1='test1', test2='test2', test3=dict(e=1))
@@ -561,11 +574,13 @@ class TestFrozenStuf(unittest.TestCase):
         self.assertEqual(self.stuf['test3']['e'], 1)
 
     def test__setattr__(self):
-        self.assertRaises(TypeError, lambda: setattr(self.stuf, 'max', 3))
+        self.assertRaises(AttributeError, setattr(self.stuf, 'max', 3))
         self.assertRaises(
-            TypeError, lambda: setattr(self.stuf, 'test1', 'test1again')
+            AttributeError, setattr(self.stuf, 'test1', 'test1again')
         )
-        self.assertRaises(TypeError, lambda: setattr(self.stuf.test3, 'e', 5))
+        self.assertRaises(
+            AttributeError, setattr(self.stuf.test3, 'e', 5)
+        )
 
     def test__setitem__(self):
         self.assertRaises(
@@ -648,10 +663,18 @@ class TestFrozenStuf(unittest.TestCase):
         self.assertRaises(AttributeError, lambda: self.stuf.popitem())
 
     def test_setdefault(self):
-        self.assertEqual(self.stuf.test3.setdefault('e', 8), 1)
-        self.assertEqual(self.stuf.test3.setdefault('r', 8), 8)
-        self.assertEqual(self.stuf.setdefault('test1', 8), 'test1')
-        self.assertEqual(self.stuf.setdefault('pow', 8), 8)
+        self.assertRaises(
+            AttributeError, lambda: self.stuf.test3.setdefault('e', 8)
+        )
+        self.assertRaises(
+            AttributeError, lambda: self.stuf.test3.setdefault('r', 8)
+        )
+        self.assertRaises(
+            AttributeError, lambda: self.stuf.setdefault('test1', 8)
+        )
+        self.assertRaises(
+            AttributeError, lambda:self.stuf.setdefault('pow', 8)
+        )
 
     def test_update(self):
         tstuff = self._makeone(test1='test1', test2='test2', test3=dict(e=1))
@@ -738,9 +761,9 @@ class TestOrderedStuf(unittest.TestCase):
         del self.stuf.test1
         del self.stuf.test2
         del self.stuf.test3.e
-        self.assertTrue(len(self.stuf.test3)==0)
+        self.assertTrue(len(self.stuf.test3) == 0)
         del self.stuf.test3
-        self.assertTrue(len(self.stuf)==0)
+        self.assertTrue(len(self.stuf) == 0)
         self.assertRaises(AttributeError, lambda: self.stuf.test1)
         self.assertRaises(AttributeError, lambda: self.stuf.test2)
         self.assertRaises(AttributeError, lambda: self.stuf.test3)
@@ -751,9 +774,9 @@ class TestOrderedStuf(unittest.TestCase):
         del self.stuf['test2']
         del self.stuf['test3']['e']
         self.assertFalse('e' in self.stuf['test3'])
-        self.assertTrue(len(self.stuf['test3'])==0)
+        self.assertTrue(len(self.stuf['test3']) == 0)
         del self.stuf['test3']
-        self.assertTrue(len(self.stuf)==0)
+        self.assertTrue(len(self.stuf) == 0)
         self.assertFalse('test1' in self.stuf)
         self.assertFalse('test2' in self.stuf)
         self.assertFalse('test3' in self.stuf)
@@ -863,4 +886,5 @@ class TestOrderedStuf(unittest.TestCase):
         nstuf = pickle.loads(pkle)
         self.assertEquals(tstuf, nstuf)
 
-if __name__ == '__main__': unittest.main()
+if __name__ == '__main__': 
+    unittest.main()
