@@ -22,6 +22,11 @@ class defaultstuf(writestuf, defaultdict):
     _mapping = defaultdict
 
     def __init__(self, default, *args, **kw):
+        '''
+        @param default: function that can provide default values
+        @param *args: iterable of keys/value pairs
+        @param **kw: keyword arguments
+        '''
         defaultdict.__init__(self, default)
         writestuf.__init__(self, *args, **kw)
 
@@ -78,6 +83,10 @@ class frozenstuf(Mapping):
     __slots__ = ['_items']
 
     def __init__(self, *args, **kw):
+        '''
+        @param *args: iterable of keys/value pairs
+        @param **kw: keyword arguments
+        '''
         self._items = self._populate(self._build(dict(*args, **kw)))
 
     def __reduce__(self):
@@ -157,6 +166,10 @@ class orderedstuf(wrapstuf, MutableMapping):
     _mapping = OrderedDict
 
     def __init__(self, *args, **kw):
+        '''
+        @param *args: iterable of keys/value pairs
+        @param **kw: keyword arguments
+        '''
         self._wrapped = OrderedDict()
         super(orderedstuf, self).__init__(*args, **kw)
 
@@ -174,11 +187,6 @@ class orderedstuf(wrapstuf, MutableMapping):
 
     def copy(self):
         return self._build(OrderedDict(self))
-
-
-class stuf(writestuf, dict):
-
-    '''dictionary with attribute-style access'''
 
 
 class fixedstuf(wrapstuf, MutableMapping):

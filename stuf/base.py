@@ -30,6 +30,9 @@ class basestuf(object):
             else:
                 yield (k, v)
 
+    def __setitem__(self, k, v):
+        pass
+
     def __getstate__(self):
         return self._mapping(self)
 
@@ -46,7 +49,7 @@ class basestuf(object):
     def _classkeys(self):
         '''protected keywords'''
         return frozenset(
-            vars(self).keys()+vars(self.__class__).keys()+self._reserved
+            vars(self).keys() + vars(self.__class__).keys() + self._reserved
         )
 
     @classmethod
@@ -104,6 +107,12 @@ class basestuf(object):
 
     def copy(self):
         return self._build(self._mapping(i for i in self))
+
+    def iteritems(self):
+        pass
+
+    def items(self):
+        pass
 
     def update(self, *args, **kw):
         '''updates stuf with iterables and keyword arguments'''
