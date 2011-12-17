@@ -30,9 +30,6 @@ class basestuf(object):
             else:
                 yield (k, v)
 
-    def __setitem__(self, k, v):
-        pass
-
     def __getattr__(self, k):
         try:
             return self.__getitem__(k)
@@ -116,12 +113,6 @@ class basestuf(object):
 
     def copy(self):
         return self._build(self._mapping(i for i in self))
-
-    def iteritems(self):
-        pass
-
-    def items(self):
-        pass
 
     def update(self, *args, **kw):
         self._populate(self._prepare(*args, **kw))

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: disable-msg=w0221,w0212
+# pylint: disable-msg=w0221,w0212,w0201
 '''core stuf'''
 
 from __future__ import absolute_import
@@ -7,14 +7,14 @@ from collections import (
     MutableMapping, Mapping, Sequence, defaultdict, namedtuple,
 )
 
-from .util import OrderedDict, lazy
+from .util import OrderedDict
 from .base import basestuf, wrapstuf
 
 
 class defaultstuf(basestuf, defaultdict):
 
     '''
-    dictionary with dot attributes and a factory function that provides a
+    dictionary with attribute-style access and a factory function to provide a
     default value for keys with no value
     '''
 
@@ -216,6 +216,6 @@ class fixedstuf(wrapstuf, MutableMapping):
     def __delattr__(self, k):
         self.__delitem__(k)
 
-    @lazy
-    def _keys(self):
-        return frozenset(self._wrapped.keys())
+    def _populate(self, iterable):
+        self._keys = frozenset(iterable.keys())
+        super(fixedstuf, self)._populate(iterable)
