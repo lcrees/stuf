@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 '''base stuf'''
 
+from __future__ import absolute_import
 from collections import Mapping, Sequence
 
 from stuf.util import class_name, lazy, recursive_repr

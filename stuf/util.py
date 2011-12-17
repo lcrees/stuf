@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 ## pylint: disable-msg=w0702
 '''stuf utilities'''
+
 from __future__ import absolute_import
 import inspect
 try:
