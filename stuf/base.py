@@ -140,6 +140,11 @@ class writestuf(basestuf):
                 raise AttributeError(k)
 
 
+class stuf(writestuf, dict):
+
+    '''dictionary with attribute-style access'''
+
+
 class wrapstuf(writestuf):
 
     def __getitem__(self, key):

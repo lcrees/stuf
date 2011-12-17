@@ -6,7 +6,6 @@ from collections import (
     MutableMapping, Mapping, Sequence, defaultdict, namedtuple,
 )
 
-
 from .base import writestuf
 from .util import OrderedDict
 from stuf.util import lazy
@@ -221,7 +220,6 @@ class fixedstuf(wrapstuf, MutableMapping):
 
     def __delattr__(self, k):
         self.__delitem__(k)
-        raise TypeError(u"can't delete attributes")
 
     @lazy
     def _keys(self):
