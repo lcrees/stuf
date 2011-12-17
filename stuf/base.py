@@ -47,18 +47,13 @@ class basestuf(object):
 
     @lazy
     def _classkeys(self):
-        '''protected keywords'''
+        # protected keywords
         return frozenset(
             vars(self).keys() + vars(self.__class__).keys() + self._reserved
         )
 
     @classmethod
     def _build(cls, iterable):
-        '''
-        converts stuff into some sort of mapping
-
-        @param iterable: iterable stuff
-        '''
         kind = cls._mapping
         # add class to handle potential nested objects of the same class
         kw = kind()
@@ -78,12 +73,6 @@ class basestuf(object):
         return cls(cls._build(iterable))
 
     def _populate(self, iterable):
-        '''
-        converts stuff into stuf key/attrs and values
-
-        @param iterable: source mapping object
-        @param sq: sequence of types to check
-        '''
         new = self._new
         for k, v in iterable.iteritems():
             if isinstance(v, (Sequence, Mapping)):
@@ -118,11 +107,6 @@ class basestuf(object):
         '''updates stuf with iterables and keyword arguments'''
         self._populate(self._prepare(*args, **kw))
 
-
-class writestuf(basestuf):
-
-    '''dictionary with dot attributes'''
-
     def __getattr__(self, k):
         try:
             return self.__getitem__(k)
@@ -149,12 +133,9 @@ class writestuf(basestuf):
                 raise AttributeError(k)
 
 
-class stuf(writestuf, dict):
+class wrapstuf(basestuf):
 
-    '''dictionary with attribute-style access'''
-
-
-class wrapstuf(writestuf):
+    '''wraps mappings for stuf compliance'''
 
     def __getitem__(self, key):
         return self._wrapped[key]
@@ -167,3 +148,8 @@ class wrapstuf(writestuf):
 
     def __reduce__(self):
         return self._wrapped.__reduce__()
+
+
+class stuf(basestuf, dict):
+
+    '''dictionary with attribute-style access'''

@@ -2,10 +2,10 @@
 from __future__ import absolute_import
 
 from .base import stuf
-from .core import defaultstuf, orderedstuf, fixedstuf, frozenstuf
+from .core import defaultstuf, fixedstuf, frozenstuf, orderedstuf
 
-istuf = stuf
 idefaultstuf = defaultstuf
-iorderedstuf = orderedstuf
 ifixedstuf = fixedstuf
 ifrozenstuf = frozenstuf
+iorderedstuf = orderedstuf
+istuf = stuf

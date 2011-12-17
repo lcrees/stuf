@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable-msg=w0108
 '''test stuf'''
 
 try:

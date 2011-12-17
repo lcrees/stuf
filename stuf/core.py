@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable-msg=w0221,w0212
 '''core stuf'''
 
 from __future__ import absolute_import
@@ -6,13 +7,11 @@ from collections import (
     MutableMapping, Mapping, Sequence, defaultdict, namedtuple,
 )
 
-from .base import writestuf
-from .util import OrderedDict
-from stuf.util import lazy
-from stuf.base import wrapstuf
+from .util import OrderedDict, lazy
+from .base import basestuf, wrapstuf
 
 
-class defaultstuf(writestuf, defaultdict):
+class defaultstuf(basestuf, defaultdict):
 
     '''
     dictionary with dot attributes and a factory function that provides a
@@ -28,7 +27,7 @@ class defaultstuf(writestuf, defaultdict):
         @param **kw: keyword arguments
         '''
         defaultdict.__init__(self, default)
-        writestuf.__init__(self, *args, **kw)
+        basestuf.__init__(self, *args, **kw)
 
     @classmethod
     def _build(cls, default, iterable):
@@ -64,7 +63,6 @@ class defaultstuf(writestuf, defaultdict):
                 self[k] = v
 
     def _prepare(self, *args, **kw):
-        '''preps stuff for stuf object construction'''
         kw.update(self._build(self.default_factory, args))
         return kw
 
@@ -72,13 +70,12 @@ class defaultstuf(writestuf, defaultdict):
         return self._build(self.default_factory, dict(i for i in self))
 
     def update(self, *args, **kw):
-        '''updates stuf with iterables and keyword arguments'''
         self._populate(self._prepare(self.default_factory, *args, **kw))
 
 
 class frozenstuf(Mapping):
 
-    '''Immutable dict with dot attributes'''
+    '''immutable dictionary with attribute-style access'''
 
     __slots__ = ['_items']
 
@@ -112,11 +109,6 @@ class frozenstuf(Mapping):
 
     @classmethod
     def _build(cls, iterable):
-        '''
-        converts stuff into some sort of mapping
-
-        @param iterable: iterable stuff
-        '''
         kw = dict()
         if isinstance(iterable, Mapping):
             kw.update(dict(i for i in iterable.items()))
@@ -130,16 +122,10 @@ class frozenstuf(Mapping):
         return kw
 
     def _freeze(self, mapping):
-        '''transform dict into named tuple'''
         frozen = namedtuple('frozenstuf', mapping.keys(), rename=True)
         return frozen(**mapping)
 
     def _populate(self, iterable):
-        '''
-        converts stuff into stuf key/attrs and values
-
-        @param iterable: source mapping object
-        '''
         new = self._freeze
         for k, v in iterable.iteritems():
             if isinstance(v, basestring):
@@ -192,7 +178,8 @@ class orderedstuf(wrapstuf, MutableMapping):
 class fixedstuf(wrapstuf, MutableMapping):
 
     '''
-    dict with attribute-style access with mutability restricted to initial keys
+    dictionary with attribute-style access with mutability restricted to
+    initial keys
     '''
 
     def __init__(self, *args, **kw):
