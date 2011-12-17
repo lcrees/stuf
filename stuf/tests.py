@@ -6,6 +6,7 @@ try:
 except ImportError:
     import unittest
 
+
 class TestStuf(unittest.TestCase):
 
     @property
@@ -19,7 +20,9 @@ class TestStuf(unittest.TestCase):
         return istuf
 
     def setUp(self):
-        self.stuf = self._makeone(test1='test1', test2='test2', test3=dict(e=1))
+        self.stuf = self._makeone(
+            test1='test1', test2='test2', test3=dict(e=1)
+        )
 
     def test__getattr__(self):
         self.assertEqual(self.stuf.test1, 'test1')
@@ -273,7 +276,7 @@ class TestDefaultStuf(unittest.TestCase):
             list,
             (1, 2),
             {},
-            src=(('test1', 'test1'), ('test2', 'test2'), ('test3', dict(e=1))),
+            (('test1', 'test1'), ('test2', 'test2'), ('test3', dict(e=1))),
         )
         self.assertEqual(self.stuf, tstuff)
 
@@ -564,11 +567,13 @@ class TestFrozenStuf(unittest.TestCase):
         self.assertEqual(self.stuf['test3']['e'], 1)
 
     def test__setattr__(self):
-        self.assertRaises(TypeError, lambda: setattr(self.stuf, 'max', 3))
+        self.assertRaises(AttributeError, setattr(self.stuf, 'max', 3))
         self.assertRaises(
-            TypeError, lambda: setattr(self.stuf, 'test1', 'test1again')
+            AttributeError, setattr(self.stuf, 'test1', 'test1again')
         )
-        self.assertRaises(TypeError, lambda: setattr(self.stuf.test3, 'e', 5))
+        self.assertRaises(
+            AttributeError, setattr(self.stuf.test3, 'e', 5)
+        )
 
     def test__setitem__(self):
         self.assertRaises(
@@ -651,10 +656,18 @@ class TestFrozenStuf(unittest.TestCase):
         self.assertRaises(AttributeError, lambda: self.stuf.popitem())
 
     def test_setdefault(self):
-        self.assertEqual(self.stuf.test3.setdefault('e', 8), 1)
-        self.assertEqual(self.stuf.test3.setdefault('r', 8), 8)
-        self.assertEqual(self.stuf.setdefault('test1', 8), 'test1')
-        self.assertEqual(self.stuf.setdefault('pow', 8), 8)
+        self.assertRaises(
+            AttributeError, lambda: self.stuf.test3.setdefault('e', 8)
+        )
+        self.assertRaises(
+            AttributeError, lambda: self.stuf.test3.setdefault('r', 8)
+        )
+        self.assertRaises(
+            AttributeError, lambda: self.stuf.setdefault('test1', 8)
+        )
+        self.assertRaises(
+            AttributeError, lambda:self.stuf.setdefault('pow', 8)
+        )
 
     def test_update(self):
         tstuff = self._makeone(test1='test1', test2='test2', test3=dict(e=1))
@@ -866,4 +879,5 @@ class TestOrderedStuf(unittest.TestCase):
         nstuf = pickle.loads(pkle)
         self.assertEquals(tstuf, nstuf)
 
-if __name__ == '__main__': unittest.main()
+if __name__ == '__main__': 
+    unittest.main()

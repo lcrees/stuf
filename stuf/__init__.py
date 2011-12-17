@@ -1,16 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
-from .core import stuf
+from .core import defaultstuf, stuf, orderedstuf, fixedstuf, frozenstuf
 
-istuf = stuf 
-    
-from .special import defaultstuf, orderedstuf
-
+istuf = stuf
 idefaultstuf = defaultstuf
 iorderedstuf = orderedstuf
-
-from .restricted import fixedstuf, frozenstuf
-
 ifixedstuf = fixedstuf
 ifrozenstuf = frozenstuf
