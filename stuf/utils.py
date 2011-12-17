@@ -3,7 +3,7 @@
 '''stuf utilities'''
 
 from __future__ import absolute_import
-import inspect
+from inspect import isclass
 try:
     from thread import get_ident
 except ImportError:
@@ -31,7 +31,7 @@ def deleter(this, key):
     @param this: object
     @param key: key to lookup
     '''
-    if inspect.isclass(this):
+    if isclass(this):
         delattr(this, key)
     else:
         object.__delattr__(this, key)
@@ -45,9 +45,34 @@ def getter(this, key, default=None):
     @param key: key to lookup
     @param default: default value returned if key not found (default: None)
     '''
-    if inspect.isclass(this):
-        return getattr(this, key, default)
-    return this.__dict__.get(key, default)
+    return getattr(this, key, default) if isclass(this) else this.__dict__.get(
+        key, default
+    )
+
+
+def instance_or_class(key, this, owner):
+    '''
+    get attribute of an instance or class
+
+    @param key: name of attribute to look for
+    @param this: instance to check for attribute
+    @param owner: class to check for attribute
+    '''
+    return getter(this, key, getter(owner, key))
+
+
+def inverse_lookup(value, this, default=None):
+    '''
+    get attribute of an instance by value
+
+    @param value: value to lookup as a key
+    @param this: instance to check for attribute
+    @param default: default key (default: None)
+    '''
+    try:
+        return dict((v, k) for k, v in vars(this).iteritems())[value]
+    except (TypeError, KeyError):
+        return default
 
 
 def lru_wrapped(this, maxsize=100):
@@ -77,6 +102,21 @@ def lru_wrapped(this, maxsize=100):
         cache[key] = result
         return result
     return wrapper
+
+
+def object_lookup(path, this):
+    '''
+    look up an attribute on an object or its child objects
+
+    @param path: path in object
+    @param this: object to lookup on
+    '''
+    for part in path:
+        result = getter(this, part)
+        if result is not None:
+            this = result
+        else:
+            return result
 
 
 def object_name(this):
@@ -121,10 +161,11 @@ def setter(this, key, value):
     @param key: key to set
     @param value: value to set
     '''
-    if inspect.isclass(this):
+    if isclass(this):
         setattr(this, key, value)
     else:
         this.__dict__[key] = value
+    return value
 
 
 class lazybase(object):
@@ -146,20 +187,8 @@ class lazy(lazybase):
     def __get__(self, instance, owner):
         if instance is None:
             return self
-        value = self.method(instance)
-        setter(instance, self.name, value)
-        return value
+        return setter(instance, self.name, self.method(instance))
 
-
-class lazy_class(lazybase):
-
-    '''Lazily assign attributes on an class upon first use.'''
-
-    def __get__(self, instance, owner):
-        value = self.method(owner)
-        setter(owner, self.name, value)
-        return value
-    
 
 class both(lazy):
 
@@ -195,9 +224,13 @@ class either(both):
 
     def __get__(self, instance, owner):
         if instance is None:
-            value = self.expr(owner)
-            setter(owner, self.name, value)
-            return value
-        value = self.method(instance)
-        setter(instance, self.name, value)
-        return value
+            return setter(owner, self.name, self.expr(owner))
+        return setter(instance, self.name, self.method(instance))
+
+
+class lazy_class(lazybase):
+
+    '''Lazily assign attributes on an class upon first use.'''
+
+    def __get__(self, instance, owner):
+        return setter(owner, self.name, self.method(owner))
