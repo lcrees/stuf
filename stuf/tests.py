@@ -436,8 +436,10 @@ class TestFixedStuf(unittest.TestCase):
         self.assertRaises(TypeError, lambda: delattr(self.stuf.test3.e))
 
     def test__delitem__(self):
-        self.assertRaises(AttributeError, lambda: self.stuf.__delitem__('test1'))
-        self.assertRaises(AttributeError, lambda: self.stuf.test3.__delitem__('test1'))
+        del self.stuf['test1']
+        self.assertIsNone(self.stuf['test1'])
+        del self.stuf.test3['test1']
+        self.assertIsNone(self.stuf.test3['test1'])
 
     def test_get(self):
         self.assertEqual(self.stuf.get('test1'), 'test1')
@@ -457,8 +459,11 @@ class TestFixedStuf(unittest.TestCase):
         self.assertEqual(len(self.stuf.test3), 1)
 
     def test_clear(self):
-        self.assertRaises(AttributeError, lambda: self.stuf.test3.clear())
-        self.assertRaises(AttributeError, lambda: self.stuf.clear())
+        self.assertRaises(KeyError, lambda: self.stuf.__setitem__('max', 3))
+        self.stuf.clear()
+        self.stuf['test1'] = 'test1again'
+        self.stuf['test3'] = 5
+
 
     def test_items(self):
         slist = list(self.stuf.items())
@@ -499,9 +504,9 @@ class TestFixedStuf(unittest.TestCase):
 
     def test_setdefault(self):
         self.assertEqual(self.stuf.test3.setdefault('e', 8), 1)
-        self.assertEqual(self.stuf.test3.setdefault('r', 8), 8)
+        self.assertRaises(KeyError, lambda: self.stuf.test3.setdefault('r', 8))
         self.assertEqual(self.stuf.setdefault('test1', 8), 'test1')
-        self.assertEqual(self.stuf.setdefault('pow', 8), 8)
+        self.assertRaises(KeyError, lambda: self.stuf.setdefault('pow', 8))
 
     def test_update(self):
         tstuff = self._makeone(test1='test1', test2='test2', test3=dict(e=1))

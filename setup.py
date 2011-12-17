@@ -13,7 +13,7 @@ if sys.version_info[0] == 2 and sys.version_info[1] < 7:
 
 setup(
     name='stuf',
-    version='0.5.1',
+    version='0.6.0',
     description='''stuf has attributes''',
     long_description=open(os.path.join(os.getcwd(), 'README.rst'), 'r').read(),
     author='L. C. Rees',
@@ -26,7 +26,7 @@ setup(
     keywords='dict attribute collection mapping dot notation access',
     install_requires=install_requires,
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Stable',
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Intended Audience :: Developers',

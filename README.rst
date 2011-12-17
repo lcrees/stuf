@@ -1,2 +1,2 @@
-A collection of dictionary types with attribute-style access. Includes  
-*defaultdict*,  *OrderedDict*, restricted, and immutable versions.
+A collection of Python dictionary that support attribute-style access. Includes  
+*defaultdict*,  *OrderedDict*, restricted, and frozen implementations.

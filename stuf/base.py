@@ -11,7 +11,7 @@ class basestuf(object):
     '''stuf basestuf'''
 
     _mapping = dict
-    _reserved = ['_keys', '_wrapped', '_mapping']
+    _reserved = ['allowed', '_wrapped', '_mapping']
 
     def __init__(self, *args, **kw):
         '''
@@ -130,9 +130,6 @@ class wrapstuf(basestuf):
 
     def __len__(self):
         return self._wrapped.__len__()
-
-    def __reduce__(self):
-        return self._wrapped.__reduce__()
 
 
 class stuf(basestuf, dict):

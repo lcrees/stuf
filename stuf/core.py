@@ -122,7 +122,7 @@ class frozenstuf(Mapping):
         return kw
 
     def _freeze(self, mapping):
-        frozen = namedtuple('frozenstuf', mapping.keys(), rename=True)
+        frozen = namedtuple('frozenstuf', mapping.keys())
         return frozen(**mapping)
 
     def _populate(self, iterable):
@@ -192,23 +192,20 @@ class fixedstuf(wrapstuf, MutableMapping):
 
     def __setitem__(self, k, v):
         # only access initial keys
-        if k in self._keys:
+        if k in self.allowed:
             self._wrapped[k] = v
         else:
-            raise KeyError(k)
+            raise KeyError('%s is not an allowed key' % k)
 
     def __setattr__(self, k, v):
         # allow normal object creation for protected keywords
         if k == '_classkeys' or k in self._classkeys:
             object.__setattr__(self, k, v)
-        elif k in self._keys:
-            # look in stuf
-            try:
-                self._wrapped[k] = v
-            except:
-                raise AttributeError(k)
         else:
-            raise AttributeError(k)
+            try:
+                self[k] = v
+            except KeyError:
+                raise AttributeError(k)
 
     def __delitem__(self, key):
         self._wrapped[key] = None
@@ -216,6 +213,21 @@ class fixedstuf(wrapstuf, MutableMapping):
     def __delattr__(self, k):
         self.__delitem__(k)
 
+    def __reduce__(self):
+        return self.__class__, (self._wrapped.copy(),)
+
     def _populate(self, iterable):
-        self._keys = frozenset(iterable.keys())
+        self.allowed = frozenset(iterable.iterkeys())
         super(fixedstuf, self)._populate(iterable)
+
+    def copy(self):
+        return fixedstuf(self._wrapped)
+
+    def clear(self):
+        self._wrapped.clear()
+
+    def popitem(self):
+        raise AttributeError()
+
+    def pop(self, key, default=None):
+        raise AttributeError()
