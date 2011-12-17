@@ -26,7 +26,7 @@ setup(
     keywords='dict attribute collection mapping dot notation access',
     install_requires=install_requires,
     classifiers=[
-        'Development Status :: 5 - Stable',
+        'Development Status :: 5 - Production/Stable',
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Intended Audience :: Developers',
