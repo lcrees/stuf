@@ -3,7 +3,7 @@
 
 from collections import Mapping, Sequence
 
-from stuf.util import lazy, recursive_repr, class_name
+from stuf.util import class_name, lazy, recursive_repr
 
 
 class basestuf(object):
@@ -33,17 +33,42 @@ class basestuf(object):
     def __setitem__(self, k, v):
         pass
 
+    def __getattr__(self, k):
+        try:
+            return self.__getitem__(k)
+        except KeyError:
+            return object.__getattribute__(self, k)
+
+    def __setattr__(self, k, v):
+        # handle normal object attributes
+        if k == '_classkeys' or k in self._classkeys:
+            object.__setattr__(self, k, v)
+        # handle special attributes
+        else:
+            try:
+                self.__setitem__(k, v)
+            except:
+                raise AttributeError(k)
+
+    def __delattr__(self, k):
+        # allow deletion of key-value pairs only
+        if not k == '_classkeys' or k in self._classkeys:
+            try:
+                self.__delitem__(k)
+            except KeyError:
+                raise AttributeError(k)
+
     def __getstate__(self):
         return self._mapping(self)
-
-    def __setstate__(self, state):
-        return self._build(state)
 
     @recursive_repr
     def __repr__(self):
         if not self:
             return '%s()' % class_name(self)
         return '%s(%r)' % (class_name(self), self.items())
+
+    def __setstate__(self, state):
+        return self._build(state)
 
     @lazy
     def _classkeys(self):
@@ -86,11 +111,6 @@ class basestuf(object):
                 self.__setitem__(k, v)
 
     def _prepare(self, *args, **kw):
-        '''
-        preps stuff for stuf object construction
-
-        @param arg: iterable sequence
-        '''
         kw.update(self._build(args))
         return kw
 
@@ -104,33 +124,7 @@ class basestuf(object):
         pass
 
     def update(self, *args, **kw):
-        '''updates stuf with iterables and keyword arguments'''
         self._populate(self._prepare(*args, **kw))
-
-    def __getattr__(self, k):
-        try:
-            return self.__getitem__(k)
-        except KeyError:
-            return object.__getattribute__(self, k)
-
-    def __setattr__(self, k, v):
-        # handle normal object attributes
-        if k == '_classkeys' or k in self._classkeys:
-            object.__setattr__(self, k, v)
-        # handle special attributes
-        else:
-            try:
-                self.__setitem__(k, v)
-            except:
-                raise AttributeError(k)
-
-    def __delattr__(self, k):
-        # allow deletion of key-value pairs only
-        if not k == '_classkeys' or k in self._classkeys:
-            try:
-                self.__delitem__(k)
-            except KeyError:
-                raise AttributeError(k)
 
 
 class wrapstuf(basestuf):

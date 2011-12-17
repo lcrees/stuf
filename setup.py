@@ -15,7 +15,7 @@ setup(
     name='stuf',
     version='0.5.1',
     description='''stuf has attributes''',
-    long_description=open(os.path.join(os.getcwd(), 'README.rst'), 'rb').read(),
+    long_description=open(os.path.join(os.getcwd(), 'README.rst'), 'r').read(),
     author='L. C. Rees',
     url='https://bitbucket.org/lcrees/stuf/',
     author_email='lcrees@gmail.com',
