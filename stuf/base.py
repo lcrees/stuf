@@ -3,8 +3,9 @@
 
 from __future__ import absolute_import
 from collections import Mapping, Sequence
+from operator import getitem, delitem, setitem
 
-from stuf.util import class_name, lazy, recursive_repr
+from stuf.utils import class_name, lazy, recursive_repr
 
 
 class basestuf(object):
@@ -33,7 +34,7 @@ class basestuf(object):
 
     def __getattr__(self, k):
         try:
-            return self.__getitem__(k)
+            return getitem(self, k)
         except KeyError:
             return object.__getattribute__(self, k)
 
@@ -44,7 +45,7 @@ class basestuf(object):
         # handle special attributes
         else:
             try:
-                self.__setitem__(k, v)
+                setitem(self, k, v)
             except:
                 raise AttributeError(k)
 
@@ -52,7 +53,7 @@ class basestuf(object):
         # allow deletion of key-value pairs only
         if not k == '_classkeys' or k in self._classkeys:
             try:
-                self.__delitem__(k)
+                delitem(self, k)
             except KeyError:
                 raise AttributeError(k)
 
@@ -81,7 +82,7 @@ class basestuf(object):
         # add class to handle potential nested objects of the same class
         kw = kind()
         if isinstance(iterable, Mapping):
-            kw.update(kind(i for i in iterable.items()))
+            kw.update(kind(i for i in iterable.iteritems()))
         elif isinstance(iterable, Sequence):
             # extract appropriate key-values from sequence
             for arg in iterable:
@@ -102,11 +103,11 @@ class basestuf(object):
                 # see if stuf can be converted to nested stuf
                 trial = new(v)
                 if len(trial) > 0:
-                    self.__setitem__(k, trial)
+                    setitem(self, k, trial)
                 else:
-                    self.__setitem__(k, v)
+                    setitem(self, k, v)
             else:
-                self.__setitem__(k, v)
+                setitem(self, k, v)
 
     def _prepare(self, *args, **kw):
         kw.update(self._build(args))
@@ -124,13 +125,13 @@ class wrapstuf(basestuf):
     '''wraps mappings for stuf compliance'''
 
     def __getitem__(self, key):
-        return self._wrapped[key]
+        return getitem(self._wrapped, key)
 
     def __iter__(self):
-        return self._wrapped.__iter__()
+        return iter(self._wrapped)
 
     def __len__(self):
-        return self._wrapped.__len__()
+        return len(self._wrapped)
 
 
 class stuf(basestuf, dict):

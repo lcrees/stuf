@@ -3,11 +3,12 @@
 '''core stuf'''
 
 from __future__ import absolute_import
+from operator import setitem, delitem
 from collections import (
     MutableMapping, Mapping, Sequence, defaultdict, namedtuple,
 )
 
-from .util import OrderedDict
+from .utils import OrderedDict
 from .base import basestuf, wrapstuf
 
 
@@ -56,11 +57,11 @@ class defaultstuf(basestuf, defaultdict):
                 # see if stuf can be converted to nested stuf
                 trial = new(self.default_factory, v)
                 if len(trial) > 0:
-                    self[k] = trial
+                    setitem(self, k, trial)
                 else:
-                    self[k] = v
+                    setitem(self, k, v)
             else:
-                self[k] = v
+                setitem(self, k, v)
 
     def _prepare(self, *args, **kw):
         kw.update(self._build(self.default_factory, args))
@@ -111,7 +112,7 @@ class frozenstuf(Mapping):
     def _build(cls, iterable):
         kw = dict()
         if isinstance(iterable, Mapping):
-            kw.update(dict(i for i in iterable.items()))
+            kw.update(dict(i for i in iterable.iteritems()))
         elif isinstance(iterable, Sequence):
             # extract appropriate key-values from sequence
             for arg in iterable:
@@ -122,23 +123,23 @@ class frozenstuf(Mapping):
         return kw
 
     def _freeze(self, mapping):
-        frozen = namedtuple('frozenstuf', mapping.keys())
+        frozen = namedtuple('frozenstuf', mapping.iterkeys())
         return frozen(**mapping)
 
     def _populate(self, iterable):
         new = self._freeze
         for k, v in iterable.iteritems():
             if isinstance(v, basestring):
-                iterable[k] = v
+                setitem(iterable, k, v)
             elif isinstance(v, (Sequence, Mapping)):
                 # see if stuf can be converted to nested stuf
                 trial = frozenstuf(v)
                 if len(trial) > 0:
-                    iterable[k] = trial
+                    setitem(iterable, k, trial)
                 else:
-                    iterable[k] = v
+                    setitem(iterable, k, v)
             else:
-                iterable[k] = v
+                setitem(iterable, k, v)
         return new(iterable)
 
     def copy(self):
@@ -160,10 +161,10 @@ class orderedstuf(wrapstuf, MutableMapping):
         super(orderedstuf, self).__init__(*args, **kw)
 
     def __setitem__(self, key, value):
-        self._wrapped[key] = value
+        setitem(self._wrapped, key, value)
 
     def __delitem__(self, key):
-        del self._wrapped[key]
+        delitem(self._wrapped, key)
 
     def __reversed__(self):
         return self._wrapped.__reversed__()
@@ -193,7 +194,7 @@ class fixedstuf(wrapstuf, MutableMapping):
     def __setitem__(self, k, v):
         # only access initial keys
         if k in self.allowed:
-            self._wrapped[k] = v
+            setitem(self._wrapped, k, v)
         else:
             raise KeyError('%s is not an allowed key' % k)
 
@@ -203,15 +204,15 @@ class fixedstuf(wrapstuf, MutableMapping):
             object.__setattr__(self, k, v)
         else:
             try:
-                self[k] = v
+                setitem(self, k, v)
             except KeyError:
                 raise AttributeError(k)
 
     def __delitem__(self, key):
-        self._wrapped[key] = None
+        setitem(self._wrapped, key, None)
 
     def __delattr__(self, k):
-        self.__delitem__(k)
+        delitem(self, k)
 
     def __reduce__(self):
         return self.__class__, (self._wrapped.copy(),)

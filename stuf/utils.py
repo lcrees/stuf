@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import
 from inspect import isclass
+from operator import itemgetter
 try:
     from thread import get_ident
 except ImportError:
@@ -21,7 +22,7 @@ def class_name(this):
 
     @param this: object
     '''
-    return getattr(this.__class__, '__name__')
+    return getter(this.__class__, '__name__')
 
 
 def deleter(this, key):
@@ -45,9 +46,9 @@ def getter(this, key, default=None):
     @param key: key to lookup
     @param default: default value returned if key not found (default: None)
     '''
-    return getattr(this, key, default) if isclass(this) else this.__dict__.get(
-        key, default
-    )
+    if isclass(this):
+        return getattr(this, key, default)
+    return object.__getattribute__(this, key) or default
 
 
 def instance_or_class(key, this, owner):
@@ -70,7 +71,9 @@ def inverse_lookup(value, this, default=None):
     @param default: default key (default: None)
     '''
     try:
-        return dict((v, k) for k, v in vars(this).iteritems())[value]
+        return itemgetter(value)(
+            dict((v, k) for k, v in vars(this).iteritems())
+        )
     except (TypeError, KeyError):
         return default
 
@@ -125,7 +128,7 @@ def object_name(this):
 
     @param this: object
     '''
-    return getattr(this, '__name__')
+    return getter(this, '__name__')
 
 
 def recursive_repr(this):
@@ -147,8 +150,8 @@ def recursive_repr(this):
             repr_running.discard(key)
         return result
     # Can't use functools.wraps() here because of bootstrap issues
-    wrapper.__module__ = getattr(this, '__module__')
-    wrapper.__doc__ = getattr(this, '__doc__')
+    wrapper.__module__ = getter(this, '__module__')
+    wrapper.__doc__ = getter(this, '__doc__')
     wrapper.__name__ = object_name(this)
     return wrapper
 
@@ -172,22 +175,43 @@ class lazybase(object):
 
     def __init__(self, method):
         self.method = method
-        try:
-            self.__doc__ = method.__doc__
-            self.__module__ = method.__module__
-            self.__name__ = self.name = object_name(method)
-        except:
-            pass
+        self.name = object_name(method)
+        update_wrapper(self, method)
 
 
 class lazy(lazybase):
 
-    '''Lazily assign attributes on an instance upon first use.'''
+    '''lazily assign attributes on an instance upon first use.'''
 
     def __get__(self, instance, owner):
         if instance is None:
             return self
         return setter(instance, self.name, self.method(instance))
+
+
+class lazy_class(lazybase):
+
+    '''Lazily assign attributes on an class upon first use.'''
+
+    def __get__(self, instance, owner):
+        return setter(owner, self.name, self.method(owner))
+
+
+class lazy_set(lazybase):
+
+    '''lazy assign attributes with a custom setter'''
+
+    def __init__(self, method, fget=None):
+        super(lazy_set, self).__init__(method)
+        self.fget = fget
+        update_wrapper(self, method)
+
+    def __set__(self, this, value):
+        self.fget(this, value)
+
+    def setter(self, func):
+        self.fget = func
+        return self
 
 
 class both(lazy):
@@ -226,11 +250,3 @@ class either(both):
         if instance is None:
             return setter(owner, self.name, self.expr(owner))
         return setter(instance, self.name, self.method(instance))
-
-
-class lazy_class(lazybase):
-
-    '''Lazily assign attributes on an class upon first use.'''
-
-    def __get__(self, instance, owner):
-        return setter(owner, self.name, self.method(owner))
