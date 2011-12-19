@@ -3,8 +3,6 @@
 '''stuf utilities'''
 
 from __future__ import absolute_import
-from inspect import isclass
-from operator import itemgetter
 try:
     from thread import get_ident
 except ImportError:
@@ -13,16 +11,31 @@ try:
     from collections import OrderedDict
 except  ImportError:
     from ordereddict import OrderedDict
+from operator import itemgetter, attrgetter
 from functools import wraps, update_wrapper
 
 
-def class_name(this):
+def clsname(this):
     '''
     get class name
 
     @param this: object
     '''
     return getter(this.__class__, '__name__')
+
+
+def deepget(this, key, default=None):
+    '''
+    get an attribute with deep attribute path
+
+    @param this: object
+    @param key: key to lookup
+    @param default: default value returned if key not found (default: None)
+    '''
+    try:
+        return attrgetter(key)(this)
+    except AttributeError:
+        return default
 
 
 def deleter(this, key):
@@ -32,10 +45,10 @@ def deleter(this, key):
     @param this: object
     @param key: key to lookup
     '''
-    if isclass(this):
-        delattr(this, key)
-    else:
+    try:
         object.__delattr__(this, key)
+    except TypeError:
+        delattr(this, key)
 
 
 def getter(this, key, default=None):
@@ -46,9 +59,15 @@ def getter(this, key, default=None):
     @param key: key to lookup
     @param default: default value returned if key not found (default: None)
     '''
-    if isclass(this):
-        return getattr(this, key, default)
-    return object.__getattribute__(this, key) or default
+    try:
+        return object.__getattribute__(this, key)
+    except TypeError:
+        try:
+            return getattr(this, key)
+        except AttributeError:
+            return default
+    except AttributeError:
+        return default
 
 
 def instance_or_class(key, this, owner):
@@ -107,22 +126,7 @@ def lru_wrapped(this, maxsize=100):
     return wrapper
 
 
-def object_lookup(path, this):
-    '''
-    look up an attribute on an object or its child objects
-
-    @param path: path in object
-    @param this: object to lookup on
-    '''
-    for part in path:
-        result = getter(this, part)
-        if result is not None:
-            this = result
-        else:
-            return result
-
-
-def object_name(this):
+def selfname(this):
     '''
     get object name
 
@@ -152,7 +156,7 @@ def recursive_repr(this):
     # Can't use functools.wraps() here because of bootstrap issues
     wrapper.__module__ = getter(this, '__module__')
     wrapper.__doc__ = getter(this, '__doc__')
-    wrapper.__name__ = object_name(this)
+    wrapper.__name__ = selfname(this)
     return wrapper
 
 
@@ -164,18 +168,20 @@ def setter(this, key, value):
     @param key: key to set
     @param value: value to set
     '''
-    if isclass(this):
-        setattr(this, key, value)
-    else:
+    try:
         this.__dict__[key] = value
+    except TypeError:
+        setattr(this, key, value)
     return value
 
 
 class lazybase(object):
 
+    '''base for lazy descriptors'''
+
     def __init__(self, method):
         self.method = method
-        self.name = object_name(method)
+        self.name = selfname(method)
         update_wrapper(self, method)
 
 
