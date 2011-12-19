@@ -437,10 +437,10 @@ class TestFixedStuf(unittest.TestCase):
         self.assertRaises(TypeError, lambda: delattr(self.stuf.test3.e))
 
     def test__delitem__(self):
+        del self.stuf.test3['e']
+        self.assertRaises(KeyError, lambda: self.stuf.test3['e'])
         del self.stuf['test1']
-        self.assertIsNone(self.stuf['test1'])
-        del self.stuf.test3['test1']
-        self.assertIsNone(self.stuf.test3['test1'])
+        self.assertRaises(KeyError, lambda: self.stuf['test1'])
 
     def test_get(self):
         self.assertEqual(self.stuf.get('test1'), 'test1')
@@ -464,7 +464,6 @@ class TestFixedStuf(unittest.TestCase):
         self.stuf.clear()
         self.stuf['test1'] = 'test1again'
         self.stuf['test3'] = 5
-
 
     def test_items(self):
         slist = list(self.stuf.items())
