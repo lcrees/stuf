@@ -16,7 +16,7 @@ class defaultstuf(directstuf, defaultdict):
     default value for keys with no value
     '''
 
-    _mapping = defaultdict
+    _map = defaultdict
 
     def __init__(self, default, *args, **kw):
         '''
@@ -29,7 +29,7 @@ class defaultstuf(directstuf, defaultdict):
 
     @classmethod
     def _build(cls, default, iterable):
-        kind = cls._mapping
+        kind = cls._map
         # add class to handle potential nested objects of the same class
         kw = kind(default)
         if isinstance(iterable, Mapping):
@@ -80,7 +80,7 @@ class fixedstuf(writewrapstuf):
         if key in self.allowed:
             super(fixedstuf, self).__setitem__(key, value)
         else:
-            raise KeyError('%s is not an allowed key' % key)
+            raise KeyError('key "{0}" not allowed'.format(key))
 
     def __reduce__(self):
         return (self.__class__, (self._wrapped.copy(),))
@@ -107,7 +107,7 @@ class frozenstuf(wrapstuf, Mapping):
         try:
             return getattr(self._wrapped, key)
         except AttributeError:
-            raise KeyError('key not found')
+            raise KeyError('key {0} not found'.format(key))
 
     def __iter__(self):
         return getter(self, '_wrapped')._asdict().iterkeys()

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable-msg=w0231
 '''base stuf'''
 
 from __future__ import absolute_import
