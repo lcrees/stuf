@@ -3,7 +3,6 @@
 '''stuf utilities'''
 
 from __future__ import absolute_import
-import inspect
 try:
     from thread import get_ident
 except ImportError:
@@ -12,16 +11,31 @@ try:
     from collections import OrderedDict
 except  ImportError:
     from ordereddict import OrderedDict
+from operator import itemgetter, attrgetter
 from functools import wraps, update_wrapper
 
 
-def class_name(this):
+def clsname(this):
     '''
     get class name
 
     @param this: object
     '''
-    return getattr(this.__class__, '__name__')
+    return getter(this.__class__, '__name__')
+
+
+def deepget(this, key, default=None):
+    '''
+    get an attribute with deep attribute path
+
+    @param this: object
+    @param key: key to lookup
+    @param default: default value returned if key not found (default: None)
+    '''
+    try:
+        return attrgetter(key)(this)
+    except AttributeError:
+        return default
 
 
 def deleter(this, key):
@@ -31,10 +45,10 @@ def deleter(this, key):
     @param this: object
     @param key: key to lookup
     '''
-    if inspect.isclass(this):
-        delattr(this, key)
-    else:
+    try:
         object.__delattr__(this, key)
+    except TypeError:
+        delattr(this, key)
 
 
 def getter(this, key, default=None):
@@ -45,9 +59,42 @@ def getter(this, key, default=None):
     @param key: key to lookup
     @param default: default value returned if key not found (default: None)
     '''
-    if inspect.isclass(this):
-        return getattr(this, key, default)
-    return this.__dict__.get(key, default)
+    try:
+        return object.__getattribute__(this, key)
+    except TypeError:
+        try:
+            return getattr(this, key)
+        except AttributeError:
+            return default
+    except AttributeError:
+        return default
+
+
+def instance_or_class(key, this, owner):
+    '''
+    get attribute of an instance or class
+
+    @param key: name of attribute to look for
+    @param this: instance to check for attribute
+    @param owner: class to check for attribute
+    '''
+    return getter(this, key, getter(owner, key))
+
+
+def inverse_lookup(value, this, default=None):
+    '''
+    get attribute of an instance by value
+
+    @param value: value to lookup as a key
+    @param this: instance to check for attribute
+    @param default: default key (default: None)
+    '''
+    try:
+        return itemgetter(value)(
+            dict((v, k) for k, v in vars(this).iteritems())
+        )
+    except (TypeError, KeyError):
+        return default
 
 
 def lru_wrapped(this, maxsize=100):
@@ -79,13 +126,13 @@ def lru_wrapped(this, maxsize=100):
     return wrapper
 
 
-def object_name(this):
+def selfname(this):
     '''
     get object name
 
     @param this: object
     '''
-    return getattr(this, '__name__')
+    return getter(this, '__name__')
 
 
 def recursive_repr(this):
@@ -107,9 +154,9 @@ def recursive_repr(this):
             repr_running.discard(key)
         return result
     # Can't use functools.wraps() here because of bootstrap issues
-    wrapper.__module__ = getattr(this, '__module__')
-    wrapper.__doc__ = getattr(this, '__doc__')
-    wrapper.__name__ = object_name(this)
+    wrapper.__module__ = getter(this, '__module__')
+    wrapper.__doc__ = getter(this, '__doc__')
+    wrapper.__name__ = selfname(this)
     return wrapper
 
 
@@ -121,34 +168,31 @@ def setter(this, key, value):
     @param key: key to set
     @param value: value to set
     '''
-    if inspect.isclass(this):
-        setattr(this, key, value)
-    else:
+    try:
         this.__dict__[key] = value
+    except TypeError:
+        setattr(this, key, value)
+    return value
 
 
 class lazybase(object):
 
+    '''base for lazy descriptors'''
+
     def __init__(self, method):
         self.method = method
-        try:
-            self.__doc__ = method.__doc__
-            self.__module__ = method.__module__
-            self.__name__ = self.name = object_name(method)
-        except:
-            pass
+        self.name = selfname(method)
+        update_wrapper(self, method)
 
 
 class lazy(lazybase):
 
-    '''Lazily assign attributes on an instance upon first use.'''
+    '''lazily assign attributes on an instance upon first use.'''
 
     def __get__(self, instance, owner):
         if instance is None:
             return self
-        value = self.method(instance)
-        setter(instance, self.name, value)
-        return value
+        return setter(instance, self.name, self.method(instance))
 
 
 class lazy_class(lazybase):
@@ -156,10 +200,25 @@ class lazy_class(lazybase):
     '''Lazily assign attributes on an class upon first use.'''
 
     def __get__(self, instance, owner):
-        value = self.method(owner)
-        setter(owner, self.name, value)
-        return value
-    
+        return setter(owner, self.name, self.method(owner))
+
+
+class lazy_set(lazybase):
+
+    '''lazy assign attributes with a custom setter'''
+
+    def __init__(self, method, fget=None):
+        super(lazy_set, self).__init__(method)
+        self.fget = fget
+        update_wrapper(self, method)
+
+    def __set__(self, this, value):
+        self.fget(this, value)
+
+    def setter(self, func):
+        self.fget = func
+        return self
+
 
 class both(lazy):
 
@@ -195,9 +254,5 @@ class either(both):
 
     def __get__(self, instance, owner):
         if instance is None:
-            value = self.expr(owner)
-            setter(owner, self.name, value)
-            return value
-        value = self.method(instance)
-        setter(instance, self.name, value)
-        return value
+            return setter(owner, self.name, self.expr(owner))
+        return setter(instance, self.name, self.method(instance))
