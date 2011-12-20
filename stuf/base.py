@@ -7,7 +7,7 @@ from itertools import chain
 from collections import Mapping, Sequence, MutableMapping
 from operator import getitem, delitem, setitem, methodcaller
 
-from .utils import lazy, recursive_repr, setter, clsname
+from .utils import attr_or_item, lazy, recursive_repr, setter, clsname
 
 
 class corestuf(object):
@@ -18,16 +18,13 @@ class corestuf(object):
     _reserved = ['allowed', '_wrapped', '_map']
 
     def __getattr__(self, key):
-        try:
-            return getitem(self, key)
-        except KeyError:
-            return object.__getattribute__(self, key)
+        return attr_or_item(self, key)
 
     @recursive_repr
     def __repr__(self):
         if not self:
             return '%s()' % clsname(self)
-        return '%s(%r)' % (clsname(self), methodcaller('iteritems')(self))
+        return '%s(%r)' % (clsname(self), methodcaller('items')(self))
 
     @lazy
     def _classkeys(self):

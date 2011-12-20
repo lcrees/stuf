@@ -11,8 +11,21 @@ try:
     from collections import OrderedDict
 except  ImportError:
     from ordereddict import OrderedDict
-from operator import itemgetter, attrgetter
 from functools import wraps, update_wrapper
+from operator import itemgetter, attrgetter, getitem
+
+
+def attr_or_item(this, key):
+    '''
+    get attribute or item
+
+    @param this: object
+    @param key: key to lookup
+    '''
+    try:
+        return getitem(this, key)
+    except KeyError:
+        return getter(this, key)
 
 
 def clsname(this):
@@ -51,7 +64,7 @@ def deleter(this, key):
         delattr(this, key)
 
 
-def getter(this, key, default=None):
+def getter(this, key):
     '''
     get an attribute
 
@@ -62,10 +75,19 @@ def getter(this, key, default=None):
     try:
         return object.__getattribute__(this, key)
     except TypeError:
-        try:
-            return getattr(this, key)
-        except AttributeError:
-            return default
+        return getattr(this, key)
+
+
+def get_or_default(this, key, default=None):
+    '''
+    get an attribute
+
+    @param this: object
+    @param key: key to lookup
+    @param default: default value returned if key not found (default: None)
+    '''
+    try:
+        return getter(this, key)
     except AttributeError:
         return default
 
