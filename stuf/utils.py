@@ -12,7 +12,7 @@ try:
 except  ImportError:
     from ordereddict import OrderedDict
 from functools import wraps, update_wrapper
-from operator import itemgetter, attrgetter, getitem
+from operator import itemgetter, attrgetter, getitem, delitem
 
 
 def attr_or_item(this, key):
@@ -239,6 +239,9 @@ class lazy_set(lazy):
 
     def __set__(self, this, value):
         self.fget(this, value)
+
+    def __delete__(self, this):
+        delitem(this.__dict__, self.name)
 
     def setter(self, func):
         self.fget = func
