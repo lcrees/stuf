@@ -60,7 +60,7 @@ def deleter(this, key):
     '''
     try:
         object.__delattr__(this, key)
-    except TypeError:
+    except (TypeError, AttributeError):
         delattr(this, key)
 
 
