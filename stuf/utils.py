@@ -74,7 +74,7 @@ def getter(this, key):
     '''
     try:
         return object.__getattribute__(this, key)
-    except TypeError:
+    except (AttributeError, TypeError):
         return getattr(this, key)
 
 
@@ -100,7 +100,10 @@ def instance_or_class(key, this, owner):
     @param this: instance to check for attribute
     @param owner: class to check for attribute
     '''
-    return getter(this, key, getter(owner, key))
+    try:
+        return getter(this, key)
+    except AttributeError:
+        return getter(owner, key)
 
 
 def inverse_lookup(value, this, default=None):
@@ -225,7 +228,7 @@ class lazy_class(lazybase):
         return setter(owner, self.name, self.method(owner))
 
 
-class lazy_set(lazybase):
+class lazy_set(lazy):
 
     '''lazy assign attributes with a custom setter'''
 
