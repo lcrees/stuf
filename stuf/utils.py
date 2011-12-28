@@ -6,7 +6,10 @@ from __future__ import absolute_import
 try:
     from thread import get_ident
 except ImportError:
-    from dummy_thread import get_ident
+    try:
+        from dummy_thread import get_ident
+    except ImportError:
+        from _thread import get_ident
 try:
     from collections import OrderedDict
 except  ImportError:

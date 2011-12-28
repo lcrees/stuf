@@ -21,6 +21,12 @@ class corestuf(object):
         try:
             return getitem(self, key)
         except KeyError:
+            if key == 'iteritems':
+                return self.items
+            elif key == 'iterkeys':
+                return self.keys
+            elif key == 'itervalues':
+                return self.values
             return object.__getattribute__(self, key)
 
     @recursive_repr
@@ -32,11 +38,16 @@ class corestuf(object):
     @lazy
     def _classkeys(self):
         # protected keywords
-        return frozenset(chain(
-            vars(self).iterkeys(),
-            vars(self.__class__).iterkeys(),
-            self._reserved
-        ))
+        try:
+            return frozenset(chain(
+                vars(self).iterkeys(),
+                vars(self.__class__).iterkeys(),
+                self._reserved
+            ))
+        except AttributeError:
+            return frozenset(chain(
+                vars(self).keys(), vars(self.__class__).keys(), self._reserved
+            ))
 
     @classmethod
     def _build(cls, iterable):
@@ -44,7 +55,11 @@ class corestuf(object):
         # add class to handle potential nested objects of the same class
         kw = kind()
         if isinstance(iterable, Mapping):
-            kw.update(kind(i for i in iterable.iteritems()))
+            try:
+                iitems = iterable.iteritems
+            except AttributeError:
+                iitems = iterable.items
+            kw.update(kind(i for i in iitems()))
         elif isinstance(iterable, Sequence):
             # extract appropriate key-values from sequence
             for arg in iterable:
@@ -65,10 +80,16 @@ class corestuf(object):
     @classmethod
     def _populate(cls, past, future):
         new = cls._new
-        for key, value in past.iteritems():
+        try:
+            pitems = past.iteritems
+            bstring = basestring  # @UndefinedVariable
+        except AttributeError:
+            pitems = past.items
+            bstring = str
+        for key, value in pitems():
             if all([
                 isinstance(value, (Sequence, Mapping)),
-                not isinstance(value, basestring),
+                not isinstance(value, bstring),
             ]):
                 # see if stuf can be converted to nested stuf
                 trial = new(value)
@@ -117,7 +138,11 @@ class writestuf(corestuf):
 
     def __iter__(self):
         cls = self.__class__
-        for key, value in methodcaller('iteritems')(self):
+        try:
+            iitems = self.iteritems
+        except AttributeError:
+            iitems = self.items
+        for key, value in iitems():
             # nested stuf of some sort
             if isinstance(value, cls):
                 yield (key, dict(i for i in value))
