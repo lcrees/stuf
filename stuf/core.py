@@ -168,3 +168,6 @@ class orderedstuf(writewrapstuf):
 class stuf(directstuf, dict):
 
     '''dictionary with attribute-style access'''
+
+
+__all__ = ['defaultstuf', 'fixedstuf', 'frozenstuf', 'orderedstuf', 'stuf']

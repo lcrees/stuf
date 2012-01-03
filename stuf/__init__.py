@@ -8,3 +8,5 @@ ifixedstuf = fixedstuf
 ifrozenstuf = frozenstuf
 iorderedstuf = orderedstuf
 istuf = stuf
+
+__all__ = ['defaultstuf', 'fixedstuf', 'frozenstuf', 'orderedstuf', 'stuf']

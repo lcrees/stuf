@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-## pylint: disable-msg=w0702
+## pylint: disable-msg=w0702,f0401
 '''stuf utilities'''
 
 from __future__ import absolute_import
@@ -65,6 +65,15 @@ def deleter(this, key):
         object.__delattr__(this, key)
     except (TypeError, AttributeError):
         delattr(this, key)
+
+
+def getcls(this):
+    '''
+    get class of instance
+
+    @param this: an instance
+    '''
+    return getter(this, '__class__')
 
 
 def getter(this, key):
@@ -287,3 +296,11 @@ class either(both):
         if instance is None:
             return setter(owner, self.name, self.expr(owner))
         return setter(instance, self.name, self.method(instance))
+
+
+__all__ = [
+    'attr_or_item', 'both', 'clsname', 'deepget', 'deleter', 'either',
+    'get_or_default', 'getcls', 'getter', 'instance_or_class',
+    'inverse_lookup', 'lazy', 'lazy_class', 'lazy_set', 'lru_wrapped',
+    'recursive_repr', 'selfname', 'setter',
+]
