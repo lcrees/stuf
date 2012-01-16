@@ -3,6 +3,11 @@
 '''stuf utilities'''
 
 from __future__ import absolute_import
+
+try:
+    from collections import OrderedDict
+except  ImportError:
+    from ordereddict import OrderedDict
 try:
     from thread import get_ident
 except ImportError:
@@ -10,10 +15,6 @@ except ImportError:
         from dummy_thread import get_ident
     except ImportError:
         from _thread import get_ident
-try:
-    from collections import OrderedDict
-except  ImportError:
-    from ordereddict import OrderedDict
 from functools import wraps, update_wrapper
 from operator import itemgetter, attrgetter, getitem, delitem
 

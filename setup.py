@@ -13,7 +13,7 @@ if sys.version_info[0] == 2 and sys.version_info[1] < 7:
 
 setup(
     name='stuf',
-    version='0.8.1',
+    version='0.8.2',
     description='''stuf has attributes''',
     long_description=open(os.path.join(os.getcwd(), 'README.rst'), 'r').read(),
     author='L. C. Rees',
