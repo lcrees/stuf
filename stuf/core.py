@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # pylint: disable-msg=w0221,w0212,w0201
 '''core stuf'''
+
 from __future__ import absolute_import
 
 from operator import setitem, getitem

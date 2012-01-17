@@ -3,11 +3,12 @@
 '''base stuf'''
 
 from __future__ import absolute_import
+
 from itertools import chain
 from collections import Mapping, Sequence, MutableMapping
 from operator import getitem, delitem, setitem, methodcaller
 
-from .utils import clsname, lazy, recursive_repr, setter
+from .utils import clsname, lazy, recursive_repr
 
 
 class corestuf(object):
@@ -120,7 +121,7 @@ class writestuf(corestuf):
     def __setattr__(self, key, value):
         # handle normal object attributes
         if key == '_classkeys' or key in self._classkeys:
-            setter(self, key, value)
+            self.__dict__[key] = value
         # handle special attributes
         else:
             try:

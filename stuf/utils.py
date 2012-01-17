@@ -38,7 +38,7 @@ def clsname(this):
 
     @param this: object
     '''
-    return getter(this.__class__, '__name__')
+    return getattr(this.__class__, '__name__')
 
 
 def deepget(this, key, default=None):
@@ -192,8 +192,8 @@ def recursive_repr(this):
             repr_running.discard(key)
         return result
     # Can't use functools.wraps() here because of bootstrap issues
-    wrapper.__module__ = getter(this, '__module__')
-    wrapper.__doc__ = getter(this, '__doc__')
+    wrapper.__module__ = getattr(this, '__module__')
+    wrapper.__doc__ = getattr(this, '__doc__')
     wrapper.__name__ = selfname(this)
     return wrapper
 
@@ -206,11 +206,14 @@ def setter(this, key, value):
     @param key: key to set
     @param value: value to set
     '''
+    # it's an instance
     try:
         this.__dict__[key] = value
+        return value
+    # it's a class
     except TypeError:
         setattr(this, key, value)
-    return value
+        return value
 
 
 class lazybase(object):
@@ -238,10 +241,10 @@ class lazy_class(lazybase):
     '''Lazily assign attributes on an class upon first use.'''
 
     def __get__(self, instance, owner):
-        return setter(owner, self.name, self.method(owner))
+        return setattr(owner, self.name, self.method(owner))
 
 
-class lazy_set(lazy):
+class lazy_set(lazybase):
 
     '''lazy assign attributes with a custom setter'''
 
@@ -249,6 +252,11 @@ class lazy_set(lazy):
         super(lazy_set, self).__init__(method)
         self.fget = fget
         update_wrapper(self, method)
+
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        return setter(instance, self.name, self.method(instance))
 
     def __set__(self, this, value):
         self.fget(this, value)
@@ -261,7 +269,7 @@ class lazy_set(lazy):
         return self
 
 
-class both(lazy):
+class both(lazybase):
 
     '''
     decorator which allows definition of a Python descriptor with both
@@ -276,7 +284,7 @@ class both(lazy):
     def __get__(self, instance, owner):
         if instance is None:
             return self.expr(owner)
-        return super(both, self).__get__(instance, owner)
+        return setter(instance, self.name, self.method(instance))
 
     def expression(self, expr):
         '''
@@ -289,14 +297,26 @@ class both(lazy):
 class either(both):
 
     '''
-    decorator which allows definition of a Python descriptor with both
+    decorator which allows caching results of a Python descriptor with both
     instance-level and class-level behavior
     '''
+
+    def __init__(self, method, expr=None):
+        super(either, self).__init__(method)
+        self.expr = expr or method
+        update_wrapper(self, method)
 
     def __get__(self, instance, owner):
         if instance is None:
             return setter(owner, self.name, self.expr(owner))
         return setter(instance, self.name, self.method(instance))
+
+    def expression(self, expr):
+        '''
+        a modifying decorator that defines a general method
+        '''
+        self.expr = expr
+        return self
 
 
 __all__ = [
