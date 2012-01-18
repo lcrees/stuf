@@ -241,7 +241,7 @@ class lazy_class(lazybase):
     '''Lazily assign attributes on an class upon first use.'''
 
     def __get__(self, instance, owner):
-        return setattr(owner, self.name, self.method(owner))
+        return setter(owner, self.name, self.method(owner))
 
 
 class lazy_set(lazybase):
