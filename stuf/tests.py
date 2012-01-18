@@ -400,7 +400,9 @@ class TestFixedStuf(unittest.TestCase):
         return ifixedstuf
 
     def setUp(self):
-        self.stuf = self._makeone(test1='test1', test2='test2', test3=dict(e=1))
+        self.stuf = self._makeone(
+            test1='test1', test2='test2', test3=dict(e=1)
+        )
 
     def test__getattr__(self):
         self.assertEqual(self.stuf.test1, 'test1')
@@ -516,7 +518,9 @@ class TestFixedStuf(unittest.TestCase):
         self.stuf.update(tstuff)
         self.assertEqual(self.stuf['test1'], 3)
         self.assertEqual(self.stuf['test2'], 6)
-        self.assertEqual(self.stuf['test3'], self._maketwo(dict(f=2)), self.stuf['test3'])
+        self.assertEqual(
+            self.stuf['test3'], self._maketwo(dict(f=2)), self.stuf['test3']
+        )
 
     def test_values(self):
         slist1 = self.stuf.test3.values()
@@ -560,7 +564,9 @@ class TestFrozenStuf(unittest.TestCase):
         return ifrozenstuf
 
     def setUp(self):
-        self.stuf = self._makeone(test1='test1', test2='test2', test3=dict(e=1))
+        self.stuf = self._makeone(
+            test1='test1', test2='test2', test3=dict(e=1)
+        )
 
     def test__getattr__(self):
         self.assertEqual(self.stuf.test1, 'test1')
@@ -586,7 +592,8 @@ class TestFrozenStuf(unittest.TestCase):
             AttributeError, lambda: self.stuf.__setitem__('max', 3)
         )
         self.assertRaises(
-            AttributeError, lambda: self.stuf.__setitem__('test2', 'test2again')
+            AttributeError,
+            lambda: self.stuf.__setitem__('test2', 'test2again'),
         )
         self.assertRaises(
             AttributeError, lambda: self.stuf.test3.__setitem__('e', 5)
@@ -672,7 +679,7 @@ class TestFrozenStuf(unittest.TestCase):
             AttributeError, lambda: self.stuf.setdefault('test1', 8)
         )
         self.assertRaises(
-            AttributeError, lambda:self.stuf.setdefault('pow', 8)
+            AttributeError, lambda: self.stuf.setdefault('pow', 8)
         )
 
     def test_update(self):
@@ -724,7 +731,9 @@ class TestOrderedStuf(unittest.TestCase):
         return iorderedstuf
 
     def setUp(self):
-        self.stuf = self._makeone(test1='test1', test2='test2', test3=dict(e=1))
+        self.stuf = self._makeone(
+            test1='test1', test2='test2', test3=dict(e=1)
+        )
 
     def test__getattr__(self):
         self.assertEqual(self.stuf.test1, 'test1')
@@ -885,5 +894,6 @@ class TestOrderedStuf(unittest.TestCase):
         nstuf = pickle.loads(pkle)
         self.assertEquals(tstuf, nstuf)
 
-if __name__ == '__main__': 
+
+if __name__ == '__main__':
     unittest.main()

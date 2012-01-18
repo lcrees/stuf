@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 # pylint: disable-msg=w0221,w0212,w0201
 '''core stuf'''
+
 from __future__ import absolute_import
-from operator import setitem
+
+from operator import setitem, getitem
 from collections import Mapping, Sequence, defaultdict, namedtuple
 
 from .utils import OrderedDict, getter
@@ -17,6 +19,18 @@ class defaultstuf(directstuf, defaultdict):
     '''
 
     _map = defaultdict
+
+    def __getattr__(self, key):
+        try:
+            if key == 'iteritems':
+                return self.items
+            elif key == 'iterkeys':
+                return self.keys
+            elif key == 'itervalues':
+                return self.values
+            return object.__getattribute__(self, key)
+        except AttributeError:
+            return getitem(self, key)
 
     def __init__(self, default, *args, **kw):
         '''
@@ -49,7 +63,11 @@ class defaultstuf(directstuf, defaultdict):
 
     def _populate(self, past, future):
         new = self._new
-        for key, value in past.items():
+        try:
+            pitems = past.iteritems
+        except AttributeError:
+            pitems = past.items
+        for key, value in pitems():
             if isinstance(value, (Mapping, Sequence)):
                 # see if stuf can be converted to nested stuf
                 trial = new(self.default_factory, value)
@@ -87,7 +105,11 @@ class fixedstuf(writewrapstuf):
 
     def _prepopulate(self, *args, **kw):
         iterable = super(fixedstuf, self)._prepopulate(*args, **kw)
-        self.allowed = frozenset(iterable.iterkeys())
+        try:
+            ikeys = iterable.iterkeys
+        except AttributeError:
+            ikeys = iterable.keys
+        self.allowed = frozenset(ikeys())
         return iterable
 
     def popitem(self):
@@ -110,7 +132,10 @@ class frozenstuf(wrapstuf, Mapping):
             raise KeyError('key {0} not found'.format(key))
 
     def __iter__(self):
-        return getter(self, '_wrapped')._asdict().iterkeys()
+        try:
+            return getter(self, '_wrapped')._asdict().iterkeys()
+        except AttributeError:
+            return iter(getter(self, '_wrapped')._asdict().keys())
 
     def __len__(self):
         return len(getter(self, '_wrapped')._asdict())
@@ -120,7 +145,11 @@ class frozenstuf(wrapstuf, Mapping):
 
     @classmethod
     def _mapping(self, mapping):
-        frozen = namedtuple('frozenstuf', mapping.iterkeys())
+        try:
+            mkeys = mapping.iterkeys
+        except AttributeError:
+            mkeys = mapping.keys
+        frozen = namedtuple('frozenstuf', mkeys())
         return frozen(**mapping)
 
 
@@ -140,3 +169,6 @@ class orderedstuf(writewrapstuf):
 class stuf(directstuf, dict):
 
     '''dictionary with attribute-style access'''
+
+
+__all__ = ['defaultstuf', 'fixedstuf', 'frozenstuf', 'orderedstuf', 'stuf']
