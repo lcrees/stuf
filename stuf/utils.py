@@ -1,18 +1,35 @@
 # -*- coding: utf-8 -*-
-## pylint: disable-msg=w0702
+## pylint: disable-msg=w0702,f0401
 '''stuf utilities'''
 
 from __future__ import absolute_import
-try:
-    from thread import get_ident
-except ImportError:
-    from dummy_thread import get_ident
+
 try:
     from collections import OrderedDict
 except  ImportError:
     from ordereddict import OrderedDict
-from operator import itemgetter, attrgetter
+try:
+    from thread import get_ident
+except ImportError:
+    try:
+        from dummy_thread import get_ident
+    except ImportError:
+        from _thread import get_ident
 from functools import wraps, update_wrapper
+from operator import itemgetter, attrgetter, getitem, delitem
+
+
+def attr_or_item(this, key):
+    '''
+    get attribute or item
+
+    @param this: object
+    @param key: key to lookup
+    '''
+    try:
+        return getitem(this, key)
+    except KeyError:
+        return getter(this, key)
 
 
 def clsname(this):
@@ -21,7 +38,7 @@ def clsname(this):
 
     @param this: object
     '''
-    return getter(this.__class__, '__name__')
+    return getattr(this.__class__, '__name__')
 
 
 def deepget(this, key, default=None):
@@ -47,11 +64,20 @@ def deleter(this, key):
     '''
     try:
         object.__delattr__(this, key)
-    except TypeError:
+    except (TypeError, AttributeError):
         delattr(this, key)
 
 
-def getter(this, key, default=None):
+def getcls(this):
+    '''
+    get class of instance
+
+    @param this: an instance
+    '''
+    return getter(this, '__class__')
+
+
+def getter(this, key):
     '''
     get an attribute
 
@@ -61,11 +87,20 @@ def getter(this, key, default=None):
     '''
     try:
         return object.__getattribute__(this, key)
-    except TypeError:
-        try:
-            return getattr(this, key)
-        except AttributeError:
-            return default
+    except (AttributeError, TypeError):
+        return getattr(this, key)
+
+
+def get_or_default(this, key, default=None):
+    '''
+    get an attribute
+
+    @param this: object
+    @param key: key to lookup
+    @param default: default value returned if key not found (default: None)
+    '''
+    try:
+        return getter(this, key)
     except AttributeError:
         return default
 
@@ -78,7 +113,10 @@ def instance_or_class(key, this, owner):
     @param this: instance to check for attribute
     @param owner: class to check for attribute
     '''
-    return getter(this, key, getter(owner, key))
+    try:
+        return getter(this, key)
+    except AttributeError:
+        return getter(owner, key)
 
 
 def inverse_lookup(value, this, default=None):
@@ -154,8 +192,8 @@ def recursive_repr(this):
             repr_running.discard(key)
         return result
     # Can't use functools.wraps() here because of bootstrap issues
-    wrapper.__module__ = getter(this, '__module__')
-    wrapper.__doc__ = getter(this, '__doc__')
+    wrapper.__module__ = getattr(this, '__module__')
+    wrapper.__doc__ = getattr(this, '__doc__')
     wrapper.__name__ = selfname(this)
     return wrapper
 
@@ -168,11 +206,14 @@ def setter(this, key, value):
     @param key: key to set
     @param value: value to set
     '''
+    # it's an instance
     try:
         this.__dict__[key] = value
+        return value
+    # it's a class
     except TypeError:
         setattr(this, key, value)
-    return value
+        return value
 
 
 class lazybase(object):
@@ -212,15 +253,23 @@ class lazy_set(lazybase):
         self.fget = fget
         update_wrapper(self, method)
 
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        return setter(instance, self.name, self.method(instance))
+
     def __set__(self, this, value):
         self.fget(this, value)
+
+    def __delete__(self, this):
+        delitem(this.__dict__, self.name)
 
     def setter(self, func):
         self.fget = func
         return self
 
 
-class both(lazy):
+class both(lazybase):
 
     '''
     decorator which allows definition of a Python descriptor with both
@@ -235,7 +284,7 @@ class both(lazy):
     def __get__(self, instance, owner):
         if instance is None:
             return self.expr(owner)
-        return super(both, self).__get__(instance, owner)
+        return setter(instance, self.name, self.method(instance))
 
     def expression(self, expr):
         '''
@@ -248,11 +297,31 @@ class both(lazy):
 class either(both):
 
     '''
-    decorator which allows definition of a Python descriptor with both
+    decorator which allows caching results of a Python descriptor with both
     instance-level and class-level behavior
     '''
+
+    def __init__(self, method, expr=None):
+        super(either, self).__init__(method)
+        self.expr = expr or method
+        update_wrapper(self, method)
 
     def __get__(self, instance, owner):
         if instance is None:
             return setter(owner, self.name, self.expr(owner))
         return setter(instance, self.name, self.method(instance))
+
+    def expression(self, expr):
+        '''
+        a modifying decorator that defines a general method
+        '''
+        self.expr = expr
+        return self
+
+
+__all__ = [
+    'attr_or_item', 'both', 'clsname', 'deepget', 'deleter', 'either',
+    'get_or_default', 'getcls', 'getter', 'instance_or_class',
+    'inverse_lookup', 'lazy', 'lazy_class', 'lazy_set', 'lru_wrapped',
+    'recursive_repr', 'selfname', 'setter',
+]
