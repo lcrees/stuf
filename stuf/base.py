@@ -5,8 +5,8 @@
 from __future__ import absolute_import
 
 from itertools import chain
+from operator import methodcaller
 from collections import Mapping, Sequence, MutableMapping
-from operator import getitem, delitem, setitem, methodcaller
 
 from .utils import clsname, lazy, recursive_repr
 
@@ -20,7 +20,7 @@ class corestuf(object):
 
     def __getattr__(self, key):
         try:
-            return getitem(self, key)
+            return self[key]
         except KeyError:
             if key == 'iteritems':
                 return self.items
@@ -95,11 +95,11 @@ class corestuf(object):
                 # see if stuf can be converted to nested stuf
                 trial = new(value)
                 if len(trial) > 0:
-                    setitem(future, key, trial)
+                    future[key] = trial
                 else:
-                    setitem(future, key, value)
+                    future[key] = value
             else:
-                setitem(future, key, value)
+                future[key] = value
         return cls._postpopulate(future)
 
     @classmethod
@@ -125,7 +125,7 @@ class writestuf(corestuf):
         # handle special attributes
         else:
             try:
-                setitem(self, key, value)
+                self[key] = value
             except:
                 raise AttributeError(key)
 
@@ -133,7 +133,7 @@ class writestuf(corestuf):
         # allow deletion of key-value pairs only
         if not key == '_classkeys' or key in self._classkeys:
             try:
-                delitem(self, key)
+                del self[key]
             except KeyError:
                 raise AttributeError(key)
 
@@ -196,13 +196,13 @@ class writewrapstuf(wrapstuf, writestuf, MutableMapping):
     '''wraps mappings for stuf compliance'''
 
     def __getitem__(self, key):
-        return getitem(self._wrapped, key)
+        return self._wrapped[key]
 
     def __setitem__(self, key, value):
-        setitem(self._wrapped, key, value)
+        self._wrapped[key] = value
 
     def __delitem__(self, key):
-        delitem(self._wrapped, key)
+        del self._wrapped[key]
 
     def __iter__(self):
         return iter(self._wrapped)

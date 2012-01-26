@@ -16,7 +16,7 @@ except ImportError:
     except ImportError:
         from _thread import get_ident
 from functools import wraps, update_wrapper
-from operator import itemgetter, attrgetter, getitem, delitem
+from operator import itemgetter, attrgetter, getitem
 
 
 def attr_or_item(this, key):
@@ -262,7 +262,7 @@ class lazy_set(lazybase):
         self.fget(this, value)
 
     def __delete__(self, this):
-        delitem(this.__dict__, self.name)
+        del this.__dict__[self.name]
 
     def setter(self, func):
         self.fget = func
