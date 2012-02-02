@@ -91,7 +91,7 @@ def getter(this, key):
         return getattr(this, key)
 
 
-def get_or_default(this, key, default=None):
+def getdefault(this, key, default=None):
     '''
     get an attribute
 
@@ -216,6 +216,21 @@ def setter(this, key, value):
         return value
 
 
+def setdefault(this, key, default=None):
+    '''
+    get an attribute, creating and setting it if needed
+
+    @param this: object
+    @param key: key to lookup
+    @param default: default value returned if key not found (default: None)
+    '''
+    try:
+        return getter(this, key)
+    except AttributeError:
+        setter(this, key, default)
+        return default
+
+
 class lazybase(object):
 
     '''base for lazy descriptors'''
@@ -322,7 +337,7 @@ class twoway(bothbase):
 
 __all__ = [
     'attr_or_item', 'both', 'clsname', 'deepget', 'deleter', 'either',
-    'get_or_default', 'getcls', 'getter', 'instance_or_class',
+    'getdefault', 'getcls', 'getter', 'instance_or_class',
     'inverse_lookup', 'lazy', 'lazy_class', 'lazy_set', 'lru',
     'recursive_repr', 'selfname', 'setter', 'twoway',
 ]
