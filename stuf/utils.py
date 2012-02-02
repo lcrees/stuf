@@ -105,18 +105,18 @@ def get_or_default(this, key, default=None):
         return default
 
 
-def instance_or_class(key, this, owner):
+def instance_or_class(key, this, that):
     '''
     get attribute of an instance or class
 
     @param key: name of attribute to look for
     @param this: instance to check for attribute
-    @param owner: class to check for attribute
+    @param that: class to check for attribute
     '''
     try:
         return getter(this, key)
     except AttributeError:
-        return getter(owner, key)
+        return getter(that, key)
 
 
 def inverse_lookup(value, this, default=None):
@@ -135,7 +135,7 @@ def inverse_lookup(value, this, default=None):
         return default
 
 
-def lru_wrapped(this, maxsize=100):
+def lru(this, maxsize=100):
     '''
     least-recently-used cache decorator from Raymond Hettinger
 
@@ -200,7 +200,7 @@ def recursive_repr(this):
 
 def setter(this, key, value):
     '''
-    get an attribute
+    set attribute
 
     @param this: object
     @param key: key to set
@@ -230,18 +230,18 @@ class lazy(lazybase):
 
     '''lazily assign attributes on an instance upon first use.'''
 
-    def __get__(self, instance, owner):
-        if instance is None:
+    def __get__(self, this, that):
+        if this is None:
             return self
-        return setter(instance, self.name, self.method(instance))
+        return setter(this, self.name, self.method(this))
 
 
 class lazy_class(lazybase):
 
     '''Lazily assign attributes on an class upon first use.'''
 
-    def __get__(self, instance, owner):
-        return setter(owner, self.name, self.method(owner))
+    def __get__(self, this, that):
+        return setter(that, self.name, self.method(that))
 
 
 class lazy_set(lazybase):
@@ -253,10 +253,10 @@ class lazy_set(lazybase):
         self.fget = fget
         update_wrapper(self, method)
 
-    def __get__(self, instance, owner):
-        if instance is None:
+    def __get__(self, this, that):
+        if this is None:
             return self
-        return setter(instance, self.name, self.method(instance))
+        return setter(this, self.name, self.method(this))
 
     def __set__(self, this, value):
         self.fget(this, value)
@@ -269,22 +269,12 @@ class lazy_set(lazybase):
         return self
 
 
-class both(lazybase):
-
-    '''
-    decorator which allows definition of a Python descriptor with both
-    instance-level and class-level behavior
-    '''
+class bothbase(lazybase):
 
     def __init__(self, method, expr=None):
-        super(both, self).__init__(method)
+        super(bothbase, self).__init__(method)
         self.expr = expr or method
         update_wrapper(self, method)
-
-    def __get__(self, instance, owner):
-        if instance is None:
-            return self.expr(owner)
-        return setter(instance, self.name, self.method(instance))
 
     def expression(self, expr):
         '''
@@ -294,34 +284,45 @@ class both(lazybase):
         return self
 
 
-class either(both):
+class both(bothbase):
 
     '''
-    decorator which allows caching results of a Python descriptor with both
-    instance-level and class-level behavior
+    Python descriptor that caches results of instance-level results while
+    allowing class-level results
     '''
 
-    def __init__(self, method, expr=None):
-        super(either, self).__init__(method)
-        self.expr = expr or method
-        update_wrapper(self, method)
+    def __get__(self, this, that):
+        if this is None:
+            return self.expr(that)
+        return setter(this, self.name, self.method(this))
 
-    def __get__(self, instance, owner):
-        if instance is None:
-            return setter(owner, self.name, self.expr(owner))
-        return setter(instance, self.name, self.method(instance))
 
-    def expression(self, expr):
-        '''
-        a modifying decorator that defines a general method
-        '''
-        self.expr = expr
-        return self
+class either(bothbase):
+
+    '''
+    Python descriptor that caches results of both instance- and class-level
+    results
+    '''
+
+    def __get__(self, this, that):
+        if this is None:
+            return setter(that, self.name, self.expr(that))
+        return setter(this, self.name, self.method(this))
+
+
+class twoway(bothbase):
+
+    '''descriptor that enables instance and class-level results'''
+
+    def __get__(self, this, that):
+        if this is None:
+            return self.expr(that)
+        return self.method(this)
 
 
 __all__ = [
     'attr_or_item', 'both', 'clsname', 'deepget', 'deleter', 'either',
     'get_or_default', 'getcls', 'getter', 'instance_or_class',
-    'inverse_lookup', 'lazy', 'lazy_class', 'lazy_set', 'lru_wrapped',
-    'recursive_repr', 'selfname', 'setter',
+    'inverse_lookup', 'lazy', 'lazy_class', 'lazy_set', 'lru',
+    'recursive_repr', 'selfname', 'setter', 'twoway',
 ]
