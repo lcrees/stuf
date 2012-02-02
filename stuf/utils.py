@@ -253,7 +253,7 @@ class lazy(lazybase):
 
 class lazy_class(lazybase):
 
-    '''Lazily assign attributes on an class upon first use.'''
+    '''lazily assign attributes on an class upon first use.'''
 
     def __get__(self, this, that):
         return setter(that, self.name, self.method(that))
@@ -335,9 +335,11 @@ class twoway(bothbase):
         return self.method(this)
 
 
+lru_wrapped = lru
+get_or_default = getdefault
 __all__ = [
-    'attr_or_item', 'both', 'clsname', 'deepget', 'deleter', 'either',
-    'getdefault', 'getcls', 'getter', 'instance_or_class',
-    'inverse_lookup', 'lazy', 'lazy_class', 'lazy_set', 'lru',
-    'recursive_repr', 'selfname', 'setter', 'twoway',
+    'attr_or_item', 'both', 'clsname', 'deepget', 'deleter', 'either', 'lazy',
+    'getdefault', 'getcls', 'getter', 'instance_or_class', 'twoway', 'setter',
+    'inverse_lookup', 'lazy_class', 'lru', 'lazy_set', 'setdefault',
+    'recursive_repr', 'selfname',
 ]
