@@ -235,13 +235,19 @@ class lazybase(object):
 
     '''base for lazy descriptors'''
 
+
+class lazyinit(lazybase):
+
+    '''base for lazy descriptors'''
+
     def __init__(self, method):
+        super(lazyinit, self).__init__()
         self.method = method
         self.name = selfname(method)
         update_wrapper(self, method)
 
 
-class lazy(lazybase):
+class lazy(lazyinit):
 
     '''lazily assign attributes on an instance upon first use.'''
 
@@ -251,7 +257,7 @@ class lazy(lazybase):
         return setter(this, self.name, self.method(this))
 
 
-class lazy_class(lazybase):
+class lazy_class(lazyinit):
 
     '''lazily assign attributes on an class upon first use.'''
 
@@ -259,7 +265,7 @@ class lazy_class(lazybase):
         return setter(that, self.name, self.method(that))
 
 
-class lazy_set(lazybase):
+class lazy_set(lazyinit):
 
     '''lazy assign attributes with a custom setter'''
 
@@ -284,7 +290,7 @@ class lazy_set(lazybase):
         return self
 
 
-class bothbase(lazybase):
+class bothbase(lazyinit):
 
     def __init__(self, method, expr=None):
         super(bothbase, self).__init__(method)
