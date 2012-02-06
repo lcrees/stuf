@@ -164,13 +164,20 @@ def lru(this, maxsize=100):
     return wrapper
 
 
-def selfname(this):
+def plucker(key, item):
     '''
-    get object name
+    fetch item from data structure by key
 
-    @param this: object
+    @param key: label of item
+    @param data: data containing item
     '''
-    return getter(this, '__name__')
+    try:
+        return itemgetter(key)(item)
+    except (KeyError, IndexError):
+        try:
+            return attrgetter(key)(item)
+        except:
+            return None
 
 
 def recursive_repr(this):
@@ -196,6 +203,15 @@ def recursive_repr(this):
     wrapper.__doc__ = getattr(this, '__doc__')
     wrapper.__name__ = selfname(this)
     return wrapper
+
+
+def selfname(this):
+    '''
+    get object name
+
+    @param this: object
+    '''
+    return getter(this, '__name__')
 
 
 def setter(this, key, value):
