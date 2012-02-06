@@ -2,12 +2,10 @@
 # pylint: disable-msg=w0221,w0212,w0201
 '''core stuf'''
 
-from __future__ import absolute_import
-
 from collections import Mapping, Sequence, defaultdict, namedtuple
 
-from .utils import OrderedDict, getter
-from .base import directstuf, wrapstuf, writewrapstuf
+from stuf.utils import OrderedDict, getter
+from stuf.base import directstuf, wrapstuf, writewrapstuf
 
 
 class defaultstuf(directstuf, defaultdict):

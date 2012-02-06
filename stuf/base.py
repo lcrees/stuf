@@ -2,13 +2,11 @@
 # pylint: disable-msg=w0231
 '''base stuf'''
 
-from __future__ import absolute_import
-
 from itertools import chain
 from operator import methodcaller
 from collections import Mapping, Sequence, MutableMapping
 
-from .utils import clsname, lazy, recursive_repr
+from stuf.utils import clsname, lazy, recursive_repr
 
 
 class corestuf(object):

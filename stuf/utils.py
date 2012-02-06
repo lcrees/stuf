@@ -2,8 +2,6 @@
 ## pylint: disable-msg=w0702,f0401
 '''stuf utilities'''
 
-from __future__ import absolute_import
-
 try:
     from collections import OrderedDict
 except  ImportError:
@@ -162,22 +160,6 @@ def lru(this, maxsize=100):
         cache[key] = result
         return result
     return wrapper
-
-
-def plucker(key, item):
-    '''
-    fetch item from data structure by key
-
-    @param key: label of item
-    @param data: data containing item
-    '''
-    try:
-        return itemgetter(key)(item)
-    except (KeyError, IndexError):
-        try:
-            return attrgetter(key)(item)
-        except:
-            return None
 
 
 def recursive_repr(this):
