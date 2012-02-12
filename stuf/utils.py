@@ -286,6 +286,22 @@ class lazy_set(lazyinit):
     def setter(self, func):
         self.fget = func
         return self
+    
+
+class bi(lazyinit):
+
+    def __get__(self, this, that):
+        if this is None:
+            def func(*args, **kw):
+                args = (that,) + args
+                return self.method(*args, **kw)
+            setattr(that, self.name, func)
+            return func
+        def func2(*args, **kw):
+            args = (this,) + args
+            return self.method(*args, **kw)
+        setattr(this, self.name, func2)
+        return func2
 
 
 class bothbase(lazyinit):
