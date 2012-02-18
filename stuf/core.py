@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: disable-msg=w0221,w0212,w0201
+# pylint: disable-msg=w0221
 '''core stuf'''
 
 from collections import Mapping, Sequence, defaultdict, namedtuple

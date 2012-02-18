@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 '''stuf has attributes'''
 
-from __future__ import absolute_import
-
 from .core import defaultstuf, fixedstuf, frozenstuf, orderedstuf, stuf
 
 idefaultstuf = defaultstuf

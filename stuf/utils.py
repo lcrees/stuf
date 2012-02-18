@@ -2,6 +2,7 @@
 ## pylint: disable-msg=w0702,f0401
 '''stuf utilities'''
 
+from inspect import ismodule
 try:
     from collections import OrderedDict
 except  ImportError:
@@ -15,6 +16,8 @@ except ImportError:
         from _thread import get_ident
 from functools import wraps, update_wrapper
 from operator import itemgetter, attrgetter, getitem
+
+from stuf.six import iteritems
 
 
 def attr_or_item(this, key):
@@ -286,7 +289,7 @@ class lazy_set(lazyinit):
     def setter(self, func):
         self.fget = func
         return self
-    
+
 
 class bi(lazyinit):
 
@@ -297,7 +300,7 @@ class bi(lazyinit):
                 return self.method(*args, **kw)
             setattr(that, self.name, func)
             return func
-        def func2(*args, **kw):
+        def func2(*args, **kw): #@IgnorePep8
             args = (this,) + args
             return self.method(*args, **kw)
         setattr(this, self.name, func2)
@@ -357,9 +360,8 @@ class twoway(bothbase):
 
 lru_wrapped = lru
 get_or_default = getdefault
-__all__ = [
-    'attr_or_item', 'both', 'clsname', 'deepget', 'deleter', 'either', 'lazy',
-    'getdefault', 'getcls', 'getter', 'instance_or_class', 'twoway', 'setter',
-    'inverse_lookup', 'lazy_class', 'lru', 'lazy_set', 'setdefault',
-    'recursive_repr', 'selfname',
-]
+
+__all__ = sorted(name for name, obj in iteritems(locals()) if not any([
+    name.startswith('_'), ismodule(obj),
+]))
+del ismodule

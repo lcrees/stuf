@@ -1,8 +1,10 @@
-#Wed Feb 01 09:57:38 MST 2012
+#Sat Feb 18 12:58:38 MST 2012
 eclipse.preferences.version=1
 encoding//stuf/__init__.py=utf-8
 encoding//stuf/base.py=utf-8
+encoding//stuf/compat.py=utf-8
 encoding//stuf/core.py=utf-8
+encoding//stuf/six.py=utf-8
 encoding//stuf/tests.py=utf-8
 encoding//stuf/utils.py=utf-8
 encoding/setup.py=utf-8
