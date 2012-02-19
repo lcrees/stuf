@@ -146,8 +146,7 @@ def lru(this, maxsize=100):
     '''
     # order: least recent to most recent
     cache = OrderedDict()
-
-    @wraps(this)
+    @wraps(this) #@IgnorePep8
     def wrapper(*args, **kw):
         key = args
         if kw:
@@ -172,8 +171,7 @@ def recursive_repr(this):
     @param this: object
     '''
     repr_running = set()
-
-    def wrapper(self):
+    def wrapper(self): #@IgnorePep8
         key = id(self), get_ident()
         if key in repr_running:
             return '...'
@@ -237,36 +235,34 @@ class lazybase(object):
     '''base for lazy descriptors'''
 
 
-class lazyinit(lazybase):
+class _lazyinit(lazybase):
 
     '''base for lazy descriptors'''
 
     def __init__(self, method):
-        super(lazyinit, self).__init__()
+        super(_lazyinit, self).__init__()
         self.method = method
         self.name = selfname(method)
         update_wrapper(self, method)
 
 
-class lazy(lazyinit):
+class lazy(_lazyinit):
 
     '''lazily assign attributes on an instance upon first use.'''
 
     def __get__(self, this, that):
-        if this is None:
-            return self
-        return setter(this, self.name, self.method(this))
+        return self if this is None else self._set(this)
 
 
-class lazy_class(lazyinit):
+class lazy_class(_lazyinit):
 
     '''lazily assign attributes on an class upon first use.'''
 
     def __get__(self, this, that):
-        return setter(that, self.name, self.method(that))
+        return self._set(that)
 
 
-class lazy_set(lazyinit):
+class lazy_set(lazy):
 
     '''lazy assign attributes with a custom setter'''
 
@@ -274,11 +270,6 @@ class lazy_set(lazyinit):
         super(lazy_set, self).__init__(method)
         self.fget = fget
         update_wrapper(self, method)
-
-    def __get__(self, this, that):
-        if this is None:
-            return self
-        return setter(this, self.name, self.method(this))
 
     def __set__(self, this, value):
         self.fget(this, value)
@@ -291,23 +282,21 @@ class lazy_set(lazyinit):
         return self
 
 
-class bi(lazyinit):
+class bi(_lazyinit):
+
+    '''call as both class and instance method'''
 
     def __get__(self, this, that):
-        if this is None:
-            def func(*args, **kw):
-                args = (that,) + args
-                return self.method(*args, **kw)
-            setattr(that, self.name, func)
-            return func
-        def func2(*args, **kw): #@IgnorePep8
-            args = (this,) + args
-            return self.method(*args, **kw)
-        setattr(this, self.name, func2)
-        return func2
+        return self._factory(that) if this is None else self._factory(this)
+
+    def _factory(self, this):
+        def func(*args, **kw):
+            return self.method(*(this,) + args, **kw)
+        setattr(this, self.name, func)
+        return func
 
 
-class bothbase(lazyinit):
+class bothbase(_lazyinit):
 
     def __init__(self, method, expr=None):
         super(bothbase, self).__init__(method)
@@ -315,9 +304,7 @@ class bothbase(lazyinit):
         update_wrapper(self, method)
 
     def expression(self, expr):
-        '''
-        a modifying decorator that defines a general method
-        '''
+        '''modifying decorator that defines a general method'''
         self.expr = expr
         return self
 
@@ -325,27 +312,24 @@ class bothbase(lazyinit):
 class both(bothbase):
 
     '''
-    Python descriptor that caches results of instance-level results while
-    allowing class-level results
+    descriptor that caches results of instance-level results while allowing
+    class-level results
     '''
 
     def __get__(self, this, that):
-        if this is None:
-            return self.expr(that)
-        return setter(this, self.name, self.method(this))
+        return self.expr(that) if this is None else self._set(this)
 
 
 class either(bothbase):
 
     '''
-    Python descriptor that caches results of both instance- and class-level
-    results
+    descriptor that caches results of both instance- and class-level results
     '''
 
     def __get__(self, this, that):
         if this is None:
             return setter(that, self.name, self.expr(that))
-        return setter(this, self.name, self.method(this))
+        return self._set(this)
 
 
 class twoway(bothbase):
@@ -353,9 +337,7 @@ class twoway(bothbase):
     '''descriptor that enables instance and class-level results'''
 
     def __get__(self, this, that):
-        if this is None:
-            return self.expr(that)
-        return self.method(this)
+        return self.expr(that) if this is None else self.method(this)
 
 
 lru_wrapped = lru
