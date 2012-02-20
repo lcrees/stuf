@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
-# pylint: disable-msg=w0221,w0212,w0201
+# pylint: disable-msg=w0221
 '''core stuf'''
 
-from __future__ import absolute_import
-
-from operator import setitem, getitem
 from collections import Mapping, Sequence, defaultdict, namedtuple
 
-from .utils import OrderedDict, getter
-from .base import directstuf, wrapstuf, writewrapstuf
+from stuf.utils import OrderedDict, getter
+from stuf.base import directstuf, wrapstuf, writewrapstuf
 
 
 class defaultstuf(directstuf, defaultdict):
@@ -30,7 +27,7 @@ class defaultstuf(directstuf, defaultdict):
                 return self.values
             return object.__getattribute__(self, key)
         except AttributeError:
-            return getitem(self, key)
+            return self[key]
 
     def __init__(self, default, *args, **kw):
         '''
@@ -72,11 +69,11 @@ class defaultstuf(directstuf, defaultdict):
                 # see if stuf can be converted to nested stuf
                 trial = new(self.default_factory, value)
                 if len(trial) > 0:
-                    setitem(future, key, trial)
+                    future[key] = trial
                 else:
-                    setitem(future, key, value)
+                    future[key] = value
             else:
-                setitem(future, key, value)
+                future[key] = value
 
     def _prepopulate(self, *args, **kw):
         kw.update(self._build(self.default_factory, args))

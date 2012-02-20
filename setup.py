@@ -11,12 +11,11 @@ except ImportError:
 
 install_requires = []
 if sys.version_info[0] == 2 and sys.version_info[1] < 7:
-    install_requires.append('ordereddict')
-    install_requires.append('unittest2')
+    install_requires.extend(['ordereddict', 'unittest2'])
 
 setup(
     name='stuf',
-    version='0.8.2',
+    version='0.8.4',
     description='''stuf has attributes''',
     long_description=open(os.path.join(os.getcwd(), 'README.rst'), 'r').read(),
     author='L. C. Rees',
