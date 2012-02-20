@@ -245,6 +245,9 @@ class _lazyinit(lazybase):
         self.name = selfname(method)
         update_wrapper(self, method)
 
+    def _set(self, this):
+        return setter(this, self.name, self.method(this))
+
 
 class lazy(_lazyinit):
 

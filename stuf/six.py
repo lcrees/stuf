@@ -120,6 +120,9 @@ _moved_attributes = [
     MovedAttribute(
         'filterfalse', 'itertools', 'itertools', 'ifilterfalse', 'filterfalse',
     ),
+    MovedAttribute(
+        'zip_longest', 'itertools', 'itertools', 'izip_longest', 'zip_longest',
+    ),
     MovedAttribute('cStringIO', 'cStringIO', 'io', 'StringIO'),
     MovedAttribute('filter', 'itertools', 'builtins', 'ifilter', 'filter'),
     MovedAttribute('map', 'itertools', 'builtins', 'imap', 'map'),
@@ -151,7 +154,7 @@ for attr in _moved_attributes:
     setattr(_MovedItems, attr.name, attr)
 del attr
 
-moves = sys.modules['appspace.six.moves'] = _MovedItems('moves')
+moves = sys.modules['stuf.six.moves'] = _MovedItems('moves')
 
 
 def add_move(move):
