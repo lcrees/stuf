@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
-# pylint: disable-msg=w0221
 '''core stuf'''
 
+from itertools import starmap
 from collections import Mapping, Sequence, defaultdict, namedtuple
 
-from stuf.utils import OrderedDict, getter
+from stuf.six import items, keys, values
+from stuf.utils import OrderedDict, getter, imap
 from stuf.base import directstuf, wrapstuf, writewrapstuf
+
+__all__ = ('defaultstuf', 'fixedstuf', 'frozenstuf', 'orderedstuf', 'stuf')
 
 
 class defaultstuf(directstuf, defaultdict):
@@ -19,12 +22,12 @@ class defaultstuf(directstuf, defaultdict):
 
     def __getattr__(self, key):
         try:
-            if key == 'items':
-                return self.items
-            elif key == 'keys':
-                return self.keys
+            if key == 'iteritems':
+                return items(self)
+            elif key == 'iterkeys':
+                return keys(self)
             elif key == 'itervalues':
-                return self.values
+                return values(self)
             return object.__getattribute__(self, key)
         except AttributeError:
             return self[key]
@@ -39,32 +42,29 @@ class defaultstuf(directstuf, defaultdict):
         directstuf.__init__(self, *args, **kw)
 
     @classmethod
-    def _build(cls, default, iterable):
+    def _build(cls, default, iterable, _map=imap, _list=list):
         kind = cls._map
         # add class to handle potential nested objects of the same class
         kw = kind(default)
+        update = kw.update
         if isinstance(iterable, Mapping):
-            kw.update(kind(default, iterable))
+            update(kind(default, iterable))
         elif isinstance(iterable, Sequence):
             # extract appropriate key-values from sequence
-            for arg in iterable:
+            def _coro(arg):
                 try:
-                    kw.update(arg)
+                    update(arg)
                 except (ValueError, TypeError):
                     pass
+            _list(_map(_coro, iterable))
         return kw
 
     @classmethod
     def _new(cls, default, iterable):
         return cls(default, cls._build(default, iterable))
 
-    def _populate(self, past, future):
-        new = self._new
-        try:
-            pitems = past.items
-        except AttributeError:
-            pitems = past.items
-        for key, value in pitems():
+    def _populate(self, past, future, _map=starmap, _items=items):
+        def _coro(key, value, new=self._new):
             if isinstance(value, (Mapping, Sequence)):
                 # see if stuf can be converted to nested stuf
                 trial = new(self.default_factory, value)
@@ -74,13 +74,14 @@ class defaultstuf(directstuf, defaultdict):
                     future[key] = value
             else:
                 future[key] = value
+        list(_map(_coro, _items(past)))
 
     def _prepopulate(self, *args, **kw):
         kw.update(self._build(self.default_factory, args))
         return kw
 
     def copy(self):
-        return self._build(self.default_factory, dict(i for i in self))
+        return self._build(self.default_factory, dict(self))
 
 
 class fixedstuf(writewrapstuf):
@@ -102,11 +103,7 @@ class fixedstuf(writewrapstuf):
 
     def _prepopulate(self, *args, **kw):
         iterable = super(fixedstuf, self)._prepopulate(*args, **kw)
-        try:
-            ikeys = iterable.keys
-        except AttributeError:
-            ikeys = iterable.keys
-        self.allowed = frozenset(ikeys())
+        self.allowed = frozenset(keys(iterable))
         return iterable
 
     def popitem(self):
@@ -128,26 +125,18 @@ class frozenstuf(wrapstuf, Mapping):
         except AttributeError:
             raise KeyError('key {0} not found'.format(key))
 
-    def __iter__(self):
-        try:
-            return getter(self, '_wrapped')._asdict().keys()
-        except AttributeError:
-            return iter(getter(self, '_wrapped')._asdict().keys())
+    def __iter__(self, _iter=iter, _getr=getter):
+        return _iter(_getr(self, '_wrapped')._asdict())
 
-    def __len__(self):
-        return len(getter(self, '_wrapped')._asdict())
+    def __len__(self, _len=len, _getr=getter):
+        return _len(getter(self, '_wrapped')._asdict())
 
-    def __reduce__(self):
-        return (self.__class__, (getter(self, '_wrapped')._asdict().copy(),))
+    def __reduce__(self, _getter=getter):
+        return (self.__class__, (_getter(self, '_wrapped')._asdict().copy(),))
 
     @classmethod
-    def _mapping(self, mapping):
-        try:
-            mkeys = mapping.keys
-        except AttributeError:
-            mkeys = mapping.keys
-        frozen = namedtuple('frozenstuf', mkeys())
-        return frozen(**mapping)
+    def _mapping(self, mapping, _namedtuple=namedtuple, _keys=keys):
+        return _namedtuple('frozenstuf', _keys(mapping))(**mapping)
 
 
 class orderedstuf(writewrapstuf):
@@ -166,6 +155,3 @@ class orderedstuf(writewrapstuf):
 class stuf(directstuf, dict):
 
     '''dictionary with attribute-style access'''
-
-
-__all__ = ['defaultstuf', 'fixedstuf', 'frozenstuf', 'orderedstuf', 'stuf']

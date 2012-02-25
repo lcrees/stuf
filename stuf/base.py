@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
-# pylint: disable-msg=w0231
 '''base stuf'''
 
-from itertools import chain
 from operator import methodcaller
+from itertools import chain, starmap
 from collections import Mapping, Sequence, MutableMapping
 
+from stuf.six import items, strings, keys, values
 from stuf.utils import clsname, lazy, recursive_repr
+
+__all__ = ['corestuf', 'directstuf', 'wrapstuf', 'writestuf', 'writewrapstuf']
 
 
 class corestuf(object):
@@ -20,52 +22,43 @@ class corestuf(object):
         try:
             return self[key]
         except KeyError:
-            if key == 'items':
-                return self.items
-            elif key == 'keys':
-                return self.keys
+            if key == 'iteritems':
+                return items(self)
+            elif key == 'iterkeys':
+                return keys(self)
             elif key == 'itervalues':
-                return self.values
+                return values(self)
             return object.__getattribute__(self, key)
 
     @recursive_repr
-    def __repr__(self):
+    def __repr__(self, _clsname=clsname, _mcaller=methodcaller):
         if not self:
-            return '%s()' % clsname(self)
-        return '%s(%r)' % (clsname(self), methodcaller('items')(self))
+            return '%s()' % _clsname(self)
+        return '%s(%r)' % (_clsname(self), _mcaller('items')(self))
 
     @lazy
     def _classkeys(self):
         # protected keywords
-        try:
-            return frozenset(chain(
-                vars(self).keys(),
-                vars(self.__class__).keys(),
-                self._reserved
-            ))
-        except AttributeError:
-            return frozenset(chain(
-                vars(self).keys(), vars(self.__class__).keys(), self._reserved
-            ))
+        return frozenset(chain(
+            keys(vars(self)), keys(vars(self.__class__)), self._reserved,
+        ))
 
     @classmethod
-    def _build(cls, iterable):
+    def _build(cls, iterable, _map=map, _is=isinstance, _list=list):
         kind = cls._map
         # add class to handle potential nested objects of the same class
         kw = kind()
-        if isinstance(iterable, Mapping):
-            try:
-                iitems = iterable.items
-            except AttributeError:
-                iitems = iterable.items
-            kw.update(kind(i for i in iitems()))
-        elif isinstance(iterable, Sequence):
+        update = kw.update
+        if _is(iterable, Mapping):
+            update(kind(items(iterable)))
+        elif _is(iterable, Sequence):
             # extract appropriate key-values from sequence
-            for arg in iterable:
+            def _coro(arg, update=update):
                 try:
-                    kw.update(arg)
+                    update(arg)
                 except (ValueError, TypeError):
                     pass
+            _list(map(_coro, iterable))
         return kw
 
     @classmethod
@@ -77,19 +70,9 @@ class corestuf(object):
         return cls(cls._build(iterable))
 
     @classmethod
-    def _populate(cls, past, future):
-        new = cls._new
-        try:
-            pitems = past.items
-            bstring = basestring  # @UndefinedVariable
-        except AttributeError:
-            pitems = past.items
-            bstring = str
-        for key, value in pitems():
-            if all([
-                isinstance(value, (Sequence, Mapping)),
-                not isinstance(value, bstring),
-            ]):
+    def _populate(cls, past, future, _is=isinstance, m=starmap, _i=items):
+        def _coro(key, value, new=cls._new, _is=_is):
+            if _is(value, (Sequence, Mapping)) and not _is(value, strings):
                 # see if stuf can be converted to nested stuf
                 trial = new(value)
                 if len(trial) > 0:
@@ -98,6 +81,7 @@ class corestuf(object):
                     future[key] = value
             else:
                 future[key] = value
+        list(m(_coro, _i(past)))
         return cls._postpopulate(future)
 
     @classmethod
@@ -137,17 +121,13 @@ class writestuf(corestuf):
 
     def __iter__(self):
         cls = self.__class__
-        try:
-            iitems = self.items
-        except AttributeError:
-            iitems = self.items
-        for key, value in iitems():
+        for key, value in items(self):
             # nested stuf of some sort
             if isinstance(value, cls):
-                yield (key, dict(i for i in value))
+                yield key, dict(iter(value))
             # normal key, value pair
             else:
-                yield (key, value)
+                yield key, value
 
     def __getstate__(self):
         return self._mapping(self)
@@ -179,9 +159,8 @@ class wrapstuf(corestuf):
         @param **kw: keyword arguments
         '''
         super(wrapstuf, self).__init__()
-        self._wrapped = self._map()
         self._wrapped = self._populate(
-            self._prepopulate(*args, **kw), self._wrapped,
+            self._prepopulate(*args, **kw), self._map(),
         )
 
     @classmethod
@@ -210,6 +189,3 @@ class writewrapstuf(wrapstuf, writestuf, MutableMapping):
 
     def clear(self):
         self._wrapped.clear()
-
-
-__all__ = ['corestuf', 'directstuf', 'wrapstuf', 'writestuf', 'writewrapstuf']

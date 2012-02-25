@@ -15,7 +15,7 @@ if sys.version_info[0] == 2 and sys.version_info[1] < 7:
 
 setup(
     name='stuf',
-    version='0.8.4',
+    version='0.8.5    ',
     description='''stuf has attributes''',
     long_description=open(os.path.join(os.getcwd(), 'README.rst'), 'r').read(),
     author='L. C. Rees',
@@ -23,7 +23,7 @@ setup(
     author_email='lcrees@gmail.com',
     license='MIT',
     packages=['stuf'],
-    test_suite='stuf.test',
+    test_suite='stuf.tests',
     zip_safe=False,
     keywords='dict attribute collection mapping dot notation access bunch',
     install_requires=install_requires,
