@@ -20,9 +20,9 @@ class corestuf(object):
         try:
             return self[key]
         except KeyError:
-            if key == 'iteritems':
+            if key == 'items':
                 return self.items
-            elif key == 'iterkeys':
+            elif key == 'keys':
                 return self.keys
             elif key == 'itervalues':
                 return self.values
@@ -39,8 +39,8 @@ class corestuf(object):
         # protected keywords
         try:
             return frozenset(chain(
-                vars(self).iterkeys(),
-                vars(self.__class__).iterkeys(),
+                vars(self).keys(),
+                vars(self.__class__).keys(),
                 self._reserved
             ))
         except AttributeError:
@@ -55,7 +55,7 @@ class corestuf(object):
         kw = kind()
         if isinstance(iterable, Mapping):
             try:
-                iitems = iterable.iteritems
+                iitems = iterable.items
             except AttributeError:
                 iitems = iterable.items
             kw.update(kind(i for i in iitems()))
@@ -80,7 +80,7 @@ class corestuf(object):
     def _populate(cls, past, future):
         new = cls._new
         try:
-            pitems = past.iteritems
+            pitems = past.items
             bstring = basestring  # @UndefinedVariable
         except AttributeError:
             pitems = past.items
@@ -138,7 +138,7 @@ class writestuf(corestuf):
     def __iter__(self):
         cls = self.__class__
         try:
-            iitems = self.iteritems
+            iitems = self.items
         except AttributeError:
             iitems = self.items
         for key, value in iitems():

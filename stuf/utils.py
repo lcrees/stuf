@@ -17,7 +17,7 @@ except ImportError:
 from functools import wraps, update_wrapper
 from operator import itemgetter, attrgetter, getitem
 
-from stuf.six import iteritems
+from stuf.six import items
 
 
 def attr_or_item(this, key):
@@ -130,7 +130,7 @@ def inverse_lookup(value, this, default=None):
     '''
     try:
         return itemgetter(value)(
-            dict((v, k) for k, v in vars(this).iteritems())
+            dict((v, k) for k, v in vars(this).items())
         )
     except (TypeError, KeyError):
         return default
@@ -346,7 +346,7 @@ class twoway(bothbase):
 lru_wrapped = lru
 get_or_default = getdefault
 
-__all__ = sorted(name for name, obj in iteritems(locals()) if not any([
+__all__ = sorted(name for name, obj in items(locals()) if not any([
     name.startswith('_'), ismodule(obj),
 ]))
 del ismodule

@@ -19,9 +19,9 @@ class defaultstuf(directstuf, defaultdict):
 
     def __getattr__(self, key):
         try:
-            if key == 'iteritems':
+            if key == 'items':
                 return self.items
-            elif key == 'iterkeys':
+            elif key == 'keys':
                 return self.keys
             elif key == 'itervalues':
                 return self.values
@@ -61,7 +61,7 @@ class defaultstuf(directstuf, defaultdict):
     def _populate(self, past, future):
         new = self._new
         try:
-            pitems = past.iteritems
+            pitems = past.items
         except AttributeError:
             pitems = past.items
         for key, value in pitems():
@@ -103,7 +103,7 @@ class fixedstuf(writewrapstuf):
     def _prepopulate(self, *args, **kw):
         iterable = super(fixedstuf, self)._prepopulate(*args, **kw)
         try:
-            ikeys = iterable.iterkeys
+            ikeys = iterable.keys
         except AttributeError:
             ikeys = iterable.keys
         self.allowed = frozenset(ikeys())
@@ -130,7 +130,7 @@ class frozenstuf(wrapstuf, Mapping):
 
     def __iter__(self):
         try:
-            return getter(self, '_wrapped')._asdict().iterkeys()
+            return getter(self, '_wrapped')._asdict().keys()
         except AttributeError:
             return iter(getter(self, '_wrapped')._asdict().keys())
 
@@ -143,7 +143,7 @@ class frozenstuf(wrapstuf, Mapping):
     @classmethod
     def _mapping(self, mapping):
         try:
-            mkeys = mapping.iterkeys
+            mkeys = mapping.keys
         except AttributeError:
             mkeys = mapping.keys
         frozen = namedtuple('frozenstuf', mkeys())
