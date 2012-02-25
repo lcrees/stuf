@@ -109,22 +109,22 @@ class TestStuf(unittest.TestCase):
         self.assertTrue(('test3', {'e': 1}) in slist)
 
     def test_iteritems(self):
-        slist = list(self.stuf.iteritems())
+        slist = list(self.stuf.items())
         self.assertTrue(('test1', 'test1') in slist)
         self.assertTrue(('test2', 'test2') in slist)
         self.assertTrue(('test3', {'e': 1}) in slist)
 
     def test_iterkeys(self):
-        slist = list(self.stuf.iterkeys())
-        slist2 = list(self.stuf.test3.iterkeys())
+        slist = list(self.stuf.keys())
+        slist2 = list(self.stuf.test3.keys())
         self.assertTrue('test1' in slist)
         self.assertTrue('test2' in slist)
         self.assertTrue('test3' in slist)
         self.assertTrue('e' in slist2)
 
     def test_itervalues(self):
-        slist = list(self.stuf.itervalues())
-        slist2 = list(self.stuf.test3.itervalues())
+        slist = list(self.stuf.values())
+        slist2 = list(self.stuf.test3.values())
         self.assertTrue('test1' in slist)
         self.assertTrue('test2' in slist)
         self.assertTrue({'e': 1} in slist)
@@ -304,22 +304,22 @@ class TestDefaultStuf(unittest.TestCase):
         self.assertTrue(('test4', []) in slist)
 
     def test_iteritems(self):
-        slist = list(self.stuf.iteritems())
+        slist = list(self.stuf.items())
         self.assertTrue(('test1', 'test1') in slist)
         self.assertTrue(('test2', 'test2') in slist)
         self.assertTrue(('test3', {'e': 1}) in slist)
 
     def test_iterkeys(self):
-        slist = list(self.stuf.iterkeys())
-        slist2 = list(self.stuf.test3.iterkeys())
+        slist = list(self.stuf.keys())
+        slist2 = list(self.stuf.test3.keys())
         self.assertTrue('test1' in slist)
         self.assertTrue('test2' in slist)
         self.assertTrue('test3' in slist)
         self.assertTrue('e' in slist2)
 
     def test_itervalues(self):
-        slist = list(self.stuf.itervalues())
-        slist2 = list(self.stuf.test3.itervalues())
+        slist = list(self.stuf.values())
+        slist2 = list(self.stuf.test3.values())
         self.assertTrue('test1' in slist)
         self.assertTrue('test2' in slist)
         self.assertTrue({'e': 1} in slist)
@@ -474,22 +474,22 @@ class TestFixedStuf(unittest.TestCase):
         self.assertTrue(('test3', dummy) in slist, slist)
 
     def test_iteritems(self):
-        slist = list(self.stuf.iteritems())
+        slist = list(self.stuf.items())
         self.assertTrue(('test1', 'test1') in slist)
         self.assertTrue(('test2', 'test2') in slist)
         self.assertTrue(('test3', self._maketwo({'e': 1})) in slist, slist)
 
     def test_iterkeys(self):
-        slist = list(self.stuf.iterkeys())
-        slist2 = list(self.stuf.test3.iterkeys())
+        slist = list(self.stuf.keys())
+        slist2 = list(self.stuf.test3.keys())
         self.assertTrue('test1' in slist)
         self.assertTrue('test2' in slist)
         self.assertTrue('test3' in slist)
         self.assertTrue('e' in slist2)
 
     def test_itervalues(self):
-        slist1 = list(i for i in self.stuf.itervalues())
-        slist2 = list(i for i in self.stuf.test3.itervalues())
+        slist1 = list(i for i in self.stuf.values())
+        slist2 = list(i for i in self.stuf.test3.values())
         self.assertTrue(1 in slist2)
         self.assertTrue('test1' in slist1)
         self.assertTrue(self._maketwo({'e': 1}) in slist1)
@@ -638,22 +638,22 @@ class TestFrozenStuf(unittest.TestCase):
         self.assertTrue(('test3', self._maketwo({'e': 1})) in slist, slist)
 
     def test_iteritems(self):
-        slist = list(self.stuf.iteritems())
+        slist = list(self.stuf.items())
         self.assertTrue(('test1', 'test1') in slist)
         self.assertTrue(('test2', 'test2') in slist)
         self.assertTrue(('test3', self._maketwo({'e': 1})) in slist, slist)
 
     def test_iterkeys(self):
-        slist = list(self.stuf.iterkeys())
-        slist2 = list(self.stuf.test3.iterkeys())
+        slist = list(self.stuf.keys())
+        slist2 = list(self.stuf.test3.keys())
         self.assertTrue('test1' in slist)
         self.assertTrue('test2' in slist)
         self.assertTrue('test3' in slist)
         self.assertTrue('e' in slist2)
 
     def test_itervalues(self):
-        slist1 = list(self.stuf.itervalues())
-        slist2 = list(self.stuf.test3.itervalues())
+        slist1 = list(self.stuf.values())
+        slist2 = list(self.stuf.test3.values())
         self.assertTrue('test2' in slist1)
         self.assertTrue(self._maketwo({'e': 1}) in slist1)
         self.assertTrue(1 in slist2)
@@ -818,22 +818,22 @@ class TestOrderedStuf(unittest.TestCase):
         self.assertTrue(('test3', {'e': 1}) in slist)
 
     def test_iteritems(self):
-        slist = list(self.stuf.iteritems())
+        slist = list(self.stuf.items())
         self.assertTrue(('test1', 'test1') in slist)
         self.assertTrue(('test2', 'test2') in slist)
         self.assertTrue(('test3', self._maketwo({'e': 1})) in slist)
 
     def test_iterkeys(self):
-        slist = list(self.stuf.iterkeys())
-        slist2 = list(self.stuf.test3.iterkeys())
+        slist = list(self.stuf.keys())
+        slist2 = list(self.stuf.test3.keys())
         self.assertTrue('test1' in slist)
         self.assertTrue('test2' in slist)
         self.assertTrue('test3' in slist)
         self.assertTrue('e' in slist2)
 
     def test_itervalues(self):
-        slist = list(self.stuf.itervalues())
-        slist2 = list(self.stuf.test3.itervalues())
+        slist = list(self.stuf.values())
+        slist2 = list(self.stuf.test3.values())
         self.assertTrue('test1' in slist)
         self.assertTrue('test2' in slist)
         self.assertTrue(self._maketwo({'e': 1}) in slist)

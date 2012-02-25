@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-## pylint: disable-msg=w0702,f0401
 '''stuf utilities'''
 
 from inspect import ismodule
@@ -17,7 +16,11 @@ except ImportError:
 from functools import wraps, update_wrapper
 from operator import itemgetter, attrgetter, getitem
 
-from stuf.six import iteritems
+from stuf.six import items
+from stuf.six.moves import filter, map  # @UnresolvedImport
+
+imap = map
+ifilter = filter
 
 
 def attr_or_item(this, key):
@@ -130,7 +133,7 @@ def inverse_lookup(value, this, default=None):
     '''
     try:
         return itemgetter(value)(
-            dict((v, k) for k, v in vars(this).iteritems())
+            dict((v, k) for k, v in items(vars(this)))
         )
     except (TypeError, KeyError):
         return default
@@ -150,7 +153,7 @@ def lru(this, maxsize=100):
     def wrapper(*args, **kw):
         key = args
         if kw:
-            key += tuple(sorted(kw.items()))
+            key += tuple(sorted(items(kw)))
         try:
             result = cache.pop(key)
         except KeyError:
@@ -239,11 +242,11 @@ class _lazyinit(lazybase):
 
     '''base for lazy descriptors'''
 
-    def __init__(self, method):
+    def __init__(self, method, _wrap=update_wrapper):
         super(_lazyinit, self).__init__()
         self.method = method
         self.name = selfname(method)
-        update_wrapper(self, method)
+        _wrap(self, method)
 
     def _set(self, this):
         return setter(this, self.name, self.method(this))
@@ -269,10 +272,10 @@ class lazy_set(lazy):
 
     '''lazy assign attributes with a custom setter'''
 
-    def __init__(self, method, fget=None):
+    def __init__(self, method, fget=None, _wrap=update_wrapper):
         super(lazy_set, self).__init__(method)
         self.fget = fget
-        update_wrapper(self, method)
+        _wrap(self, method)
 
     def __set__(self, this, value):
         self.fget(this, value)
@@ -301,10 +304,10 @@ class bi(_lazyinit):
 
 class bothbase(_lazyinit):
 
-    def __init__(self, method, expr=None):
+    def __init__(self, method, expr=None, _wrap=update_wrapper):
         super(bothbase, self).__init__(method)
         self.expr = expr or method
-        update_wrapper(self, method)
+        _wrap(self, method)
 
     def expression(self, expr):
         '''modifying decorator that defines a general method'''
@@ -346,7 +349,7 @@ class twoway(bothbase):
 lru_wrapped = lru
 get_or_default = getdefault
 
-__all__ = sorted(name for name, obj in iteritems(locals()) if not any([
+__all__ = sorted(name for name, obj in items(locals()) if not any([
     name.startswith('_'), ismodule(obj),
 ]))
 del ismodule
