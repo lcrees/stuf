@@ -11,19 +11,19 @@ __version__ = '1.1.0'
 # True if we are running on Python 3.
 PY3 = sys.version_info[0] == 3
 if PY3:
-    string_types = str,
-    integer_types = int,
-    class_types = type,
-    text_type = str
-    binary_type = bytes
+    strings = str,
+    integers = int,
+    classes = type,
+    texts = str
+    binaries = bytes
 
     MAXSIZE = sys.maxsize
 else:
-    string_types = basestring,
-    integer_types = (int, long)
-    class_types = (type, types.ClassType)
-    text_type = unicode
-    binary_type = str
+    strings = basestring,
+    integers = (int, long)
+    classes = (type, types.ClassType)
+    texts = unicode
+    binaries = str
 
     # It's possible to have sizeof(long) != sizeof(Py_ssize_t).
     class X(object):
@@ -187,9 +187,9 @@ else:
     _func_code = 'func_code'
     _func_defaults = 'func_defaults'
 
-    _iterkeys = 'iterkeys'
-    _itervalues = 'itervalues'
-    _iteritems = 'iteritems'
+    _iterkeys = 'keys'
+    _itervalues = 'values'
+    _iteritems = 'items'
 
 if PY3:
     def get_unbound_function(unbound):
@@ -212,23 +212,23 @@ _add_doc(
     get_unbound_function, 'Get the function out of a possibly unbound function'
 )
 
-get_method_function = operator.attrgetter(_meth_func)
-get_method_self = operator.attrgetter(_meth_self)
-get_function_code = operator.attrgetter(_func_code)
-get_function_defaults = operator.attrgetter(_func_defaults)
+method_function = operator.attrgetter(_meth_func)
+method_self = operator.attrgetter(_meth_self)
+function_code = operator.attrgetter(_func_code)
+function_defaults = operator.attrgetter(_func_defaults)
 
 
-def iterkeys(d):
+def keys(d):
     '''Return an iterator over the keys of a dictionary.'''
     return getattr(d, _iterkeys)()
 
 
-def itervalues(d):
+def values(d):
     '''Return an iterator over the values of a dictionary.'''
     return getattr(d, _itervalues)()
 
 
-def iteritems(d):
+def items(d):
     '''Return an iterator over the (key, value) pairs of a dictionary.'''
     return getattr(d, _iteritems)()
 
@@ -268,7 +268,7 @@ if PY3:
         if value.__traceback__ is not tb:
             raise value.with_traceback(tb)
         raise value
-    print_ = getattr(builtins, 'print')
+    printf = getattr(builtins, 'print')
     del builtins
 else:
     def exec_(code, globs=None, locs=None):
@@ -287,9 +287,9 @@ else:
     raise tp, value, tb
 ''')
 
-    def print_(*args, **kwargs):
+    def printf(*args, **kw):
         '''The new-style print function.'''
-        fp = kwargs.pop('file', sys.stdout)
+        fp = kw.pop('file', sys.stdout)
         if fp is None:
             return
 
@@ -298,19 +298,19 @@ else:
                 data = str(data)
             fp.write(data)
         want_unicode = False
-        sep = kwargs.pop('sep', None)
+        sep = kw.pop('sep', None)
         if sep is not None:
             if isinstance(sep, unicode):
                 want_unicode = True
             elif not isinstance(sep, str):
                 raise TypeError('sep must be None or a string')
-        end = kwargs.pop('end', None)
+        end = kw.pop('end', None)
         if end is not None:
             if isinstance(end, unicode):
                 want_unicode = True
             elif not isinstance(end, str):
                 raise TypeError('end must be None or a string')
-        if kwargs:
+        if kw:
             raise TypeError('invalid keyword arguments to print()')
         if not want_unicode:
             for arg in args:
