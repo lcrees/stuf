@@ -5,7 +5,7 @@ from itertools import starmap
 from collections import Mapping, Sequence, defaultdict, namedtuple
 
 from stuf.six import items, keys, values
-from stuf.utils import OrderedDict, getter, imap
+from stuf.utils import OrderedDict, getter, imap, exhaust
 from stuf.base import directstuf, wrapstuf, writewrapstuf
 
 __all__ = ('defaultstuf', 'fixedstuf', 'frozenstuf', 'orderedstuf', 'stuf')
@@ -42,7 +42,7 @@ class defaultstuf(directstuf, defaultdict):
         directstuf.__init__(self, *args, **kw)
 
     @classmethod
-    def _build(cls, default, iterable, _map=imap, _list=list):
+    def _build(cls, default, iterable, _map=imap, _list=exhaust):
         kind = cls._map
         # add class to handle potential nested objects of the same class
         kw = kind(default)
@@ -74,7 +74,7 @@ class defaultstuf(directstuf, defaultdict):
                     future[key] = value
             else:
                 future[key] = value
-        list(_map(_coro, _items(past)))
+        exhaust(_map(_coro, _items(past)))
 
     def _prepopulate(self, *args, **kw):
         kw.update(self._build(self.default_factory, args))
