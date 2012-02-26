@@ -6,7 +6,7 @@ from itertools import chain, starmap
 from collections import Mapping, Sequence, MutableMapping
 
 from stuf.six import items, strings, keys, values
-from stuf.utils import clsname, lazy, recursive_repr
+from stuf.utils import clsname, lazy, recursive_repr, exhaust, imap
 
 __all__ = ['corestuf', 'directstuf', 'wrapstuf', 'writestuf', 'writewrapstuf']
 
@@ -44,7 +44,7 @@ class corestuf(object):
         ))
 
     @classmethod
-    def _build(cls, iterable, _map=map, _is=isinstance, _list=list):
+    def _build(cls, iterable, _map=imap, _is=isinstance, _list=exhaust):
         kind = cls._map
         # add class to handle potential nested objects of the same class
         kw = kind()
@@ -58,7 +58,7 @@ class corestuf(object):
                     update(arg)
                 except (ValueError, TypeError):
                     pass
-            _list(map(_coro, iterable))
+            _list(_map(_coro, iterable))
         return kw
 
     @classmethod
@@ -81,7 +81,7 @@ class corestuf(object):
                     future[key] = value
             else:
                 future[key] = value
-        list(m(_coro, _i(past)))
+        exhaust(m(_coro, _i(past)))
         return cls._postpopulate(future)
 
     @classmethod
