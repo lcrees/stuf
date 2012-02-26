@@ -59,6 +59,19 @@ def deepget(this, key, default=None):
         return default
 
 
+def exhaust(iterable, exception=StopIteration, _next=next):
+    '''
+    call next on an iterator until it's exhausted
+
+    @param iterable: an iterable to exhaust
+    '''
+    try:
+        while True:
+            next(iterable)
+    except exception:
+        pass
+
+
 def deleter(this, key):
     '''
     delete an attribute
@@ -137,6 +150,21 @@ def inverse_lookup(value, this, default=None):
         )
     except (TypeError, KeyError):
         return default
+
+
+def iterexcept(func, exception):
+    '''
+    call a function repeatedly until an exception is raised
+
+    Converts a call-until-exception interface to an iterator interface. Like
+    `__builtin__.iter(func, sentinel)` but uses an exception instead of a
+    sentinel to end the loop.
+    '''
+    try:
+        while True:
+            yield func()
+    except exception:
+        pass
 
 
 def lru(this, maxsize=100):
