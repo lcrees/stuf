@@ -74,19 +74,19 @@ def exhaust(iterable, exception=StopIteration, _n=next):
         pass
 
 
-def exhaustmap(mapping, filter, handler, exception=StopIteration, _n=next):
+def exhaustmap(mapping, call, filter=False, exception=StopIteration, _n=next):
     '''
-    call next on an iterator until it's exhausted
+    call `next` on an iterator until it's exhausted
 
     @param mapping: a mapping to exhaust
-    @param filter: a filter to apply to mapping
-    @param handler: a handler for what survives the filter
-    @param exception: exception that marks end of iteration
+    @param call: call to handle what survives the filter
+    @param filter: a filter to apply to mapping (default: `None`)
+    @param exception: exception sentinel (default: `StopIteration`)
     '''
-    iterable = starmap(handler, ifilter(filter, items(mapping)))
+    subiter = ifilter(filter, items(mapping)) if filter else items(mapping)
     try:
         while True:
-            _n(iterable)
+            _n(starmap(call, subiter))
     except exception:
         pass
 
