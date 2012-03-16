@@ -14,7 +14,7 @@ if PY3:
     strings = str,
     integers = int,
     classes = type,
-    texts = str
+    native = texts = str
     binaries = bytes
 
     MAXSIZE = sys.maxsize
@@ -23,7 +23,7 @@ else:
     integers = (int, long)
     classes = (type, types.ClassType)
     texts = unicode
-    binaries = str
+    native = binaries = str
 
     # It's possible to have sizeof(long) != sizeof(Py_ssize_t).
     class X(object):
