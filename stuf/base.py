@@ -18,7 +18,7 @@ class corestuf(object):
     _map = dict
     _reserved = ['allowed', '_wrapped', '_map']
 
-    def __getattr__(self, key):
+    def __getattr__(self, key, _getter=object.__getattribute__):
         try:
             return self[key]
         except KeyError:
@@ -28,7 +28,7 @@ class corestuf(object):
                 return keys(self)
             elif key == 'itervalues':
                 return values(self)
-            return object.__getattribute__(self, key)
+            return _getter(self, key)
 
     @recursive_repr
     def __repr__(self, _clsname=clsname, _mcaller=methodcaller):
