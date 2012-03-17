@@ -20,7 +20,7 @@ class defaultstuf(directstuf, defaultdict):
 
     _map = defaultdict
 
-    def __getattr__(self, key):
+    def __getattr__(self, key, _getter=object.__getattribute__):
         try:
             if key == 'iteritems':
                 return items(self)
@@ -28,7 +28,7 @@ class defaultstuf(directstuf, defaultdict):
                 return keys(self)
             elif key == 'itervalues':
                 return values(self)
-            return object.__getattribute__(self, key)
+            return _getter(self, key)
         except AttributeError:
             return self[key]
 

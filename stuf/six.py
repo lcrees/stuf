@@ -14,7 +14,7 @@ if PY3:
     strings = str,
     integers = int,
     classes = type,
-    texts = str
+    native = texts = str
     binaries = bytes
 
     MAXSIZE = sys.maxsize
@@ -23,7 +23,7 @@ else:
     integers = (int, long)
     classes = (type, types.ClassType)
     texts = unicode
-    binaries = str
+    native = binaries = str
 
     # It's possible to have sizeof(long) != sizeof(Py_ssize_t).
     class X(object):
@@ -131,7 +131,25 @@ _moved_attributes = [
     MovedAttribute('StringIO', 'StringIO', 'io'),
     MovedAttribute('xrange', '__builtin__', 'builtins', 'xrange', 'range'),
     MovedAttribute('zip', 'itertools', 'builtins', 'izip', 'zip'),
-
+    MovedAttribute('parsedate_tz', 'rfc822', 'email.utils', 'parsedate_tz'),
+    MovedAttribute('formatdate', 'rfc822', 'email.utils', 'formatdate'),
+    MovedAttribute('xrange', '__builtin__', 'builtins', 'xrange', 'range'),
+    MovedAttribute(
+        'read_plist',
+        'plistlib',
+        'plistlib',
+        'readPlistFromString',
+        'readPlistFromBytes',
+    ),
+    MovedAttribute(
+        'write_plist',
+        'plistlib',
+        'plistlib',
+        'writePlistFromString',
+        'writePlistFromBytes',
+    ),
+    MovedAttribute('parse_qs', 'cgi', 'urllib.parse', 'parse_qs'),
+    MovedAttribute('urlencode', 'urlparse', 'urllib.parse', 'urlencode'),
     MovedModule('builtins', '__builtin__'),
     MovedModule('configparser', 'ConfigParser'),
     MovedModule('copyreg', 'copy_reg'),
@@ -149,6 +167,7 @@ _moved_attributes = [
     MovedModule('socketserver', 'SocketServer'),
     MovedModule('urllib_robotparser', 'robotparser', 'urllib.robotparser'),
     MovedModule('winreg', '_winreg'),
+    MovedModule('xmlrpc', 'xmlrpclib', 'xmlrpc.client'),
 ]
 for attr in _moved_attributes:
     setattr(_MovedItems, attr.name, attr)
@@ -191,11 +210,18 @@ else:
     _itervalues = 'values'
     _iteritems = 'items'
 
+try:
+    advance_iterator = next
+except NameError:
+    def advance_iterator(it):
+        return it.next()
+next = advance_iterator
+
 if PY3:
     def get_unbound_function(unbound):
         return unbound
 
-    advance_iterator = next
+    Iterator = object
 
     def callable(obj):
         return any('__call__' in klass.__dict__ for klass in type(obj).__mro__)
@@ -203,8 +229,9 @@ else:
     def get_unbound_function(unbound):
         return unbound.im_func
 
-    def advance_iterator(it):
-        return it.next()
+    class Iterator(object):
+        def next(self):
+            return type(self).__next__(self)
 
     callable = callable
 

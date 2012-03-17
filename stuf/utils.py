@@ -2,6 +2,7 @@
 '''stuf utilities'''
 
 from inspect import ismodule
+from itertools import starmap
 try:
     from collections import OrderedDict
 except  ImportError:
@@ -59,15 +60,33 @@ def deepget(this, key, default=None):
         return default
 
 
-def exhaust(iterable, exception=StopIteration, _next=next):
+def exhaust(iterable, exception=StopIteration, _n=next):
     '''
     call next on an iterator until it's exhausted
 
     @param iterable: an iterable to exhaust
+    @param exception: exception that marks end of iteration
     '''
     try:
         while True:
-            next(iterable)
+            _n(iterable)
+    except exception:
+        pass
+
+
+def exhaustmap(mapping, call, filter=False, exception=StopIteration, _n=next):
+    '''
+    call `next` on an iterator until it's exhausted
+
+    @param mapping: a mapping to exhaust
+    @param call: call to handle what survives the filter
+    @param filter: a filter to apply to mapping (default: `None`)
+    @param exception: exception sentinel (default: `StopIteration`)
+    '''
+    subiter = ifilter(filter, items(mapping)) if filter else items(mapping)
+    try:
+        while True:
+            _n(starmap(call, subiter))
     except exception:
         pass
 
