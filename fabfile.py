@@ -10,6 +10,7 @@ def tox():
 
 def release():
     '''release stuf'''
+    local('hg update pu')
     local('hg update next')
     local('hg merge pu')
     local('hg update maint')
