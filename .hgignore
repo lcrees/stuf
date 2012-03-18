@@ -29,3 +29,5 @@ syntax: regexp
 ^profile$
 syntax: regexp
 ^support\.py$
+syntax: glob
+.tox/*
