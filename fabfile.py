@@ -12,13 +12,13 @@ def release():
     '''release stuf'''
     local('hg update pu')
     local('hg update next')
-    local('hg merge pu')
+    local('hg merge pu; hg ci -m automerge')
     local('hg update maint')
-    local('hg merge default')
+    local('hg merge default; hg ci -m automerge')
     local('hg update default')
-    local('hg merge next')
+    local('hg merge next; hg ci -m automerge')
     local('hg update pu')
-    local('hg merge default')
+    local('hg merge default; hg ci -m automerge')
     prompt('Enter tag', 'tag')
     with settings(warn_only=True):
         local('hg tag "%(tag)s"' % env)
