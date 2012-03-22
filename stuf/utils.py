@@ -74,6 +74,17 @@ def exhaust(iterable, exception=StopIteration, _n=next):
         pass
 
 
+def breakcount(func, length):
+    '''
+    run an iterator until it reaches its original length
+
+    @param iterable: an iterable to exhaust
+    '''
+    while length:
+        yield func()
+        length -= 1
+
+
 def exhaustmap(mapping, call, filter=False, exception=StopIteration, _n=next):
     '''
     call `next` on an iterator until it's exhausted
