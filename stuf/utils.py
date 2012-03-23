@@ -182,16 +182,20 @@ def inverse_lookup(value, this, default=None):
         return default
 
 
-def iterexcept(func, exception):
+def iterexcept(func, exception, start=None):
     '''
     call a function repeatedly until an exception is raised
 
     Converts a call-until-exception interface to an iterator interface. Like
     `__builtin__.iter(func, sentinel)` but uses an exception instead of a
     sentinel to end the loop.
+
+    Raymond Hettinger Python Cookbook recipe # 577155
     '''
     try:
-        while True:
+        if start is not None:
+            yield start()
+        while 1:
             yield func()
     except exception:
         pass
