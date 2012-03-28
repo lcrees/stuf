@@ -102,6 +102,23 @@ def exhaustmap(mapping, call, filter=False, exception=StopIteration, _n=next):
         pass
 
 
+def exhaustcall(call, iterator, exception=StopIteration, _n=next):
+    '''
+    call `next` on an iterator until it's exhausted
+
+    @param mapping: a mapping to exhaust
+    @param call: call to handle what survives the filter
+    @param filter: a filter to apply to mapping (default: `None`)
+    @param exception: exception sentinel (default: `StopIteration`)
+    '''
+    iterator = starmap(call, iterator)
+    try:
+        while True:
+            _n(iterator)
+    except exception:
+        pass
+
+
 def deleter(this, key):
     '''
     delete an attribute
