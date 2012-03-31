@@ -133,7 +133,6 @@ _moved_attributes = [
     MovedAttribute('zip', 'itertools', 'builtins', 'izip', 'zip'),
     MovedAttribute('parsedate_tz', 'rfc822', 'email.utils', 'parsedate_tz'),
     MovedAttribute('formatdate', 'rfc822', 'email.utils', 'formatdate'),
-    MovedAttribute('xrange', '__builtin__', 'builtins', 'xrange', 'range'),
 #    MovedAttribute(
 #        'read_plist',
 #        'plistlib',
