@@ -10,24 +10,22 @@ try:
 except ImportError:
     from distutils.core import setup
 
-from stuf import __version__
-
 install_requires = list(l for l in open(
     join(getcwd(), 'requirements.txt'), 'r',
 ).readlines())
 if sys.version_info[0] == 2 and sys.version_info[1] < 7:
-    install_requires.append('ordereddict')
+    install_requires.extend(['ordereddict'])
 
 setup(
     name='stuf',
-    version='{}.{}.{}'.format(*__version__),
+    version='0.8.13',
     description='stuf has attributes',
     long_description=open(join(getcwd(), 'README.rst'), 'r').read(),
     keywords='dict attribute collection mapping dot notation access bunch',
     license='BSD',
     author='L. C. Rees',
     author_email='lcrees@gmail.com',
-    url='https://bitbucket.org/lcrees/stuf/',
+    url='https://bitbucket.org/lcrees/stuf',
     packages=['stuf'],
     test_suite='stuf.tests',
     zip_safe=False,
