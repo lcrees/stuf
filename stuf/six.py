@@ -5,6 +5,21 @@
 import sys
 import types
 import operator
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest  # @UnusedImport
+try:
+    from collections import OrderedDict
+except  ImportError:
+    from ordereddict import OrderedDict  # @UnusedImport
+try:
+    from thread import get_ident
+except ImportError:
+    try:
+        from dummy_thread import get_ident
+    except ImportError:
+        from _thread import get_ident  # @UnusedImport
 
 __author__ = 'Benjamin Peterson <benjamin@python.org>'
 __version__ = '1.1.0'
@@ -16,7 +31,6 @@ if PY3:
     classes = type,
     native = texts = str
     binaries = bytes
-
     MAXSIZE = sys.maxsize
 else:
     strings = basestring,
@@ -133,21 +147,6 @@ _moved_attributes = [
     MovedAttribute('zip', 'itertools', 'builtins', 'izip', 'zip'),
     MovedAttribute('parsedate_tz', 'rfc822', 'email.utils', 'parsedate_tz'),
     MovedAttribute('formatdate', 'rfc822', 'email.utils', 'formatdate'),
-    MovedAttribute('xrange', '__builtin__', 'builtins', 'xrange', 'range'),
-#    MovedAttribute(
-#        'read_plist',
-#        'plistlib',
-#        'plistlib',
-#        'readPlistFromString',
-#        'readPlistFromBytes',
-#    ),
-#    MovedAttribute(
-#        'write_plist',
-#        'plistlib',
-#        'plistlib',
-#        'writePlistFromString',
-#        'writePlistFromBytes',
-#    ),
     MovedAttribute('parse_qs', 'cgi', 'urllib.parse', 'parse_qs'),
     MovedAttribute('urlencode', 'urllib', 'urllib.parse', 'urlencode'),
     MovedModule('builtins', '__builtin__'),
