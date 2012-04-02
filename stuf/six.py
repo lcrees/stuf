@@ -5,6 +5,21 @@
 import sys
 import types
 import operator
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest  # @UnusedImport
+try:
+    from collections import OrderedDict
+except  ImportError:
+    from ordereddict import OrderedDict  # @UnusedImport
+try:
+    from thread import get_ident
+except ImportError:
+    try:
+        from dummy_thread import get_ident
+    except ImportError:
+        from _thread import get_ident  # @UnusedImport
 
 __author__ = 'Benjamin Peterson <benjamin@python.org>'
 __version__ = '1.1.0'
@@ -16,7 +31,6 @@ if PY3:
     classes = type,
     native = texts = str
     binaries = bytes
-
     MAXSIZE = sys.maxsize
 else:
     strings = basestring,

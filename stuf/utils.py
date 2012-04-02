@@ -3,22 +3,12 @@
 
 from inspect import ismodule
 from itertools import starmap
-try:
-    from collections import OrderedDict
-except  ImportError:
-    from ordereddict import OrderedDict
-try:
-    from thread import get_ident
-except ImportError:
-    try:
-        from dummy_thread import get_ident
-    except ImportError:
-        from _thread import get_ident
+
 from functools import wraps, update_wrapper
 from operator import itemgetter, attrgetter, getitem
 
-from stuf.six import items
 from stuf.six.moves import filter, map  # @UnresolvedImport
+from stuf.six import OrderedDict, items, get_ident
 
 imap = map
 ifilter = filter
