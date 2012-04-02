@@ -2,10 +2,7 @@
 # pylint: disable-msg=w0108
 '''test stuf'''
 
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+from stuf.six import unittest
 
 
 class TestStuf(unittest.TestCase):
