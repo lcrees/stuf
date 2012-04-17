@@ -7,11 +7,7 @@ from itertools import starmap
 from functools import wraps, update_wrapper
 from operator import itemgetter, attrgetter, getitem
 
-from stuf.six.moves import filter, map  # @UnresolvedImport
-from stuf.six import OrderedDict, items, get_ident
-
-imap = map
-ifilter = filter
+from stuf.six import OrderedDict, items, get_ident, filter, map
 
 
 def attr_or_item(this, key):
@@ -84,7 +80,7 @@ def exhaustmap(mapping, call, filter=False, exception=StopIteration, _n=next):
     @param filter: a filter to apply to mapping (default: `None`)
     @param exception: exception sentinel (default: `StopIteration`)
     '''
-    subiter = ifilter(filter, items(mapping)) if filter else items(mapping)
+    subiter = filter(filter, items(mapping)) if filter else items(mapping)
     iterable = starmap(call, subiter)
     try:
         while True:

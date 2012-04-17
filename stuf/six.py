@@ -6,6 +6,10 @@ import sys
 import types
 import operator
 try:
+    from future_builtins import filter, map, zip
+except ImportError:
+    from builtins import filter, map, zip  # @UnusedImport
+try:
     import unittest2 as unittest
 except ImportError:
     import unittest  # @UnusedImport
@@ -138,13 +142,10 @@ _moved_attributes = [
         'zip_longest', 'itertools', 'itertools', 'izip_longest', 'zip_longest',
     ),
     MovedAttribute('cStringIO', 'cStringIO', 'io', 'StringIO'),
-    MovedAttribute('filter', 'itertools', 'builtins', 'ifilter', 'filter'),
-    MovedAttribute('map', 'itertools', 'builtins', 'imap', 'map'),
     MovedAttribute('reload_module', '__builtin__', 'imp', 'reload'),
     MovedAttribute('reduce', '__builtin__', 'functools'),
     MovedAttribute('StringIO', 'StringIO', 'io'),
     MovedAttribute('xrange', '__builtin__', 'builtins', 'xrange', 'range'),
-    MovedAttribute('zip', 'itertools', 'builtins', 'izip', 'zip'),
     MovedAttribute('parsedate_tz', 'rfc822', 'email.utils', 'parsedate_tz'),
     MovedAttribute('formatdate', 'rfc822', 'email.utils', 'formatdate'),
     MovedAttribute('parse_qs', 'cgi', 'urllib.parse', 'parse_qs'),
