@@ -366,3 +366,103 @@ _add_doc(reraise, '''Reraise an exception.''')
 def with_metaclass(meta, base=object):
     '''Create a base class with a metaclass.'''
     return meta('NewBase', (base,), {})
+
+
+class port(object):
+
+    '''python 2/3 helper'''
+
+    # is python 3?
+    PY3 = PY3
+    # types
+    BINARY = binaries
+    CLASS = classes
+    INTEGER = integers
+    MAXSIZE = MAXSIZE
+    STRING = strings
+    UNICODE = texts
+    # classes
+    BytesIO = BytesIO
+    StringIO = StringIO
+    # character data
+    b = staticmethod(b)
+    int2byte = staticmethod(int2byte)
+    u = staticmethod(u)
+    # dictionary
+    items = staticmethod(items)
+    keys = staticmethod(keys)
+    values = staticmethod(values)
+    # iterables
+    iterator = staticmethod(advance_iterator)
+    # classes
+    metaclass = staticmethod(with_metaclass)
+    # methods
+    code = staticmethod(function_code)
+    defaults = staticmethod(function_defaults)
+    method_function = staticmethod(method_function)
+    method_self = staticmethod(method_self)
+    unbound = staticmethod(get_unbound_function)
+    # exception
+    reraise = staticmethod(reraise)
+
+    @classmethod
+    def isbinary(cls, value):
+        '''is binary?'''
+        return isinstance(value, cls.BINARY)
+
+    @classmethod
+    def isclass(cls, value):
+        '''is class?'''
+        return isinstance(value, cls.CLASS)
+
+    @classmethod
+    def iscall(cls, value):
+        '''is callable?'''
+        return callable(value)
+
+    @classmethod
+    def isgtemax(cls, value):
+        '''greater than max size?'''
+        return value > cls.MAXSIZE
+
+    @classmethod
+    def isinteger(cls, value):
+        '''is integer?'''
+        return isinstance(value, cls.INTEGER)
+
+    @classmethod
+    def isltemax(cls, value):
+        '''less than max size?'''
+        return value < cls.MAXSIZE
+
+    @classmethod
+    def isstring(cls, value):
+        '''is string'''
+        return isinstance(value, cls.STRING)
+
+    @classmethod
+    def isunicode(cls, value):
+        '''is text?'''
+        return isinstance(value, cls.UNICODE)
+
+    @staticmethod
+    def printf(*args, **kw):
+        '''print output'''
+        return printf(*args, **kw)
+
+isbinary = port.isbinary
+isstring = port.isstring
+isunicode = port.isunicode
+
+
+def tounicode(thing, encoding='utf-8', errors='strict'):
+    return (
+        thing.decode(encoding, errors) if isbinary(thing) else
+        texts(texts(thing).encode(encoding, errors), encoding, errors)
+    )
+
+
+def tobytes(thing, encoding='utf-8', errors='strict'):
+    return (
+        texts(thing).encode(encoding, errors) if not isbinary(thing) else thing
+    )

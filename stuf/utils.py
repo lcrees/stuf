@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 '''stuf utilities'''
 
-from inspect import ismodule
 from itertools import starmap
+from collections import Iterable
 
 from functools import wraps, update_wrapper
 from operator import itemgetter, attrgetter, getitem
 
-from stuf.six import OrderedDict, items, get_ident, filter, map
+from stuf.six import OrderedDict, items, get_ident, filter, map, isstring
 
 
 def attr_or_item(this, key):
@@ -411,10 +411,23 @@ class twoway(bothbase):
         return self.expr(that) if this is None else self.method(this)
 
 
+def deferfunc(func):
+    yield func()
+
+
+def deferiter(iterz):
+    yield next(iterz)
+
+
+def iterthing(iterator, wrap, noniter):
+    yield wrap(iterator(wrap(noniter)))
+
+
+def makeiter(wrap, thing):
+    if not isstring(thing) and isinstance(thing, Iterable):
+        return thing
+    return wrap(thing)
+
+
 lru_wrapped = lru
 get_or_default = getdefault
-
-__all__ = sorted(name for name, obj in items(locals()) if not any([
-    name.startswith('_'), ismodule(obj),
-]))
-del ismodule
