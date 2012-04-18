@@ -419,14 +419,14 @@ def deferiter(iterz):
     yield next(iterz)
 
 
-def iterthing(iterator, wrap, noniter):
-    yield wrap(iterator(wrap(noniter)))
+def iterthing(iterator, wrapper, noniter):
+    yield wrapper(iterator(wrapper(noniter)))
 
 
-def makeiter(wrap, thing):
+def makeiter(wrapper, thing):
     if not isstring(thing) and isinstance(thing, Iterable):
         return thing
-    return wrap(thing)
+    return wrapper(thing)
 
 
 lru_wrapped = lru
