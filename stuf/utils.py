@@ -7,11 +7,7 @@ from itertools import starmap
 from functools import wraps, update_wrapper
 from operator import itemgetter, attrgetter, getitem
 
-from stuf.six.moves import filter, map  # @UnresolvedImport
-from stuf.six import OrderedDict, items, get_ident
-
-imap = map
-ifilter = filter
+from stuf.six import OrderedDict, items, get_ident, map, isstring
 
 
 def attr_or_item(this, key):
@@ -413,6 +409,28 @@ class twoway(bothbase):
 
     def __get__(self, this, that):
         return self.expr(that) if this is None else self.method(this)
+
+
+def deferfunc(func):
+    yield func()
+
+
+def deferiter(iterz):
+    yield next(iterz)
+
+
+def deferyield(iterz):
+    yield iterz
+
+
+def iterthing(iterator, wrapper, noniter):
+    yield wrapper(iterator(wrapper(noniter)))
+
+
+def makeiter(wrapper, thing):
+    if not isstring(thing) and isinstance(thing, Iterable):
+        return thing
+    return wrapper(thing)
 
 
 lru_wrapped = lru
