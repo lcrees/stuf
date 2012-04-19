@@ -4,7 +4,7 @@
 from stuf.core import defaultstuf, fixedstuf, frozenstuf, orderedstuf, stuf
 
 __all__ = ('defaultstuf', 'fixedstuf', 'frozenstuf', 'orderedstuf', 'stuf')
-__version__ = (0, 8, 13)
+__version__ = (0, 8, 14)
 
 idefaultstuf = defaultstuf
 ifixedstuf = fixedstuf

@@ -5,8 +5,8 @@ from operator import methodcaller
 from itertools import chain, starmap
 from collections import Mapping, Sequence, MutableMapping
 
-from stuf.six import items, strings, keys, values
-from stuf.utils import clsname, lazy, recursive_repr, exhaust, imap
+from stuf.six import items, strings, keys, values, map
+from stuf.utils import clsname, lazy, recursive_repr, exhaust
 
 __all__ = ['corestuf', 'directstuf', 'wrapstuf', 'writestuf', 'writewrapstuf']
 
@@ -44,7 +44,7 @@ class corestuf(object):
         ))
 
     @classmethod
-    def _build(cls, iterable, _map=imap, _is=isinstance, _list=exhaust):
+    def _build(cls, iterable, _map=map, _is=isinstance, _list=exhaust):
         kind = cls._map
         # add class to handle potential nested objects of the same class
         kw = kind()

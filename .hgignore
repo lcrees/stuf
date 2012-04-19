@@ -31,3 +31,5 @@ syntax: regexp
 ^support\.py$
 syntax: glob
 .tox/*
+syntax: regexp
+^stuff$

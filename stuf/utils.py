@@ -1,17 +1,13 @@
 # -*- coding: utf-8 -*-
 '''stuf utilities'''
 
-from inspect import ismodule
 from itertools import starmap
+from collections import Iterable
 
 from functools import wraps, update_wrapper
 from operator import itemgetter, attrgetter, getitem
 
-from stuf.six.moves import filter, map  # @UnresolvedImport
-from stuf.six import OrderedDict, items, get_ident
-
-imap = map
-ifilter = filter
+from stuf.six import OrderedDict, items, get_ident, map, isstring
 
 
 def attr_or_item(this, key):
@@ -84,7 +80,7 @@ def exhaustmap(mapping, call, filter=False, exception=StopIteration, _n=next):
     @param filter: a filter to apply to mapping (default: `None`)
     @param exception: exception sentinel (default: `StopIteration`)
     '''
-    subiter = ifilter(filter, items(mapping)) if filter else items(mapping)
+    subiter = filter(filter, items(mapping)) if filter else items(mapping)
     iterable = starmap(call, subiter)
     try:
         while True:
@@ -415,10 +411,30 @@ class twoway(bothbase):
         return self.expr(that) if this is None else self.method(this)
 
 
+def deferfunc(func):
+    yield func()
+
+
+def deferiter(iterz):
+    yield next(iterz)
+
+
+def deferyield(iterz):
+    yield iterz
+
+
+def iterthing(iterator, wrapper, noniter):
+    yield wrapper(iterator(wrapper(noniter)))
+
+
+def makeiter(wrapper, thing):
+    if not isstring(thing) and isinstance(thing, Iterable):
+        return thing
+    return wrapper(thing)
+
 lru_wrapped = lru
 get_or_default = getdefault
 
-__all__ = sorted(name for name, obj in items(locals()) if not any([
-    name.startswith('_'), ismodule(obj),
-]))
-del ismodule
+
+lru_wrapped = lru
+get_or_default = getdefault
