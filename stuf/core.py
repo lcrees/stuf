@@ -4,8 +4,8 @@
 from itertools import starmap
 from collections import Mapping, Sequence, defaultdict, namedtuple
 
-from stuf.six import items, keys, values
-from stuf.utils import OrderedDict, getter, imap, exhaust
+from stuf.six import items, keys, values, map
+from stuf.utils import OrderedDict, getter, exhaust
 from stuf.base import directstuf, wrapstuf, writewrapstuf
 
 __all__ = ('defaultstuf', 'fixedstuf', 'frozenstuf', 'orderedstuf', 'stuf')
@@ -42,7 +42,7 @@ class defaultstuf(directstuf, defaultdict):
         directstuf.__init__(self, *args, **kw)
 
     @classmethod
-    def _build(cls, default, iterable, _map=imap, _list=exhaust):
+    def _build(cls, default, iterable, _map=map, _list=exhaust):
         kind = cls._map
         # add class to handle potential nested objects of the same class
         kw = kind(default)
