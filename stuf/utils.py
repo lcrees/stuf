@@ -7,7 +7,7 @@ from collections import Iterable
 from functools import wraps, update_wrapper
 from operator import itemgetter, attrgetter, getitem
 
-from stuf.six import OrderedDict, items, get_ident, filter, map, isstring
+from stuf.six import OrderedDict, items, get_ident, map, isstring
 
 
 def attr_or_item(this, key):
