@@ -4,9 +4,9 @@
 from itertools import starmap
 from collections import Mapping, Sequence, defaultdict, namedtuple
 
-from stuf.six import items, keys, values, map
-from stuf.utils import OrderedDict, getter, exhaust
+from stuf.utils import getter, exhaust
 from stuf.base import directstuf, wrapstuf, writewrapstuf
+from stuf.six import OrderedDict, items, keys, values, map
 
 __all__ = ('defaultstuf', 'fixedstuf', 'frozenstuf', 'orderedstuf', 'stuf')
 
