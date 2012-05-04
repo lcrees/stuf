@@ -27,6 +27,7 @@ except ImportError:
 
 __author__ = 'Benjamin Peterson <benjamin@python.org>'
 __version__ = '1.1.0'
+
 # True if we are running on Python 3.
 PY3 = sys.version_info[0] == 3
 if PY3:
