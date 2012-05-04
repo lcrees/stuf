@@ -4,7 +4,7 @@ from fabric.api import prompt, local, settings, env
 
 
 def _test(val):
-    truth = val in ['py26', 'py27', 'py32']
+    truth = val in ['py26', 'py27', 'py31', 'py32']
     if truth is False:
         raise KeyError(val)
     return val

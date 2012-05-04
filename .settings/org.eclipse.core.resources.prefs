@@ -5,4 +5,5 @@ encoding//stuf/core.py=utf-8
 encoding//stuf/six.py=utf-8
 encoding//stuf/tests.py=utf-8
 encoding//stuf/utils.py=utf-8
+encoding//stuf/version.py=utf-8
 encoding/setup.py=utf-8
