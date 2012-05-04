@@ -4,7 +4,7 @@ from fabric.api import prompt, local, settings, env
 
 
 def _test(val):
-    truth = val in ['py26', 'py27', 'py32']
+    truth = val in ['py26', 'py27', 'py31', 'py32']
     if truth is False:
         raise KeyError(val)
     return val
@@ -41,4 +41,4 @@ def release():
         local('hg tag "%(tag)s"' % env)
         local('hg push ssh://hg@bitbucket.org/lcrees/stuf')
         local('hg push git+ssh://git@github.com:kwarterthieves/stuf.git')
-    local('./setup.py register sdist --format=bztar,gztar,zip upload')
+    local('./setup.py register sdist --format=gztar,zip upload')
