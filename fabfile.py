@@ -40,5 +40,5 @@ def release():
     with settings(warn_only=True):
         local('hg tag "%(tag)s"' % env)
         local('hg push ssh://hg@bitbucket.org/lcrees/stuf')
-        local('hg push git+ssh://git@github.com:kwarterthieves/stuf.git')
+        local('hg push github')
     local('./setup.py register sdist --format=gztar,zip upload')
