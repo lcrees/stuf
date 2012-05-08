@@ -8,10 +8,10 @@ from stuf.six import items, get_ident
 
 def attr_or_item(this, key):
     '''
-    get attribute or item
+    Get attribute or item.
 
-    @param this: object
-    @param key: key to lookup
+    :argument this: an object
+    :argument key: key to lookup
     '''
     try:
         return getitem(this, key)
@@ -21,20 +21,20 @@ def attr_or_item(this, key):
 
 def clsname(this):
     '''
-    get class name
+    Get class name.
 
-    @param this: object
+    :argument this: an object
     '''
     return getattr(this.__class__, '__name__')
 
 
 def deepget(this, key, default=None):
     '''
-    get an attribute with deep attribute path
+    Get an attribute with deep attribute path
 
-    @param this: object
-    @param key: key to lookup
-    @param default: default value returned if key not found (default: None)
+    :argument this: an object
+    :argument str key: key to lookup
+    :keyword default: default value returned if key not found
     '''
     try:
         return attrgetter(key)(this)
@@ -44,10 +44,10 @@ def deepget(this, key, default=None):
 
 def deleter(this, key):
     '''
-    delete an attribute
+    Delete an attribute.
 
-    @param this: object
-    @param key: key to lookup
+    :argument this: an object
+    :argument str key: key to lookup
     '''
     try:
         object.__delattr__(this, key)
@@ -57,20 +57,19 @@ def deleter(this, key):
 
 def getcls(this):
     '''
-    get class of instance
+    Get class of instance.
 
-    @param this: an instance
+    :argument this: an instance
     '''
     return getter(this, '__class__')
 
 
 def getter(this, key):
     '''
-    get an attribute
+    Get an attribute.
 
-    @param this: object
-    @param key: key to lookup
-    @param default: default value returned if key not found (default: None)
+    :argument this: an object
+    :argument str key: key to lookup
     '''
     try:
         return object.__getattribute__(this, key)
@@ -80,11 +79,11 @@ def getter(this, key):
 
 def getdefault(this, key, default=None):
     '''
-    get an attribute
+    Get an attribute.
 
-    @param this: object
-    @param key: key to lookup
-    @param default: default value returned if key not found (default: None)
+    :argument this: an object
+    :argument str key: key to lookup
+    :keyword default: default value returned if key not found
     '''
     try:
         return getter(this, key)
@@ -94,11 +93,11 @@ def getdefault(this, key, default=None):
 
 def instance_or_class(key, this, that):
     '''
-    get attribute of an instance or class
+    Get attribute of an instance or class.
 
-    @param key: name of attribute to look for
-    @param this: instance to check for attribute
-    @param that: class to check for attribute
+    :argument str key: name of attribute to look for
+    :argument this: instance to check for attribute
+    :argument that: class to check for attribute
     '''
     try:
         return getter(this, key)
@@ -108,11 +107,11 @@ def instance_or_class(key, this, that):
 
 def inverse_lookup(value, this, default=None):
     '''
-    get attribute of an instance by value
+    Get attribute of an instance by value.
 
-    @param value: value to lookup as a key
-    @param this: instance to check for attribute
-    @param default: default key (default: None)
+    :argument value: value to lookup as a key
+    :argument this: instance to check for attribute
+    :keyword default: default key (default: None)
     '''
     try:
         return itemgetter(value)(
@@ -124,9 +123,9 @@ def inverse_lookup(value, this, default=None):
 
 def recursive_repr(this):
     '''
-    Decorator to make a repr function return "..." for a recursive call
+    Decorator to make a repr function return "..." for a recursive call.
 
-    @param this: object
+    :argument this: an object
     '''
     repr_running = set()
     def wrapper(self): #@IgnorePep8
@@ -148,20 +147,20 @@ def recursive_repr(this):
 
 def selfname(this):
     '''
-    get object name
+    Get object name.
 
-    @param this: object
+    :argument this: an object
     '''
     return getter(this, '__name__')
 
 
 def setter(this, key, value):
     '''
-    set attribute
+    Set attribute.
 
-    @param this: object
-    @param key: key to set
-    @param value: value to set
+    :argument this: an object
+    :argument key: key to set
+    :argument value: value to set
     '''
     # it's an instance
     try:
@@ -175,11 +174,11 @@ def setter(this, key, value):
 
 def setdefault(this, key, default=None):
     '''
-    get an attribute, creating and setting it if needed
+    Get an attribute, creating and setting it if needed
 
-    @param this: object
-    @param key: key to lookup
-    @param default: default value returned if key not found (default: None)
+    :argument this: an object
+    :argument key: key to lookup
+    :argument default: default value returned if key not found
     '''
     try:
         return getter(this, key)

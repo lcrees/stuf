@@ -27,7 +27,7 @@ class Sluggify(object):
 
 def lazyimport(path, attribute=None, i=import_module, g=getattr, s=isstring):
     '''
-    deferred module loader
+    Deferred module loader.
 
     :argument path: something to load
     :keyword str attribute: attribute on loaded module to return

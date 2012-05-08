@@ -4,7 +4,8 @@
 from itertools import starmap
 from collections import Mapping, Sequence, defaultdict, namedtuple
 
-from stuf.utils import getter, exhaust
+from stuf.deep import getter
+from stuf.iterable import exhaust
 from stuf.base import directstuf, wrapstuf, writewrapstuf
 from stuf.six import OrderedDict, items, keys, values, map
 
@@ -34,9 +35,9 @@ class defaultstuf(directstuf, defaultdict):
 
     def __init__(self, default, *args, **kw):
         '''
-        @param default: function that can provide default values
-        @param *args: iterable of keys/value pairs
-        @param **kw: keyword arguments
+        :argument default: function that can provide default values
+        :param *args: iterable of keys/value pairs
+        :param **kw: keyword arguments
         '''
         defaultdict.__init__(self, default)
         directstuf.__init__(self, *args, **kw)

@@ -21,10 +21,10 @@ def deferyield(iterz):
 
 def exhaust(iterable, exception=StopIteration, _n=next):
     '''
-    call next on an iterator until it's exhausted
+    Call next on an iterator until it's exhausted.
 
-    @param iterable: an iterable to exhaust
-    @param exception: exception that marks end of iteration
+    :param iterable: an iterable to exhaust
+    :param exception: exception that marks end of iteration
     '''
     try:
         while True:
@@ -35,9 +35,9 @@ def exhaust(iterable, exception=StopIteration, _n=next):
 
 def breakcount(func, length):
     '''
-    run an iterator until it reaches its original length
+    Run an iterator until it reaches its original length.
 
-    @param iterable: an iterable to exhaust
+    :param iterable: an iterable to exhaust
     '''
     while length:
         yield func()
@@ -46,12 +46,12 @@ def breakcount(func, length):
 
 def exhaustmap(mapping, call, filter=False, exception=StopIteration, _n=next):
     '''
-    call `next` on an iterator until it's exhausted
+    Call `next` on an iterator until it's exhausted.
 
-    @param mapping: a mapping to exhaust
-    @param call: call to handle what survives the filter
-    @param filter: a filter to apply to mapping (default: `None`)
-    @param exception: exception sentinel (default: `StopIteration`)
+    :param mapping: a mapping to exhaust
+    :param call: call to handle what survives the filter
+    :param filter: a filter to apply to mapping (default: `None`)
+    :param exception: exception sentinel (default: `StopIteration`)
     '''
     subiter = filter(filter, items(mapping)) if filter else items(mapping)
     iterable = starmap(call, subiter)
@@ -64,11 +64,11 @@ def exhaustmap(mapping, call, filter=False, exception=StopIteration, _n=next):
 
 def exhaustcall(call, iterable, exception=StopIteration, _n=next):
     '''
-    call function on an iterator until it's exhausted
+    Call function on an iterator until it's exhausted.
 
-    @param call: call that does the exhausting
-    @param iterable: iterable to exhaust
-    @param exception: exception marking end of iteration
+    :param call: call that does the exhausting
+    :param iterable: iterable to exhaust
+    :param exception: exception marking end of iteration
     '''
     iterable = map(call, iterable)
     try:
@@ -80,7 +80,7 @@ def exhaustcall(call, iterable, exception=StopIteration, _n=next):
 
 def iterexcept(func, exception, start=None):
     '''
-    call a function repeatedly until an exception is raised
+    Call a function repeatedly until an exception is raised.
 
     Converts a call-until-exception interface to an iterator interface. Like
     `__builtin__.iter(func, sentinel)` but uses an exception instead of a

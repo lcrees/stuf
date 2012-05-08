@@ -27,7 +27,9 @@ class _lazyinit(lazybase):
 
 class lazy(_lazyinit):
 
-    '''lazily assign attributes on an instance upon first use.'''
+    '''
+    Lazily assign attributes on an instance upon first use.
+    '''
 
     def __get__(self, this, that):
         return self if this is None else self._set(this)
@@ -35,7 +37,9 @@ class lazy(_lazyinit):
 
 class lazy_class(_lazyinit):
 
-    '''lazily assign attributes on an class upon first use.'''
+    '''
+    Lazily assign attributes on an class upon first use.
+    '''
 
     def __get__(self, this, that):
         return self._set(that)
@@ -43,7 +47,9 @@ class lazy_class(_lazyinit):
 
 class lazy_set(lazy):
 
-    '''lazy assign attributes with a custom setter'''
+    '''
+    Lazily assign attributes with a custom setter.
+    '''
 
     def __init__(self, method, fget=None, _wrap=update_wrapper):
         super(lazy_set, self).__init__(method)
@@ -63,7 +69,9 @@ class lazy_set(lazy):
 
 class bi(_lazyinit):
 
-    '''call as both class and instance method'''
+    '''
+    Call as both class and instance method.
+    '''
 
     def __get__(self, this, that):
         return self._factory(that) if this is None else self._factory(this)
@@ -83,7 +91,9 @@ class bothbase(_lazyinit):
         _wrap(self, method)
 
     def expression(self, expr):
-        '''modifying decorator that defines a general method'''
+        '''
+        Modifying decorator that defines a general method.
+        '''
         self.expr = expr
         return self
 
@@ -91,8 +101,8 @@ class bothbase(_lazyinit):
 class both(bothbase):
 
     '''
-    descriptor that caches results of instance-level results while allowing
-    class-level results
+    Descriptor that caches results of instance-level results while allowing
+    class-level results.
     '''
 
     def __get__(self, this, that):
@@ -102,7 +112,7 @@ class both(bothbase):
 class either(bothbase):
 
     '''
-    descriptor that caches results of both instance- and class-level results
+    Descriptor that caches results of both instance- and class-level results.
     '''
 
     def __get__(self, this, that):
@@ -113,7 +123,7 @@ class either(bothbase):
 
 class twoway(bothbase):
 
-    '''descriptor that enables instance and class-level results'''
+    '''Descriptor that enables instance and class-level results.'''
 
     def __get__(self, this, that):
         return self.expr(that) if this is None else self.method(this)

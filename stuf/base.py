@@ -6,7 +6,9 @@ from itertools import chain, starmap
 from collections import Mapping, Sequence, MutableMapping
 
 from stuf.six import items, strings, keys, values, map
-from stuf.utils import clsname, lazy, recursive_repr, exhaust
+from stuf.deep import recursive_repr, clsname
+from stuf.desc import lazy
+from stuf.iterable import exhaust
 
 __all__ = ['corestuf', 'directstuf', 'wrapstuf', 'writestuf', 'writewrapstuf']
 
@@ -145,8 +147,8 @@ class directstuf(writestuf):
 
     def __init__(self, *args, **kw):
         '''
-        @param *args: iterable of keys/value pairs
-        @param **kw: keyword arguments
+        :param *args: iterable of keys/value pairs
+        :param **kw: keyword arguments
         '''
         self.update(*args, **kw)
 
@@ -155,8 +157,8 @@ class wrapstuf(corestuf):
 
     def __init__(self, *args, **kw):
         '''
-        @param *args: iterable of keys/value pairs
-        @param **kw: keyword arguments
+        :param *args: iterable of keys/value pairs
+        :param **kw: keyword arguments
         '''
         super(wrapstuf, self).__init__()
         self._wrapped = self._populate(
