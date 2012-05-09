@@ -21,7 +21,7 @@ class Sluggify(object):
         and converts spaces to hyphens
         '''
         return self._second('-', u(self._first(
-            '', normalize('NFKD', value).encode('ascii', 'ignore')
+            '', normalize('NFKD', u(value)).encode('ascii', 'ignore')
         ).strip().lower()))
 
 
