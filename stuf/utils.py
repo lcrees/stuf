@@ -10,21 +10,6 @@ from functools import update_wrapper
 from stuf.six import items, isstring, u
 
 
-class Sluggify(object):
-
-    _first = staticmethod(re.compile('[^\w\s-]').sub)
-    _second = staticmethod(re.compile('[-\s]+').sub)
-
-    def __call__(self, value):
-        '''
-        normalizes string, converts to lowercase, removes non-alpha characters,
-        and converts spaces to hyphens
-        '''
-        return self._second('-', u(self._first(
-            '', normalize('NFKD', u(value)).encode('ascii', 'ignore')
-        ).strip().lower()))
-
-
 def lazyimport(path, attribute=None, i=import_module, g=getattr, s=isstring):
     '''
     Deferred module loader.
@@ -139,6 +124,21 @@ def lru(maxsize=100):
         return update_wrapper(wrapper, user_function)
 
     return decorating_function
+
+
+class Sluggify(object):
+
+    _first = staticmethod(re.compile('[^\w\s-]').sub)
+    _second = staticmethod(re.compile('[-\s]+').sub)
+
+    def __call__(self, value):
+        '''
+        normalizes string, converts to lowercase, removes non-alpha characters,
+        and converts spaces to hyphens
+        '''
+        return self._second('-', u(self._first(
+            '', normalize('NFKD', u(value)).encode('ascii', 'ignore')
+        ).strip().lower()))
 
 
 lru_wrapped = lru
