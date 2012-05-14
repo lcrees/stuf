@@ -76,8 +76,8 @@ def release():
 
 
 def releaser():
-    '''knife releaser'''
-    docs()
+    '''stuf releaser'''
+#    docs()
     _promptup()
     local(regup)
     local(sphinxup)
