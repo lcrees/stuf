@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-'''stuf utilities'''
+'''stuf iterable helpers'''
 
 from itertools import starmap
 from collections import Iterable
@@ -17,6 +17,19 @@ def deferiter(iterz):
 
 def deferyield(iterz):
     yield iterz
+
+
+def count(iterable, enumerate=enumerate, next=next, S=StopIteration):
+    counter = enumerate(iterable, 1)
+    idx = ()
+    while 1:
+        try:
+            idx = next(counter)
+        except S:
+            try:
+                return next(idx.__iter__())
+            except S:
+                return 0
 
 
 def exhaust(iterable, exception=StopIteration, _n=next):

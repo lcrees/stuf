@@ -24,6 +24,14 @@ except ImportError:
         from dummy_thread import get_ident
     except ImportError:
         from _thread import get_ident  # @UnusedImport
+try:
+    from __builtin__ import intern
+except ImportError:
+    from sys import intern  # @UnusedImport
+try:
+    from cPickle import loads as ld, dumps, HIGHEST_PROTOCOL
+except ImportError:
+    from pickle import loads as ld, dumps, HIGHEST_PROTOCOL  # @UnusedImport
 
 __author__ = 'Benjamin Peterson <benjamin@python.org>'
 __version__ = '1.1.0'

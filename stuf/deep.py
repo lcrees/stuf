@@ -3,7 +3,7 @@
 
 from operator import itemgetter, attrgetter, getitem
 
-from stuf.six import items, get_ident
+from stuf.six import get_ident, items
 
 
 def attr_or_item(this, key):
@@ -85,10 +85,10 @@ def getdefault(this, key, default=None):
     :argument str key: key to lookup
     :keyword default: default value returned if key not found
     '''
-    try:
-        return getter(this, key)
-    except AttributeError:
-        return default
+    return getter(this, key, default)
+
+
+get_or_default = getdefault
 
 
 def instance_or_class(key, this, that):
@@ -183,8 +183,4 @@ def setdefault(this, key, default=None):
     try:
         return getter(this, key)
     except AttributeError:
-        setter(this, key, default)
-        return default
-
-
-get_or_default = getdefault
+        return setter(this, key, default)

@@ -1,6 +1,7 @@
 eclipse.preferences.version=1
 encoding//depends/fabfile.py=utf-8
 encoding//stuf/__init__.py=utf-8
+encoding//stuf/collects.py=utf-8
 encoding//stuf/core.py=utf-8
 encoding//stuf/deep.py=utf-8
 encoding//stuf/desc.py=utf-8

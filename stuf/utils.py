@@ -4,11 +4,29 @@
 import re
 from threading import Lock
 from keyword import iskeyword
+from pickletools import genops
 from unicodedata import normalize
 from importlib import import_module
 from functools import update_wrapper
 
-from stuf.six import items, isstring, u
+from stuf.six import (
+    HIGHEST_PROTOCOL, items, isstring, function_code, ld, dumps, u, b)
+
+
+def memoize(f, i=intern, z=items, r=repr, uw=update_wrapper):
+    f.cache = {}.setdefault
+    if function_code(f).co_argcount == 1:
+        def memoize_(arg):
+            return f.cache(i(r(arg)), f(arg))
+    else:
+        def memoize_(*args, **kw): #@IgnorePep8
+            return f.setdefault(
+                i(r(args, z(kw)) if kw else r(args)), f(*args, **kw)
+            )
+    return uw(f, memoize_)
+
+
+loads = memoize(lambda x: ld(x))
 
 
 def lazyimport(path, attribute=None, i=import_module, g=getattr, s=isstring):
@@ -125,6 +143,57 @@ def lru(maxsize=100):
         return update_wrapper(wrapper, user_function)
 
     return decorating_function
+
+
+@memoize
+def optimize(
+    obj,
+    d=dumps,
+    p=HIGHEST_PROTOCOL,
+    s=set,
+    g=genops,
+    b_=b,
+    n=next,
+    S=StopIteration
+):
+    '''
+    Optimize a pickle string by removing unused PUT opcodes.
+
+    Raymond Hettinger Python cookbook recipe # 545418
+    '''
+    # set of args used by a GET opcode
+    this = d(obj, p)
+    gets = s()
+    # (arg, startpos, stoppos) for the PUT opcodes
+    # set to pos if previous opcode was a PUT
+    def iterthing(gets=gets, this=this, g=g, n=n):  # @IgnorePep8
+        gadd = gets.add
+        prevpos, prevarg = None, None
+        try:
+            nextr = g(this)
+            while 1:
+                opcode, arg, pos = n(nextr)
+                if prevpos is not None:
+                    yield prevarg, prevpos, pos
+                    prevpos = None
+                if 'PUT' in opcode.name:
+                    prevarg, prevpos = arg, pos
+                elif 'GET' in opcode.name:
+                    gadd(arg)
+        except S:
+            pass
+    # Copy the pickle string except for PUTS without a corresponding GET
+    def iterthingy(iterthing=iterthing(), this=this, n=n):  # @IgnorePep8
+        i = 0
+        try:
+            while 1:
+                arg, start, stop = n(iterthing)
+                yield this[i:stop if (arg in gets) else start]
+                i = stop
+        except S:
+            pass
+        yield this[i:]
+    return b_('').join(i for i in iterthingy())
 
 
 class CheckName(object):
