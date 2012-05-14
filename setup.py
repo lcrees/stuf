@@ -11,7 +11,7 @@ except ImportError:
     from distutils.core import setup
 
 install_requires = list(l for l in open(
-    join(getcwd(), 'requirements.txt'), 'r',
+    join(getcwd(), 'depends/requirements.txt'), 'r',
 ).readlines())
 if sys.version_info[0] == 2 and sys.version_info[1] < 7:
     install_requires.extend(['ordereddict', 'importlib'])
