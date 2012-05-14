@@ -42,7 +42,7 @@ def update_docs():
         local('hg ci -m docmerge')
         local('hg push ssh://hg@bitbucket.org/lcrees/stuf')
         local('hg push github')
-    local(sphinxup)
+#    local(sphinxup)
 
 
 def tox_recreate():
@@ -69,7 +69,7 @@ def release():
     local('hg merge default; hg ci -m automerge')
     _promptup()
     local(regup)
-    local(sphinxup)
+#    local(sphinxup)
     local(nodist)
 
 
@@ -78,7 +78,7 @@ def releaser():
 #    docs()
     _promptup()
     local(regup)
-    local(sphinxup)
+#    local(sphinxup)
     local(nodist)
 
 
@@ -89,5 +89,5 @@ def inplace():
         local('hg push ssh://hg@bitbucket.org/lcrees/stuf')
         local('hg push github')
     local('./setup.py sdist --format=bztar,gztar,zip upload')
-    local(sphinxup)
+#    local(sphinxup)
     local(nodist)
