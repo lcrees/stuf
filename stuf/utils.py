@@ -10,7 +10,7 @@ from importlib import import_module
 from functools import update_wrapper
 
 from stuf.six import (
-    HIGHEST_PROTOCOL, items, isstring, function_code, ld, dumps, u, b)
+    HIGHEST_PROTOCOL, items, isstring, function_code, ld, dumps, u, b, intern)
 
 
 def memoize(f, i=intern, z=items, r=repr, uw=update_wrapper):
