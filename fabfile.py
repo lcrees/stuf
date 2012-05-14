@@ -3,9 +3,9 @@
 
 from fabric.api import prompt, local, settings, env, lcd
 
-regup = '../setup.py register sdist --format=bztar,gztar,zip upload'
-nodist = 'rm -rf ../dist'
-sphinxup = '../setup.py upload_sphinx'
+regup = './setup.py register sdist --format=bztar,gztar,zip upload'
+nodist = 'rm -rf dist'
+sphinxup = './setup.py upload_sphinx'
 
 
 def _promptup():
@@ -25,12 +25,11 @@ def _test(val):
 
 def tox():
     '''test stuf'''
-    with lcd('../'):
-        local('tox')
+    local('tox')
 
 
 def docs():
-    with lcd('../docs/'):
+    with lcd('docs/'):
         local('make clean')
         local('make html')
         local('make linkcheck')
@@ -48,13 +47,12 @@ def update_docs():
 
 def tox_recreate():
     '''recreate stuf test env'''
-    with lcd('../'):
-        prompt(
-            'Enter testenv: [py26, py27, py31, py32]',
-            'testenv',
-            validate=_test,
-        )
-        local('tox --recreate -e %(testenv)s' % env)
+    prompt(
+        'Enter testenv: [py26, py27, py31, py32]',
+        'testenv',
+        validate=_test,
+    )
+    local('tox --recreate -e %(testenv)s' % env)
 
 
 def release():
@@ -86,10 +84,10 @@ def releaser():
 
 def inplace():
     '''in-place stuf'''
-    docs()
+#    docs()
     with settings(warn_only=True):
         local('hg push ssh://hg@bitbucket.org/lcrees/stuf')
         local('hg push github')
-    local('../setup.py sdist --format=bztar,gztar,zip upload')
+    local('./setup.py sdist --format=bztar,gztar,zip upload')
     local(sphinxup)
     local(nodist)
