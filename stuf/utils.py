@@ -26,7 +26,7 @@ def memoize(f, i=intern, z=items, r=repr, uw=update_wrapper):
     return uw(f, memoize_)
 
 
-loads = memoize(lambda x: ld(x))
+loads = memoize(lambda x: ld(x, encoding='latin-1'))
 
 
 def lazyimport(path, attribute=None, i=import_module, g=getattr, s=isstring):
