@@ -10,7 +10,8 @@ from importlib import import_module
 from functools import update_wrapper
 
 from stuf.six import (
-    HIGHEST_PROTOCOL, items, isstring, function_code, ld, dumps, u, b, intern)
+    PY3, HIGHEST_PROTOCOL, items, isstring, function_code, ld, dumps, u, b,
+    intern)
 
 
 def memoize(f, i=intern, z=items, r=repr, uw=update_wrapper):
@@ -26,7 +27,10 @@ def memoize(f, i=intern, z=items, r=repr, uw=update_wrapper):
     return uw(f, memoize_)
 
 
-loads = memoize(lambda x: ld(x, encoding='latin-1'))
+if PY3:
+    loads = memoize(lambda x: ld(x, encoding='latin-1'))
+else:
+    loads = memoize(lambda x: ld(x))
 
 
 def lazyimport(path, attribute=None, i=import_module, g=getattr, s=isstring):
