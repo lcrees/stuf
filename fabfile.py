@@ -13,7 +13,7 @@ def _promptup():
     with settings(warn_only=True):
         local('hg tag "%(tag)s"' % env)
         local('hg push ssh://hg@bitbucket.org/lcrees/stuf')
-        local('hg push github')
+#        local('hg push github')
 
 
 def _test(val):
@@ -57,7 +57,7 @@ def tox_recreate():
 
 def release():
     '''release stuf'''
-    docs()
+#    docs()
     local('hg update pu')
     local('hg update next')
     local('hg merge pu; hg ci -m automerge')

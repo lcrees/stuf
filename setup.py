@@ -15,7 +15,7 @@ if sys.version_info[0] == 2 and sys.version_info[1] < 7:
 
 setup(
     name='stuf',
-    version='0.8.17',
+    version='0.8.18',
     description='dictionaries with attribute-style access',
     long_description=open(join(getcwd(), 'README.rst'), 'r').read(),
     keywords='dict attribute collection mapping dot notation access bunch',
