@@ -18,17 +18,6 @@ src/
 static/
 media/
 *.orig
-
-syntax: regexp
-^bin/fabfile\.py$
-syntax: regexp
-^graphalchemy/tests/foo$
-syntax: regexp
-^graphalchemy/tests/foo3$
-syntax: regexp
-^profile$
-syntax: regexp
-^support\.py$
 syntax: glob
 .tox/*
 syntax: regexp
