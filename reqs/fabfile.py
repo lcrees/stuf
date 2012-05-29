@@ -3,9 +3,9 @@
 
 from fabric.api import prompt, local, settings, env, lcd
 
-regup = './setup.py register sdist --format=bztar,zip upload'
-nodist = 'rm -rf dist'
-sphinxup = './setup.py upload_sphinx'
+regup = '../setup.py register sdist --format=bztar,gztar,zip upload'
+nodist = 'rm -rf ../dist'
+sphinxup = '../setup.py upload_sphinx'
 
 
 def _promptup():
@@ -13,7 +13,7 @@ def _promptup():
     with settings(warn_only=True):
         local('hg tag "%(tag)s"' % env)
         local('hg push ssh://hg@bitbucket.org/lcrees/stuf')
-#        local('hg push github')
+        local('hg push github')
 
 
 def _test(val):
@@ -25,11 +25,12 @@ def _test(val):
 
 def tox():
     '''test stuf'''
-    local('tox')
+    with lcd('../'):
+        local('tox')
 
 
 def docs():
-    with lcd('docs/'):
+    with lcd('../docs/'):
         local('make clean')
         local('make html')
         local('make linkcheck')
@@ -42,17 +43,18 @@ def update_docs():
         local('hg ci -m docmerge')
         local('hg push ssh://hg@bitbucket.org/lcrees/stuf')
         local('hg push github')
-#    local(sphinxup)
+    local(sphinxup)
 
 
 def tox_recreate():
     '''recreate stuf test env'''
-    prompt(
-        'Enter testenv: [py26, py27, py31, py32]',
-        'testenv',
-        validate=_test,
-    )
-    local('tox --recreate -e %(testenv)s' % env)
+    with lcd('../'):
+        prompt(
+            'Enter testenv: [py26, py27, py31, py32]',
+            'testenv',
+            validate=_test,
+        )
+        local('tox --recreate -e %(testenv)s' % env)
 
 
 def release():
@@ -69,16 +71,16 @@ def release():
     local('hg merge default; hg ci -m automerge')
     _promptup()
     local(regup)
-#    local(sphinxup)
+    local(sphinxup)
     local(nodist)
 
 
 def releaser():
-    '''stuf releaser'''
+    '''knife releaser'''
 #    docs()
     _promptup()
     local(regup)
-#    local(sphinxup)
+    local(sphinxup)
     local(nodist)
 
 
@@ -88,6 +90,6 @@ def inplace():
     with settings(warn_only=True):
         local('hg push ssh://hg@bitbucket.org/lcrees/stuf')
         local('hg push github')
-    local('./setup.py sdist --format=gztar,zip upload')
-#    local(sphinxup)
+    local('../setup.py sdist --format=bztar,gztar,zip upload')
+    local(sphinxup)
     local(nodist)
