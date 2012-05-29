@@ -1,14 +1,182 @@
 # -*- coding: utf-8 -*-
 '''core stuf'''
 
-from itertools import starmap
-from collections import Mapping, Sequence, defaultdict, namedtuple
+from operator import methodcaller
+from itertools import chain, starmap
+from collections import (
+    Mapping, MutableMapping, Sequence, defaultdict, namedtuple)
 
-from stuf.utils import getter, exhaust
-from stuf.base import directstuf, wrapstuf, writewrapstuf
-from stuf.six import OrderedDict, items, keys, values, map
+from stuf.desc import lazy
+from stuf.iterable import exhaust
+from stuf.collects import OrderedDict
+from stuf.six import (
+    items, strings, keys, map, getvalues, getkeys, getitems)
+from stuf.deep import recursive_repr, clsname, getter, getcls
 
 __all__ = ('defaultstuf', 'fixedstuf', 'frozenstuf', 'orderedstuf', 'stuf')
+
+
+class corestuf(object):
+
+    '''stuf core stuff'''
+
+    _map = dict
+    _reserved = ('allowed', '_wrapped', '_map')
+
+    def __getattr__(self, key, _getter=object.__getattribute__):
+        if key == 'iteritems':
+            return getitems(self)
+        elif key == 'iterkeys':
+            return getkeys(self)
+        elif key == 'itervalues':
+            return getvalues(self)
+        try:
+            return self[key]
+        except KeyError:
+            return _getter(self, key)
+
+    @recursive_repr
+    def __repr__(self, _clsname=clsname, _mcaller=methodcaller):
+        return '%s(%r)' % (_clsname(self), _mcaller('items')(self))
+
+    @lazy
+    def _classkeys(self):
+        # protected keywords
+        return frozenset(chain(
+            keys(vars(self)), keys(vars(getcls(self))), self._reserved,
+        ))
+
+    @classmethod
+    def _build(cls, iterable, _map=map, _is=isinstance, _list=exhaust):
+        kind = cls._map
+        # add class to handle potential nested objects of the same class
+        kw = kind()
+        update = kw.update
+        if _is(iterable, Mapping):
+            update(kind(items(iterable)))
+        elif _is(iterable, Sequence):
+            # extract appropriate key-values from sequence
+            def _coro(arg, update=update):
+                try:
+                    update(arg)
+                except (ValueError, TypeError):
+                    pass
+            _list(_map(_coro, iterable))
+        return kw
+
+    @classmethod
+    def _mapping(cls, iterable):
+        return cls._map(iterable)
+
+    @classmethod
+    def _new(cls, iterable):
+        return cls(cls._build(iterable))
+
+    @classmethod
+    def _populate(cls, past, future, _is=isinstance, m=starmap, _i=items):
+        def _coro(key, value, new=cls._new, _is=_is):
+            if _is(value, (Sequence, Mapping)) and not _is(value, strings):
+                # see if stuf can be converted to nested stuf
+                trial = new(value)
+                if len(trial) > 0:
+                    future[key] = trial
+                else:
+                    future[key] = value
+            else:
+                future[key] = value
+        exhaust(m(_coro, _i(past)))
+        return cls._postpopulate(future)
+
+    @classmethod
+    def _postpopulate(cls, future):
+        return future
+
+    def _prepopulate(self, *args, **kw):
+        kw.update(self._build(args))
+        return kw
+
+    def copy(self):
+        return self._build(self._map(self))
+
+
+class writestuf(corestuf):
+
+    '''stuf basestuf'''
+
+    def __setattr__(self, key, value):
+        # handle normal object attributes
+        if key == '_classkeys' or key in self._classkeys:
+            self.__dict__[key] = value
+        # handle special attributes
+        else:
+            try:
+                self[key] = value
+            except:
+                raise AttributeError(key)
+
+    def __delattr__(self, key):
+        # allow deletion of key-value pairs only
+        if not key == '_classkeys' or key in self._classkeys:
+            try:
+                del self[key]
+            except KeyError:
+                raise AttributeError(key)
+
+    def __getstate__(self):
+        return self._mapping(self)
+
+    def __setstate__(self, state):
+        return self._build(state)
+
+    def update(self, *args, **kw):
+        self._populate(self._prepopulate(*args, **kw), self)
+
+
+class directstuf(writestuf):
+
+    '''stuf basestuf'''
+
+    __init__ = writestuf.update
+
+
+class wrapstuf(corestuf):
+
+    def __init__(self, *args, **kw):
+        '''
+        :param *args: iterable of keys/value pairs
+        :param **kw: keyword arguments
+        '''
+        super(wrapstuf, self).__init__()
+        self._wrapped = self._populate(
+            self._prepopulate(*args, **kw), self._map(),
+        )
+
+    @classmethod
+    def _postpopulate(cls, future):
+        return cls._mapping(future)
+
+
+class writewrapstuf(wrapstuf, writestuf, MutableMapping):
+
+    '''wraps mappings for stuf compliance'''
+
+    def __getitem__(self, key):
+        return self._wrapped[key]
+
+    def __setitem__(self, key, value):
+        self._wrapped[key] = value
+
+    def __delitem__(self, key):
+        del self._wrapped[key]
+
+    def __iter__(self):
+        return iter(self._wrapped)
+
+    def __len__(self):
+        return len(self._wrapped)
+
+    def clear(self):
+        self._wrapped.clear()
 
 
 class defaultstuf(directstuf, defaultdict):
@@ -20,23 +188,11 @@ class defaultstuf(directstuf, defaultdict):
 
     _map = defaultdict
 
-    def __getattr__(self, key, _getter=object.__getattribute__):
-        try:
-            if key == 'iteritems':
-                return items(self)
-            elif key == 'iterkeys':
-                return keys(self)
-            elif key == 'itervalues':
-                return values(self)
-            return _getter(self, key)
-        except AttributeError:
-            return self[key]
-
     def __init__(self, default, *args, **kw):
         '''
-        @param default: function that can provide default values
-        @param *args: iterable of keys/value pairs
-        @param **kw: keyword arguments
+        :argument default: function that can provide default values
+        :param *args: iterable of keys/value pairs
+        :param **kw: keyword arguments
         '''
         defaultdict.__init__(self, default)
         directstuf.__init__(self, *args, **kw)
@@ -99,7 +255,7 @@ class fixedstuf(writewrapstuf):
             raise KeyError('key "{0}" not allowed'.format(key))
 
     def __reduce__(self):
-        return (self.__class__, (self._wrapped.copy(),))
+        return (getcls(self), (self._wrapped.copy(),))
 
     def _prepopulate(self, *args, **kw):
         iterable = super(fixedstuf, self)._prepopulate(*args, **kw)
@@ -132,7 +288,7 @@ class frozenstuf(wrapstuf, Mapping):
         return _len(getter(self, '_wrapped')._asdict())
 
     def __reduce__(self, _getter=getter):
-        return (self.__class__, (_getter(self, '_wrapped')._asdict().copy(),))
+        return (getcls(self), (_getter(self, '_wrapped')._asdict().copy(),))
 
     @classmethod
     def _mapping(self, mapping, _namedtuple=namedtuple, _keys=keys):
