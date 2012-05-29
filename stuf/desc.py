@@ -67,22 +67,6 @@ class lazy_set(lazy):
         return self
 
 
-class bi(_lazyinit):
-
-    '''
-    Call as both class and instance method.
-    '''
-
-    def __get__(self, this, that):
-        return self._factory(that) if this is None else self._factory(this)
-
-    def _factory(self, this):
-        def func(*args, **kw):
-            return self.method(*(this,) + args, **kw)
-        setattr(this, self.name, func)
-        return func
-
-
 class bothbase(_lazyinit):
 
     def __init__(self, method, expr=None, _wrap=update_wrapper):
@@ -127,55 +111,3 @@ class twoway(bothbase):
 
     def __get__(self, this, that):
         return self.expr(that) if this is None else self.method(this)
-
-try:
-    from functools import total_ordering  # @UnusedImport
-except ImportError:
-    def total_ordering(cls):
-        '''
-        class decorator that fills in missing ordering methods
-
-        not available for python versions < 2.7
-        '''
-        convert = {
-            '__lt__': [
-                ('__gt__', lambda self, other: not (
-                    self < other or self == other)),
-                ('__le__', lambda self, other: self < other or self == other),
-                ('__ge__', lambda self, other: not self < other),
-            ],
-            '__le__': [
-                ('__ge__',
-                lambda self, other: not self <= other or self == other),
-                ('__lt__',
-                lambda self, other: self <= other and not self == other),
-                ('__gt__', lambda self, other: not self <= other),
-            ],
-            '__gt__': [
-                ('__lt__', lambda self, other: not (
-                    self > other or self == other)),
-                ('__ge__', lambda self, other: self > other or self == other),
-                ('__le__', lambda self, other: not self > other),
-            ],
-            '__ge__': [
-                ('__le__', lambda self, other: (
-                    not self >= other) or self == other
-                ),
-                ('__gt__',
-                lambda self, other: self >= other and not self == other),
-                ('__lt__', lambda self, other: not self >= other)
-            ]
-        }
-        roots = set(dir(cls)) & set(convert)
-        if not roots:
-            raise ValueError(
-                'must define at least one ordering operation: < > <= >='
-            )
-        # prefer __lt__ to __le__ to __gt__ to __ge__
-        root = max(roots)
-        for opname, opfunc in convert[root]:
-            if opname not in roots:
-                opfunc.__name__ = opname
-                opfunc.__doc__ = getattr(int, opname).__doc__
-                setattr(cls, opname, opfunc)
-        return cls

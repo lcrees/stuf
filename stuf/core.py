@@ -8,8 +8,10 @@ from collections import (
 
 from stuf.desc import lazy
 from stuf.iterable import exhaust
-from stuf.deep import recursive_repr, clsname, getter
-from stuf.six import OrderedDict, items, strings, keys, values, map
+from stuf.collects import OrderedDict
+from stuf.six import (
+    items, strings, keys, map, getvalues, getkeys, getitems)
+from stuf.deep import recursive_repr, clsname, getter, getcls
 
 __all__ = ('defaultstuf', 'fixedstuf', 'frozenstuf', 'orderedstuf', 'stuf')
 
@@ -22,28 +24,26 @@ class corestuf(object):
     _reserved = ('allowed', '_wrapped', '_map')
 
     def __getattr__(self, key, _getter=object.__getattribute__):
+        if key == 'iteritems':
+            return getitems(self)
+        elif key == 'iterkeys':
+            return getkeys(self)
+        elif key == 'itervalues':
+            return getvalues(self)
         try:
             return self[key]
         except KeyError:
-            if key == 'iteritems':
-                return items(self)
-            elif key == 'iterkeys':
-                return keys(self)
-            elif key == 'itervalues':
-                return values(self)
             return _getter(self, key)
 
     @recursive_repr
     def __repr__(self, _clsname=clsname, _mcaller=methodcaller):
-        if not self:
-            return '%s()' % _clsname(self)
         return '%s(%r)' % (_clsname(self), _mcaller('items')(self))
 
     @lazy
     def _classkeys(self):
         # protected keywords
         return frozenset(chain(
-            keys(vars(self)), keys(vars(self.__class__)), self._reserved,
+            keys(vars(self)), keys(vars(getcls(self))), self._reserved,
         ))
 
     @classmethod
@@ -122,16 +122,6 @@ class writestuf(corestuf):
             except KeyError:
                 raise AttributeError(key)
 
-    def __iter__(self):
-        cls = self.__class__
-        for key, value in items(self):
-            # nested stuf of some sort
-            if isinstance(value, cls):
-                yield key, dict(iter(value))
-            # normal key, value pair
-            else:
-                yield key, value
-
     def __getstate__(self):
         return self._mapping(self)
 
@@ -146,12 +136,7 @@ class directstuf(writestuf):
 
     '''stuf basestuf'''
 
-    def __init__(self, *args, **kw):
-        '''
-        :param *args: iterable of keys/value pairs
-        :param **kw: keyword arguments
-        '''
-        self.update(*args, **kw)
+    __init__ = writestuf.update
 
 
 class wrapstuf(corestuf):
@@ -202,18 +187,6 @@ class defaultstuf(directstuf, defaultdict):
     '''
 
     _map = defaultdict
-
-    def __getattr__(self, key, _getter=object.__getattribute__):
-        try:
-            if key == 'iteritems':
-                return items(self)
-            elif key == 'iterkeys':
-                return keys(self)
-            elif key == 'itervalues':
-                return values(self)
-            return _getter(self, key)
-        except AttributeError:
-            return self[key]
 
     def __init__(self, default, *args, **kw):
         '''
@@ -282,7 +255,7 @@ class fixedstuf(writewrapstuf):
             raise KeyError('key "{0}" not allowed'.format(key))
 
     def __reduce__(self):
-        return (self.__class__, (self._wrapped.copy(),))
+        return (getcls(self), (self._wrapped.copy(),))
 
     def _prepopulate(self, *args, **kw):
         iterable = super(fixedstuf, self)._prepopulate(*args, **kw)
@@ -315,7 +288,7 @@ class frozenstuf(wrapstuf, Mapping):
         return _len(getter(self, '_wrapped')._asdict())
 
     def __reduce__(self, _getter=getter):
-        return (self.__class__, (_getter(self, '_wrapped')._asdict().copy(),))
+        return (getcls(self), (_getter(self, '_wrapped')._asdict().copy(),))
 
     @classmethod
     def _mapping(self, mapping, _namedtuple=namedtuple, _keys=keys):

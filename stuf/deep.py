@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 '''stuf deep object utilities'''
 
-from operator import itemgetter, attrgetter, getitem
+from operator import attrgetter, getitem
 
-from stuf.six import get_ident, items
+from stuf.six import get_ident
 
 
 def attr_or_item(this, key):
@@ -15,7 +15,7 @@ def attr_or_item(this, key):
     '''
     try:
         return getitem(this, key)
-    except KeyError:
+    except (KeyError, TypeError):
         return getter(this, key)
 
 
@@ -75,50 +75,6 @@ def getter(this, key):
         return object.__getattribute__(this, key)
     except (AttributeError, TypeError):
         return getattr(this, key)
-
-
-def getdefault(this, key, default=None):
-    '''
-    Get an attribute.
-
-    :argument this: an object
-    :argument str key: key to lookup
-    :keyword default: default value returned if key not found
-    '''
-    return getter(this, key, default)
-
-
-get_or_default = getdefault
-
-
-def instance_or_class(key, this, that):
-    '''
-    Get attribute of an instance or class.
-
-    :argument str key: name of attribute to look for
-    :argument this: instance to check for attribute
-    :argument that: class to check for attribute
-    '''
-    try:
-        return getter(this, key)
-    except AttributeError:
-        return getter(that, key)
-
-
-def inverse_lookup(value, this, default=None):
-    '''
-    Get attribute of an instance by value.
-
-    :argument value: value to lookup as a key
-    :argument this: instance to check for attribute
-    :keyword default: default key (default: None)
-    '''
-    try:
-        return itemgetter(value)(
-            dict((v, k) for k, v in items(vars(this)))
-        )
-    except (TypeError, KeyError):
-        return default
 
 
 def recursive_repr(this):

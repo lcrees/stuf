@@ -3,10 +3,14 @@
 
 import sys
 from collections import MutableMapping
+try:
+    from collections import OrderedDict
+except  ImportError:
+    from ordereddict import OrderedDict  # @UnusedImport
 
 from stuf.deep import recursive_repr
+from stuf.six import items, map as imap
 from stuf.six.moves import filterfalse, zip_longest  # @UnresolvedImport @UnusedImport @IgnorePep8
-from stuf.six import OrderedDict, items, map as imap
 
 if not sys.version_info[0] == 2 and sys.version_info[1] < 7:
     from collections import Counter  # @UnresolvedImport
@@ -37,8 +41,6 @@ else:
             if n is None:
                 return sorted(i(self), key=g(1), reverse=True)
             return nl(n, i(self), key=g(1))
-
-        # Override dict methods where necessary
 
         def update(self, iterable=None):
             '''like dict.update() but add counts instead of replacing them'''

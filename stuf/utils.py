@@ -15,6 +15,9 @@ from stuf.six import (
 
 
 def memoize(f, i=intern, z=items, r=repr, uw=update_wrapper):
+    '''
+    memoize function
+    '''
     f.cache = {}.setdefault
     if function_code(f).co_argcount == 1:
         def memoize_(arg):
@@ -93,7 +96,6 @@ def lru(maxsize=100):
         root[:] = [root, root, None, None]
         # names for the link fields
         PREV, NEXT, KEY, RESULT = 0, 1, 2, 3
-
         if maxsize is None:
             def wrapper(*args, **kw):
                 # simple caching without ordering or size limit
@@ -144,7 +146,10 @@ def lru(maxsize=100):
                 return result
 
         wrapper.__wrapped__ = user_function
-        return update_wrapper(wrapper, user_function)
+        try:
+            return update_wrapper(wrapper, user_function)
+        except AttributeError:
+            return wrapper
 
     return decorating_function
 
@@ -227,14 +232,24 @@ class Sluggify(object):
     _first = staticmethod(re.compile('[^\w\s-]').sub)
     _second = staticmethod(re.compile('[-\s]+').sub)
 
-    def __call__(self, value):
-        '''
-        normalizes string, converts to lowercase, removes non-alpha characters,
-        and converts spaces to hyphens
-        '''
-        return self._second('-', u(self._first(
-            '', normalize('NFKD', u(value)).encode('ascii', 'ignore')
-        ).strip().lower()))
+    if PY3:
+        def __call__(self, value):
+            '''
+            normalizes string, converts to lowercase, removes non-alpha
+            characters, and converts spaces to hyphens
+            '''
+            return self._second('-', self._first(
+                '', normalize('NFKD', value)
+            )).strip().lower()
+    else:
+        def __call__(self, value):
+            '''
+            normalizes string, converts to lowercase, removes non-alpha
+            characters, and converts spaces to hyphens
+            '''
+            return self._second('-', u(self._first(
+                '', normalize('NFKD', u(value)).encode('ascii', 'ignore')
+            ).strip().lower()))
 
 
 lru_wrapped = lru

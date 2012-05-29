@@ -5,10 +5,7 @@
 import sys
 from os import getcwd
 from os.path import join
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
+from setuptools import setup, find_packages
 
 install_requires = list(l for l in open(
     join(getcwd(), 'reqs/requires.txt'), 'r',
@@ -18,15 +15,15 @@ if sys.version_info[0] == 2 and sys.version_info[1] < 7:
 
 setup(
     name='stuf',
-    version='0.8.16',
-    description='stuf has attributes',
+    version='0.8.17',
+    description='dictionaries with attribute-style access',
     long_description=open(join(getcwd(), 'README.rst'), 'r').read(),
     keywords='dict attribute collection mapping dot notation access bunch',
     license='BSD',
     author='L. C. Rees',
     author_email='lcrees@gmail.com',
     url='https://bitbucket.org/lcrees/stuf',
-    packages=['stuf'],
+    packages=find_packages(),
     test_suite='stuf.tests',
     zip_safe=False,
     install_requires=install_requires,

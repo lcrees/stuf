@@ -14,10 +14,6 @@ try:
 except ImportError:
     import unittest  # @UnusedImport
 try:
-    from collections import OrderedDict
-except  ImportError:
-    from ordereddict import OrderedDict  # @UnusedImport
-try:
     from thread import get_ident
 except ImportError:
     try:
@@ -215,9 +211,9 @@ else:
     _func_code = 'func_code'
     _func_defaults = 'func_defaults'
 
-    _iterkeys = 'keys'
-    _itervalues = 'values'
-    _iteritems = 'items'
+    _iterkeys = 'iterkeys'
+    _itervalues = 'itervalues'
+    _iteritems = 'iteritems'
 
 try:
     advance_iterator = next
@@ -254,14 +250,26 @@ function_code = operator.attrgetter(_func_code)
 function_defaults = operator.attrgetter(_func_defaults)
 
 
+def getkeys(d):
+    return getattr(d, _iterkeys)
+
+
 def keys(d):
     '''Return an iterator over the keys of a dictionary.'''
     return getattr(d, _iterkeys)()
 
 
+def getvalues(d):
+    return getattr(d, _itervalues)
+
+
 def values(d):
     '''Return an iterator over the values of a dictionary.'''
     return getattr(d, _itervalues)()
+
+
+def getitems(d):
+    return getattr(d, _iteritems)
 
 
 def items(d):
@@ -475,3 +483,55 @@ def tobytes(thing, encoding='utf-8', errors='strict'):
     return (
         texts(thing).encode(encoding, errors) if not isbinary(thing) else thing
     )
+
+try:
+    from functools import total_ordering  # @UnusedImport
+except ImportError:
+    def total_ordering(cls):
+        '''
+        class decorator that fills in missing ordering methods
+
+        not available for python versions < 2.7
+        '''
+        convert = {
+            '__lt__': [
+                ('__gt__', lambda self, other: not (
+                    self < other or self == other)),
+                ('__le__', lambda self, other: self < other or self == other),
+                ('__ge__', lambda self, other: not self < other),
+            ],
+            '__le__': [
+                ('__ge__',
+                lambda self, other: not self <= other or self == other),
+                ('__lt__',
+                lambda self, other: self <= other and not self == other),
+                ('__gt__', lambda self, other: not self <= other),
+            ],
+            '__gt__': [
+                ('__lt__', lambda self, other: not (
+                    self > other or self == other)),
+                ('__ge__', lambda self, other: self > other or self == other),
+                ('__le__', lambda self, other: not self > other),
+            ],
+            '__ge__': [
+                ('__le__', lambda self, other: (
+                    not self >= other) or self == other
+                ),
+                ('__gt__',
+                lambda self, other: self >= other and not self == other),
+                ('__lt__', lambda self, other: not self >= other)
+            ]
+        }
+        roots = set(dir(cls)) & set(convert)
+        if not roots:
+            raise ValueError(
+                'must define at least one ordering operation: < > <= >='
+            )
+        # prefer __lt__ to __le__ to __gt__ to __ge__
+        root = max(roots)
+        for opname, opfunc in convert[root]:
+            if opname not in roots:
+                opfunc.__name__ = opname
+                opfunc.__doc__ = getattr(int, opname).__doc__
+                setattr(cls, opname, opfunc)
+        return cls
