@@ -3,7 +3,7 @@
 
 from fabric.api import prompt, local, settings, env, lcd
 
-regup = './setup.py register sdist --format=bztar,gztar,zip upload'
+regup = './setup.py register sdist --format=bztar,zip upload'
 nodist = 'rm -rf dist'
 sphinxup = './setup.py upload_sphinx'
 
