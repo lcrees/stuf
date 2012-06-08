@@ -9,8 +9,8 @@ from collections import (
 from stuf.desc import lazy
 from stuf.iterable import exhaust
 from stuf.collects import OrderedDict
-from stuf.six import items, strings, map, getvalues, getitems
 from stuf.deep import recursive_repr, clsname, getter, getcls
+from stuf.six import items, strings, map, getvalues, getitems, getkeys
 
 __all__ = ('defaultstuf', 'fixedstuf', 'frozenstuf', 'orderedstuf', 'stuf')
 
@@ -26,7 +26,7 @@ class corestuf(object):
         if key == 'iteritems':
             return getitems(self)
         elif key == 'iterkeys':
-            return iter(self)
+            return getkeys(self)
         elif key == 'itervalues':
             return getvalues(self)
         try:
