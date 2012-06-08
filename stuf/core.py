@@ -9,8 +9,7 @@ from collections import (
 from stuf.desc import lazy
 from stuf.iterable import exhaust
 from stuf.collects import OrderedDict
-from stuf.six import (
-    items, strings, keys, map, getvalues, getkeys, getitems)
+from stuf.six import items, strings, map, getvalues, getitems
 from stuf.deep import recursive_repr, clsname, getter, getcls
 
 __all__ = ('defaultstuf', 'fixedstuf', 'frozenstuf', 'orderedstuf', 'stuf')
@@ -27,7 +26,7 @@ class corestuf(object):
         if key == 'iteritems':
             return getitems(self)
         elif key == 'iterkeys':
-            return getkeys(self)
+            return iter(self)
         elif key == 'itervalues':
             return getvalues(self)
         try:
@@ -43,7 +42,7 @@ class corestuf(object):
     def _classkeys(self):
         # protected keywords
         return frozenset(chain(
-            keys(vars(self)), keys(vars(getcls(self))), self._reserved,
+            iter(vars(self)), iter(vars(getcls(self))), self._reserved,
         ))
 
     @classmethod
@@ -259,7 +258,7 @@ class fixedstuf(writewrapstuf):
 
     def _prepopulate(self, *args, **kw):
         iterable = super(fixedstuf, self)._prepopulate(*args, **kw)
-        self.allowed = frozenset(keys(iterable))
+        self.allowed = frozenset(iterable)
         return iterable
 
     def popitem(self):
@@ -291,8 +290,8 @@ class frozenstuf(wrapstuf, Mapping):
         return (getcls(self), (_getter(self, '_wrapped')._asdict().copy(),))
 
     @classmethod
-    def _mapping(self, mapping, _namedtuple=namedtuple, _keys=keys):
-        return _namedtuple('frozenstuf', _keys(mapping))(**mapping)
+    def _mapping(self, mapping, _namedtuple=namedtuple):
+        return _namedtuple('frozenstuf', iter(mapping))(**mapping)
 
 
 class orderedstuf(writewrapstuf):
