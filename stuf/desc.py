@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 '''stuf descriptor utilities'''
 
-from functools import update_wrapper
+from functools import update_wrapper, partial
 
 from stuf.deep import selfname, setter
 
@@ -33,6 +33,16 @@ class lazy(_lazyinit):
 
     def __get__(self, this, that):
         return self if this is None else self._set(this)
+
+
+class lazypartial(lazy):
+
+    '''
+    Lazily assign attributes on an instance upon first use.
+    '''
+
+    def _set(self, this):
+        return setter(this, self.name, partial(*self.method(this)))
 
 
 class lazy_class(_lazyinit):

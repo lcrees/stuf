@@ -13,6 +13,9 @@ from stuf.six import (
     PY3, HIGHEST_PROTOCOL, items, isstring, function_code, ld, dumps, u, b,
     intern)
 
+# check for None
+isnone = lambda x, y: x if y is None else y
+
 
 def memoize(f, i=intern, z=items, r=repr, uw=update_wrapper):
     '''
