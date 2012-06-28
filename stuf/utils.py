@@ -159,7 +159,6 @@ else:
     loads = memoize(lambda x: ld(x))
 
 
-@memoize
 def optimize(
     obj,
     d=dumps,
