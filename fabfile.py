@@ -13,7 +13,7 @@ def _promptup():
     with settings(warn_only=True):
         local('hg tag "%(tag)s"' % env)
         local('hg push ssh://hg@bitbucket.org/lcrees/stuf')
-#        local('hg push github')
+        local('hg push github')
 
 
 def _test(val):

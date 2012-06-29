@@ -13,27 +13,10 @@ from stuf.six import (
     PY3, HIGHEST_PROTOCOL, items, isstring, function_code, ld, dumps, u, b,
     intern)
 
-
-def memoize(f, i=intern, z=items, r=repr, uw=update_wrapper):
-    '''
-    memoize function
-    '''
-    f.cache = {}.setdefault
-    if function_code(f).co_argcount == 1:
-        def memoize_(arg):
-            return f.cache(i(r(arg)), f(arg))
-    else:
-        def memoize_(*args, **kw): #@IgnorePep8
-            return f.setdefault(
-                i(r(args, z(kw)) if kw else r(args)), f(*args, **kw)
-            )
-    return uw(f, memoize_)
-
-
-if PY3:
-    loads = memoize(lambda x: ld(x, encoding='latin-1'))
-else:
-    loads = memoize(lambda x: ld(x))
+# check for None
+isnone = lambda x, y: x if y is None else y
+# import loader
+lazyload = lambda x: lazyimport(x) if isstring(x) and '.' in x else x
 
 
 def lazyimport(path, attribute=None, i=import_module, g=getattr, s=isstring):
@@ -154,7 +137,28 @@ def lru(maxsize=100):
     return decorating_function
 
 
-@memoize
+def memoize(f, i=intern, z=items, r=repr, uw=update_wrapper):
+    '''
+    memoize function
+    '''
+    f.cache = {}.setdefault
+    if function_code(f).co_argcount == 1:
+        def memoize_(arg):
+            return f.cache(i(r(arg)), f(arg))
+    else:
+        def memoize_(*args, **kw): #@IgnorePep8
+            return f.setdefault(
+                i(r(args, z(kw)) if kw else r(args)), f(*args, **kw)
+            )
+    return uw(f, memoize_)
+
+
+if PY3:
+    loads = memoize(lambda x: ld(x, encoding='latin-1'))
+else:
+    loads = memoize(lambda x: ld(x))
+
+
 def optimize(
     obj,
     d=dumps,

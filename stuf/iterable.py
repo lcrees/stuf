@@ -6,14 +6,15 @@ from itertools import starmap
 from stuf.six import items, map
 
 
-def deferfunc(func):
-    '''Defer running `func`.'''
-    yield func()
+def breakcount(func, length):
+    '''
+    Run an iterator until it reaches its original length.
 
-
-def deferiter(iterator):
-    '''Defer running `iterator`.'''
-    yield next(iterator)
+    :param iterable: an iterable to exhaust
+    '''
+    while length:
+        yield func()
+        length -= 1
 
 
 def count(iterable, enumerate=enumerate, next=next, S=StopIteration):
@@ -30,6 +31,16 @@ def count(iterable, enumerate=enumerate, next=next, S=StopIteration):
                 return 0
 
 
+def deferfunc(func):
+    '''Defer running `func`.'''
+    yield func()
+
+
+def deferiter(iterator):
+    '''Defer running `iterator`.'''
+    yield next(iterator)
+
+
 def exhaust(iterable, exception=StopIteration, _n=next):
     '''
     Call next on an iterator until it's exhausted.
@@ -42,17 +53,6 @@ def exhaust(iterable, exception=StopIteration, _n=next):
             _n(iterable)
     except exception:
         pass
-
-
-def breakcount(func, length):
-    '''
-    Run an iterator until it reaches its original length.
-
-    :param iterable: an iterable to exhaust
-    '''
-    while length:
-        yield func()
-        length -= 1
 
 
 def exhaustmap(mapping, call, filter=None, exception=StopIteration, _n=next):
