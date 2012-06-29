@@ -1,14 +1,17 @@
 # -*- coding: utf-8 -*-
-# pylint: disable-msg=f0401,w0613,w0631,w0622,w0122
 '''utilities for writing code that runs on Python 2 and 3'''
 
 import sys
 import types
 import operator
 try:
+    from __builtin__ import intern
     from future_builtins import filter, map, zip
+    from cPickle import loads as ld, dumps, HIGHEST_PROTOCOL
 except ImportError:
+    from sys import intern  # @UnusedImport
     from builtins import filter, map, zip  # @UnusedImport
+    from pickle import loads as ld, dumps, HIGHEST_PROTOCOL  # @UnusedImport
 try:
     import unittest2 as unittest
 except ImportError:
@@ -20,17 +23,6 @@ except ImportError:
         from dummy_thread import get_ident
     except ImportError:
         from _thread import get_ident  # @UnusedImport
-try:
-    from __builtin__ import intern
-except ImportError:
-    from sys import intern  # @UnusedImport
-try:
-    from cPickle import loads as ld, dumps, HIGHEST_PROTOCOL
-except ImportError:
-    from pickle import loads as ld, dumps, HIGHEST_PROTOCOL  # @UnusedImport
-
-__author__ = 'Benjamin Peterson <benjamin@python.org>'
-__version__ = '1.1.0'
 
 # True if we are running on Python 3.
 PY3 = sys.version_info[0] == 3
