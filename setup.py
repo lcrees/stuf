@@ -7,6 +7,16 @@ from os import getcwd
 from os.path import join
 from setuptools import setup, find_packages
 
+
+def getversion(fname):
+    '''
+    Get the __version__ without importing.
+    '''
+    for line in open(fname):
+        if line.startswith('__version__'):
+            return '%s.%s.%s' % eval(line[13:])
+
+
 install_requires = list(l for l in open(
     join(getcwd(), 'reqs/requires.txt'), 'r',
 ).readlines())
@@ -15,7 +25,7 @@ if sys.version_info[0] == 2 and sys.version_info[1] < 7:
 
 setup(
     name='stuf',
-    version='0.8.19',
+    version=getversion('stuf/__init__.py'),
     description='dictionaries with attribute-style access',
     long_description=open(join(getcwd(), 'README.rst'), 'r').read(),
     keywords='dict attribute collection mapping dot notation access bunch',
