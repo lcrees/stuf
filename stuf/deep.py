@@ -5,6 +5,12 @@ from operator import attrgetter, getitem
 
 from stuf.six import get_ident
 
+# lightweight object manipulation
+hasit = lambda x, y: y in x.__dict__
+getit = lambda x, y: x.__dict__[y]
+setit = lambda x, y, z: x.__dict__.__setitem(y, z)
+delit = lambda x, y: x.__dict__.__delitem__(y)
+
 
 def attr_or_item(this, key):
     '''

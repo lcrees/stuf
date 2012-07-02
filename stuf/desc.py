@@ -55,14 +55,14 @@ class lazy_class(_lazyinit):
         return self._set(that)
 
 
-class lazy_set(lazy):
+class lazyset(lazy):
 
     '''
     Lazily assign attributes with a custom setter.
     '''
 
     def __init__(self, method, fget=None, _wrap=update_wrapper):
-        super(lazy_set, self).__init__(method)
+        super(lazyset, self).__init__(method)
         self.fget = fget
         _wrap(self, method)
 

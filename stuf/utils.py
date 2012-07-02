@@ -3,16 +3,19 @@
 
 import re
 from threading import Lock
+from itertools import count
 from keyword import iskeyword
 from pickletools import genops
 from unicodedata import normalize
 from importlib import import_module
-from functools import update_wrapper
+from functools import update_wrapper, partial
 
 from stuf.six import (
     PY3, HIGHEST_PROTOCOL, items, isstring, function_code, ld, dumps, u, b,
     intern)
 
+# count
+count = partial(next, count())
 # check for None
 isnone = lambda x, y: x if y is None else y
 # import loader
