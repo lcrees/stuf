@@ -14,7 +14,7 @@ def getversion(fname):
     '''
     for line in open(fname):
         if line.startswith('__version__'):
-            return '%s.%s.%s' % eval(line[13:])
+            return '%s.%s.%s' % eval(line[13:].rstrip())
 
 
 install_requires = list(l for l in open(
