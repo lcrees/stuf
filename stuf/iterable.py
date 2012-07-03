@@ -92,6 +92,22 @@ def exhaustcall(call, iterable, exception=StopIteration, _n=next, map=map):
         pass
 
 
+def exhauststar(call, iterable, exception=StopIteration, _n=next, map=starmap):
+    '''
+    Call function on an iterator until it's exhausted.
+
+    :param call: call that does the exhausting
+    :param iterable: iterable to exhaust
+    :param exception: exception marking end of iteration
+    '''
+    iterable = map(call, iterable)
+    try:
+        while 1:
+            _n(iterable)
+    except exception:
+        pass
+
+
 def iterexcept(func, exception, start=None):
     '''
     Call a function repeatedly until an exception is raised.
