@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 '''stuf iterable helpers'''
 
-from codecs import open as copen
-from itertools import starmap, repeat
+from itertools import starmap
 
 from stuf.six import items, map
 
@@ -126,33 +125,3 @@ def iterexcept(func, exception, start=None):
             yield func()
     except exception:
         pass
-
-
-def iterlines(fname, encoding=None, errors='strict', strip=False, bytes=False):
-    '''
-    Read data from file line by line.
-
-    :keyword str encoding: Unicode encoding of the file. If the default is
-      `None`, file content is read as 8-bit `str` and yielded as
-      non-Unicode strings.
-    :keyword str errors: how to handle Unicode errors
-    :keyword bool retain: strip off or keep newline (all newlines ('\r',
-      '\n', '\r\n') are translated to '\n'
-    '''
-    if strip:
-        def lineiter(fnext):
-            while 1:
-                yield fnext().rstrip()
-    else:
-        def lineiter(fnext):
-            while 1:
-                yield fnext()
-    if encoding is None:
-        with open(fname, 'rb') as f:
-            return iterexcept(lineiter(f.next), StopIteration)
-    with copen(fname, 'r', encoding, errors) as f:
-        return iterexcept(lineiter(f.next), StopIteration)
-        def iterfunc():  #  @IgnorePep8
-            while 1:
-                yield tuple(lineiter() for i in repeat(None, 100000))  # @UnusedVariable @IgnorePep8
-        ifunk = iterfunc().next
