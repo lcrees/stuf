@@ -19,7 +19,7 @@ def getversion(fname):
 
 def _promptup():
     with settings(warn_only=True):
-        local('hg tag "%(tag)s"' % getversion('stuf/__init__.py'))
+        local('hg tag "%s"' % getversion('stuf/__init__.py'))
         local('hg push ssh://hg@bitbucket.org/lcrees/stuf')
         local('hg push github')
 

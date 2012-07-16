@@ -189,11 +189,14 @@ class TestStuf(unittest.TestCase):
         tstuf = self._makeone(test1='test1', test2='test2', test3=dict(e=1))
         pkle = pickle.dumps(tstuf)
         nstuf = pickle.loads(pkle)
+        self.assertIsInstance(nstuf, self._makeone)
         self.assertEqual(tstuf, nstuf)
 
     def test_copy(self):
         tstuf = self._makeone(test1='test1', test2='test2', test3=dict(e=1))
         nstuf = tstuf.copy()
+        self.assertIsInstance(nstuf, self._makeone)
+        self.assertIsInstance(tstuf, self._makeone)
         self.assertEqual(tstuf, nstuf)
 
 
@@ -402,6 +405,7 @@ class TestDefaultStuf(unittest.TestCase):
         )
         pkle = pickle.dumps(tstuf)
         nstuf = pickle.loads(pkle)
+        self.assertIsInstance(nstuf, self._makeone)
         self.assertEqual(tstuf, nstuf)
 
     def test_copy(self):
@@ -409,6 +413,8 @@ class TestDefaultStuf(unittest.TestCase):
             list, ([],), test1='test1', test2='test2', test3=dict(e=1)
         )
         nstuf = tstuf.copy()
+        self.assertIsInstance(nstuf, self._makeone)
+        self.assertIsInstance(tstuf, self._makeone)
         self.assertEqual(tstuf, nstuf)
 
 
@@ -580,6 +586,8 @@ class TestFixedStuf(unittest.TestCase):
     def test_copy(self):
         tstuf = self._makeone(test1='test1', test2='test2', test3=dict(e=1))
         nstuf = tstuf.copy()
+        self.assertIsInstance(nstuf, self._makeone)
+        self.assertIsInstance(tstuf, self._makeone)
         self.assertEqual(tstuf, nstuf)
 
     def test_pickle(self):
@@ -587,6 +595,7 @@ class TestFixedStuf(unittest.TestCase):
         tstuf = self._makeone(test1='test1', test2='test2', test3=dict(e=1))
         pkle = pickle.dumps(tstuf)
         nstuf = pickle.loads(pkle)
+        self.assertIsInstance(nstuf, self._makeone)
         self.assertEqual(tstuf, nstuf)
 
 
@@ -761,6 +770,8 @@ class TestFrozenStuf(unittest.TestCase):
     def test_copy(self):
         tstuf = self._makeone(test1='test1', test2='test2', test3=dict(e=1))
         nstuf = tstuf.copy()
+        self.assertIsInstance(nstuf, self._makeone)
+        self.assertIsInstance(tstuf, self._makeone)
         self.assertEqual(tstuf, nstuf)
 
     def test_pickle(self):
@@ -768,6 +779,7 @@ class TestFrozenStuf(unittest.TestCase):
         tstuf = self._makeone(test1='test1', test2='test2', test3=dict(e=1))
         pkle = pickle.dumps(tstuf)
         nstuf = pickle.loads(pkle)
+        self.assertIsInstance(nstuf, self._makeone)
         self.assertEqual(tstuf, nstuf)
 
 
@@ -952,6 +964,8 @@ class TestOrderedStuf(unittest.TestCase):
     def test_copy(self):
         tstuf = self._makeone(test1='test1', test2='test2', test3=dict(e=1))
         nstuf = tstuf.copy()
+        self.assertIsInstance(nstuf, self._makeone)
+        self.assertIsInstance(tstuf, self._makeone)
         self.assertEqual(tstuf, nstuf)
 
     def test_pickle(self):
@@ -959,6 +973,7 @@ class TestOrderedStuf(unittest.TestCase):
         tstuf = self._makeone(test1='test1', test2='test2', test3=dict(e=1))
         pkle = pickle.dumps(tstuf)
         nstuf = pickle.loads(pkle)
+        self.assertIsInstance(nstuf, self._makeone)
         self.assertEqual(tstuf, nstuf)
 
     def test_reversed(self):

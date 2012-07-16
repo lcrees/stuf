@@ -103,6 +103,11 @@ class TestUtils(unittest.TestCase):
         deferred = exhaustcall(lambda x: x + x, iter([1, 2, 3]), StopIteration)
         self.assertIsNone(deferred)
 
+    def test_exhauststar(self):
+        from stuf.iterable import exhauststar
+        deferred = exhauststar(lambda x, y: x + y, iter([(1, 2), (3, 4)]))
+        self.assertIsNone(deferred)
+
     def test_exhaustmap(self):
         from stuf.iterable import exhaustmap
         deferred = exhaustmap({1: 2}, lambda x, y: x + y)
@@ -117,9 +122,9 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(Foo, Foo.this)
 
     def test_lazy_set(self):
-        from stuf.desc import lazy_set
+        from stuf.desc import lazyset
         class Foo(object): #@IgnorePep8
-            @lazy_set
+            @lazyset
             def this(self):
                 return self._foo + 1
             @this.setter #@IgnorePep8

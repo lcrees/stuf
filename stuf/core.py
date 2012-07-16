@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 '''core stuf'''
 
+from itertools import chain
 from operator import methodcaller
-from itertools import chain, starmap
 from collections import (
     Mapping, MutableMapping, Sequence, defaultdict, namedtuple)
 
 from stuf.desc import lazy
-from stuf.iterable import exhaust
 from stuf.collects import OrderedDict
-from stuf.deep import recursive_repr, clsname, getter, getcls
+from stuf.iterable import exhaust, exhaustmap
+from stuf.deep import recursive_repr, clsname, getcls
 from stuf.six import items, strings, map, getvalues, getitems, getkeys
 
 __all__ = ('defaultstuf', 'fixedstuf', 'frozenstuf', 'orderedstuf', 'stuf')
@@ -35,8 +35,8 @@ class corestuf(object):
             return _getter(self, key)
 
     @recursive_repr
-    def __repr__(self, _clsname=clsname, _mcaller=methodcaller):
-        return '%s(%r)' % (_clsname(self), _mcaller('items')(self))
+    def __repr__(self):
+        return '{0}({1})'.format(clsname(self), methodcaller('items')(self))
 
     @lazy
     def _classkeys(self):
@@ -46,21 +46,21 @@ class corestuf(object):
         ))
 
     @classmethod
-    def _build(cls, iterable, _map=map, _is=isinstance, _list=exhaust):
+    def _build(cls, iterable):
         kind = cls._map
         # add class to handle potential nested objects of the same class
         kw = kind()
         update = kw.update
-        if _is(iterable, Mapping):
+        if isinstance(iterable, Mapping):
             update(kind(items(iterable)))
-        elif _is(iterable, Sequence):
+        elif isinstance(iterable, Sequence):
             # extract appropriate key-values from sequence
             def _coro(arg, update=update):
                 try:
                     update(arg)
                 except (ValueError, TypeError):
                     pass
-            _list(_map(_coro, iterable))
+            exhaust(map(_coro, iterable))
         return kw
 
     @classmethod
@@ -72,18 +72,15 @@ class corestuf(object):
         return cls(cls._build(iterable))
 
     @classmethod
-    def _populate(cls, past, future, _is=isinstance, m=starmap, _i=items):
+    def _populate(cls, past, future, _is=isinstance):
         def _coro(key, value, new=cls._new, _is=_is):
             if _is(value, (Sequence, Mapping)) and not _is(value, strings):
                 # see if stuf can be converted to nested stuf
                 trial = new(value)
-                if len(trial) > 0:
-                    future[key] = trial
-                else:
-                    future[key] = value
+                future[key] = trial if len(trial) > 0 else value
             else:
                 future[key] = value
-        exhaust(m(_coro, _i(past)))
+        exhaustmap(past, _coro)
         return cls._postpopulate(future)
 
     @classmethod
@@ -95,12 +92,10 @@ class corestuf(object):
         return kw
 
     def copy(self):
-        return self._build(self._map(self))
+        return self._new(self._map(self))
 
 
 class writestuf(corestuf):
-
-    '''stuf basestuf'''
 
     def __setattr__(self, key, value):
         # handle normal object attributes
@@ -110,7 +105,7 @@ class writestuf(corestuf):
         else:
             try:
                 self[key] = value
-            except:
+            except KeyError:
                 raise AttributeError(key)
 
     def __delattr__(self, key):
@@ -121,19 +116,11 @@ class writestuf(corestuf):
             except KeyError:
                 raise AttributeError(key)
 
-    def __getstate__(self):
-        return self._mapping(self)
-
-    def __setstate__(self, state):
-        return self._build(state)
-
     def update(self, *args, **kw):
         self._populate(self._prepopulate(*args, **kw), self)
 
 
 class directstuf(writestuf):
-
-    '''stuf basestuf'''
 
     __init__ = writestuf.update
 
@@ -157,7 +144,7 @@ class wrapstuf(corestuf):
 
 class writewrapstuf(wrapstuf, writestuf, MutableMapping):
 
-    '''wraps mappings for stuf compliance'''
+    '''Wraps mappings for stuf.'''
 
     def __getitem__(self, key):
         return self._wrapped[key]
@@ -177,12 +164,15 @@ class writewrapstuf(wrapstuf, writestuf, MutableMapping):
     def clear(self):
         self._wrapped.clear()
 
+    def __reduce__(self):
+        return (getcls(self), (self._wrapped.copy(),))
+
 
 class defaultstuf(directstuf, defaultdict):
 
     '''
-    dictionary with attribute-style access and a factory function to provide a
-    default value for keys with no value
+    Dictionary with attribute-style access and a factory function to provide a
+    default value for keys with no value.
     '''
 
     _map = defaultdict
@@ -197,7 +187,7 @@ class defaultstuf(directstuf, defaultdict):
         directstuf.__init__(self, *args, **kw)
 
     @classmethod
-    def _build(cls, default, iterable, _map=map, _list=exhaust):
+    def _build(cls, default, iterable):
         kind = cls._map
         # add class to handle potential nested objects of the same class
         kw = kind(default)
@@ -211,39 +201,36 @@ class defaultstuf(directstuf, defaultdict):
                     update(arg)
                 except (ValueError, TypeError):
                     pass
-            _list(_map(_coro, iterable))
+            exhaust(map(_coro, iterable))
         return kw
 
     @classmethod
     def _new(cls, default, iterable):
         return cls(default, cls._build(default, iterable))
 
-    def _populate(self, past, future, _map=starmap, _items=items):
+    def _populate(self, past, future):
         def _coro(key, value, new=self._new):
             if isinstance(value, (Mapping, Sequence)):
                 # see if stuf can be converted to nested stuf
                 trial = new(self.default_factory, value)
-                if len(trial) > 0:
-                    future[key] = trial
-                else:
-                    future[key] = value
+                future[key] = trial if len(trial) > 0 else value
             else:
                 future[key] = value
-        exhaust(_map(_coro, _items(past)))
+        exhaustmap(past, _coro)
 
     def _prepopulate(self, *args, **kw):
         kw.update(self._build(self.default_factory, args))
         return kw
 
     def copy(self):
-        return self._build(self.default_factory, dict(self))
+        return self._new(self.default_factory, dict(self))
 
 
 class fixedstuf(writewrapstuf):
 
     '''
-    dictionary with attribute-style access with mutability restricted to
-    initial keys
+    Dictionary with attribute-style access with mutability restricted to
+    initial keys.
     '''
 
     def __setitem__(self, key, value):
@@ -252,9 +239,6 @@ class fixedstuf(writewrapstuf):
             super(fixedstuf, self).__setitem__(key, value)
         else:
             raise KeyError('key "{0}" not allowed'.format(key))
-
-    def __reduce__(self):
-        return (getcls(self), (self._wrapped.copy(),))
 
     def _prepopulate(self, *args, **kw):
         iterable = super(fixedstuf, self)._prepopulate(*args, **kw)
@@ -280,18 +264,18 @@ class frozenstuf(wrapstuf, Mapping):
         except AttributeError:
             raise KeyError('key {0} not found'.format(key))
 
-    def __iter__(self, _iter=iter, _getr=getter):
-        return _iter(_getr(self, '_wrapped')._asdict())
+    def __iter__(self):
+        return iter(self._wrapped._asdict())
 
-    def __len__(self, _len=len, _getr=getter):
-        return _len(getter(self, '_wrapped')._asdict())
+    def __len__(self):
+        return len(self._wrapped._asdict())
 
-    def __reduce__(self, _getter=getter):
-        return (getcls(self), (_getter(self, '_wrapped')._asdict().copy(),))
+    def __reduce__(self):
+        return (getcls(self), (self._wrapped._asdict().copy(),))
 
     @classmethod
-    def _mapping(self, mapping, _namedtuple=namedtuple):
-        return _namedtuple('frozenstuf', iter(mapping))(**mapping)
+    def _mapping(self, mapping):
+        return namedtuple('frozenstuf', iter(mapping))(**mapping)
 
 
 class orderedstuf(writewrapstuf):
@@ -301,10 +285,7 @@ class orderedstuf(writewrapstuf):
     _mapping = OrderedDict
 
     def __reversed__(self):
-        return getter(self, '_wrapped').__reversed__()
-
-    def __reduce__(self):
-        return self._wrapped.__reduce__()
+        return self._wrapped.__reversed__()
 
 
 class stuf(directstuf, dict):

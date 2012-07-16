@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 '''stuf descriptor utilities'''
 
+from threading import local
 from functools import update_wrapper, partial
 
-from stuf.deep import selfname, setter
+from stuf.six import items
+from stuf.iterable import exhaustmap
+from stuf.deep import selfname, setter, getcls
 
 
 class lazybase(object):
@@ -121,3 +124,28 @@ class twoway(bothbase):
 
     def __get__(self, this, that):
         return self.expr(that) if this is None else self.method(this)
+
+
+class readonly(lazybase):
+
+    '''Read-only lazy descriptor.'''
+
+    def __set__(self, this, value):
+        raise AttributeError('attribute is read-only')
+
+    def __delete__(self, this):
+        raise AttributeError('attribute is read-only')
+
+
+class ResetMixin(local):
+
+    '''Reset descriptors subclassing :class:`lazybase`\.'''
+
+    def reset(self):
+        '''Reset previously accessed :class:`lazybase` attributes.'''
+        attrs = set(vars(self))
+        exhaustmap(
+            items(vars(getcls(self))),
+            delattr,
+            lambda x, y: x in attrs and isinstance(y, lazybase),
+        )
