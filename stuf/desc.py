@@ -149,3 +149,11 @@ class ResetMixin(local):
             delattr,
             lambda x, y: x in attrs and isinstance(y, lazybase),
         )
+
+
+class ContextMixin(ResetMixin):
+
+    '''Resetable context manager mixin.'''
+
+    def __enter__(self):
+        return self
