@@ -22,6 +22,13 @@ isnone = lambda x, y: x if y is None else y
 lazyload = lambda x: lazyimport(x) if isstring(x) and '.' in x else x
 
 
+def diff(current, past):
+    '''Difference between `past` and `current` ``dicts``.'''
+    intersect = set(current).intersection(set(past))
+    changed = set(o for o in intersect if past[o] != current[o])
+    return dict((k, v) for k, v in items(current) if k in changed)
+
+
 def lazyimport(path, attribute=None, i=import_module, g=getattr, s=isstring):
     '''
     Deferred module loader.

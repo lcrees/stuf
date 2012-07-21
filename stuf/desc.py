@@ -11,12 +11,12 @@ from stuf.deep import selfname, setter, getcls
 
 class lazybase(object):
 
-    '''base for lazy descriptors'''
+    '''Base class for lazy descriptors.'''
 
 
 class _lazyinit(lazybase):
 
-    '''base for lazy descriptors'''
+    '''Base initializer for lazy descriptors.'''
 
     def __init__(self, method, _wrap=update_wrapper):
         super(_lazyinit, self).__init__()
@@ -30,9 +30,7 @@ class _lazyinit(lazybase):
 
 class lazy(_lazyinit):
 
-    '''
-    Lazily assign attributes on an instance upon first use.
-    '''
+    '''Lazily assign attributes on an instance upon first use.'''
 
     def __get__(self, this, that):
         return self if this is None else self._set(this)
@@ -40,9 +38,7 @@ class lazy(_lazyinit):
 
 class lazypartial(lazy):
 
-    '''
-    Lazily assign attributes on an instance upon first use.
-    '''
+    '''Lazily assign attributes on an instance upon first use.'''
 
     def _set(self, this):
         return setter(this, self.name, partial(*self.method(this)))
@@ -50,9 +46,7 @@ class lazypartial(lazy):
 
 class lazy_class(_lazyinit):
 
-    '''
-    Lazily assign attributes on an class upon first use.
-    '''
+    '''Lazily assign attributes on an class upon first use.'''
 
     def __get__(self, this, that):
         return self._set(that)
@@ -60,9 +54,7 @@ class lazy_class(_lazyinit):
 
 class lazyset(lazy):
 
-    '''
-    Lazily assign attributes with a custom setter.
-    '''
+    '''Lazily assign attributes with a custom setter.'''
 
     def __init__(self, method, fget=None, _wrap=update_wrapper):
         super(lazyset, self).__init__(method)
@@ -81,6 +73,8 @@ class lazyset(lazy):
 
 
 class bothbase(_lazyinit):
+    
+    '''Base for two-way lazy descriptors.'''
 
     def __init__(self, method, expr=None, _wrap=update_wrapper):
         super(bothbase, self).__init__(method)
@@ -139,7 +133,7 @@ class readonly(lazybase):
 
 class ResetMixin(local):
 
-    '''Reset descriptors subclassing :class:`lazybase`\.'''
+    '''Mixin for reseting descriptors subclassing :class:`lazybase`\.'''
 
     def reset(self):
         '''Reset previously accessed :class:`lazybase` attributes.'''
