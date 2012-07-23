@@ -4,6 +4,7 @@
 import sys
 import types
 import operator
+from importlib import import_module
 try:
     from __builtin__ import intern
     from future_builtins import filter, map, zip
@@ -60,12 +61,6 @@ def _add_doc(func, doc):
     func.__doc__ = doc
 
 
-def _import_module(name):
-    '''import module, returning the module after the last dot.'''
-    __import__(name)
-    return sys.modules[name]
-
-
 class _LazyDescr(object):
 
     def __init__(self, name):
@@ -91,7 +86,7 @@ class MovedModule(_LazyDescr):
             self.mod = old
 
     def _resolve(self):
-        return _import_module(self.mod)
+        return import_module(self.mod)
 
 
 class MovedAttribute(_LazyDescr):
@@ -115,7 +110,7 @@ class MovedAttribute(_LazyDescr):
             self.attr = old_attr
 
     def _resolve(self):
-        module = _import_module(self.mod)
+        module = import_module(self.mod)
         return getattr(module, self.attr)
 
 
@@ -158,6 +153,7 @@ _moved_attributes = [
     MovedModule('BaseHTTPServer', 'BaseHTTPServer', 'http.server'),
     MovedModule('CGIHTTPServer', 'CGIHTTPServer', 'http.server'),
     MovedModule('SimpleHTTPServer', 'SimpleHTTPServer', 'http.server'),
+    MovedModule('quote', 'urllib', 'urllib.parse'),
     MovedModule('pickle', 'cPickle', 'pickle'),
     MovedModule('queue', 'Queue'),
     MovedModule('reprlib', 'repr'),
