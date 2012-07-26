@@ -12,7 +12,7 @@ from stuf.iterable import exhaust, exhaustmap
 from stuf.deep import recursive_repr, clsname, getcls
 from stuf.six import items, strings, map, getvalues, getitems, getkeys
 
-__all__ = ('defaultstuf', 'fixedstuf', 'frozenstuf', 'orderedstuf', 'stuf')
+__all__ = 'defaultstuf fixedstuf frozenstuf orderedstuf stuf'.split()
 
 
 class corestuf(object):
@@ -229,7 +229,7 @@ class defaultstuf(directstuf, defaultdict):
 class fixedstuf(writewrapstuf):
 
     '''
-    Dictionary with attribute-style access with mutability restricted to
+    Dictionary with attribute-style access where mutability is restricted to
     initial keys.
     '''
 
