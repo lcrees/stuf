@@ -36,20 +36,20 @@ class lazy(_lazyinit):
         return self if this is None else self._set(this)
 
 
-class lazypartial(lazy):
-
-    '''Lazily assign attributes on an instance upon first use.'''
-
-    def _set(self, this):
-        return setter(this, self.name, partial(*self.method(this)))
-
-
 class lazy_class(_lazyinit):
 
     '''Lazily assign attributes on an class upon first use.'''
 
     def __get__(self, this, that):
         return self._set(that)
+    
+
+class lazypartial(lazy):
+
+    '''Lazily assign attributes on an instance upon first use.'''
+
+    def _set(self, this):
+        return setter(this, self.name, partial(*self.method(this)))
 
 
 class lazyset(lazy):
