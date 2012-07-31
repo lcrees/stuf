@@ -142,15 +142,12 @@ def lru(maxsize=100):
                 cache.clear()
                 root = nonlocal_root[0]
                 root[:] = [root, root, None, None]
-                raise TypeError()
         wrapper.__wrapped__ = user_function
         wrapper.clear = clear
-        #try:
-        foo = update_wrapper(wrapper, user_function)
-        foo.clear = clear
-        return foo
-#        except AttributeError:
-#        return wrapper
+        try:
+            return update_wrapper(wrapper, user_function)
+        except AttributeError:
+            return wrapper
     return decorator
 
 
@@ -265,7 +262,6 @@ class Sluggify(object):
             return self._second('-', u(self._first(
                 '', normalize('NFKD', u(value)).encode('ascii', 'ignore')
             ).strip().lower()))
-
 
 lru_wrapped = lru
 sluggify = Sluggify()
