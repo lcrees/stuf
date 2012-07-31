@@ -64,13 +64,11 @@ def lru(maxsize=100):
 
     By Raymond Hettinger
     '''
-
     # Users should only access the lru through its public API:
     #   f.__wrapped__
     # The internals of the lru are encapsulated for thread safety and
     # to allow the implementation to change (including a possible C version).
-
-    def decorating_function(user_function):
+    def decorator(user_function):
         cache = dict()
         items_ = items
         repr_ = repr
@@ -138,19 +136,26 @@ def lru(maxsize=100):
                         root[RESULT] = None
                 return result
 
+        def clear():
+            # clear the cache and cache statistics
+            with lock:
+                cache.clear()
+                root = nonlocal_root[0]
+                root[:] = [root, root, None, None]
+                raise TypeError()
         wrapper.__wrapped__ = user_function
-        try:
-            return update_wrapper(wrapper, user_function)
-        except AttributeError:
-            return wrapper
-
-    return decorating_function
+        wrapper.clear = clear
+        #try:
+        foo = update_wrapper(wrapper, user_function)
+        foo.clear = clear
+        return foo
+#        except AttributeError:
+#        return wrapper
+    return decorator
 
 
 def memoize(f, i=intern, z=items, r=repr, uw=update_wrapper):
-    '''
-    memoize function
-    '''
+    '''Memoize function.'''
     f.cache = {}.setdefault
     if function_code(f).co_argcount == 1:
         def memoize_(arg):
@@ -221,17 +226,13 @@ def optimize(
 
 class CheckName(object):
 
-    '''ensures string is legal Python name'''
+    '''Ensures string is legal Python name.'''
 
     # Illegal characters for Python names
     ic = '()[]{}@,:`=;+*/%&|^><\'"#\\$?!~'
 
     def __call__(self, name):
-        '''
-        ensures string is legal python name
-
-        @param name: name to check
-        '''
+        ''':argument name: name to check.'''
         # Remove characters that are illegal in a Python name
         name = name.strip().lower().replace('-', '_').replace(
             '.', '_'
@@ -249,8 +250,8 @@ class Sluggify(object):
     if PY3:
         def __call__(self, value):
             '''
-            normalizes string, converts to lowercase, removes non-alpha
-            characters, and converts spaces to hyphens
+            Normalizes string, converts to lowercase, removes non-alpha
+            characters, and converts spaces to hyphens.
             '''
             return self._second('-', self._first(
                 '', normalize('NFKD', value)
@@ -258,8 +259,8 @@ class Sluggify(object):
     else:
         def __call__(self, value):
             '''
-            normalizes string, converts to lowercase, removes non-alpha
-            characters, and converts spaces to hyphens
+            Normalizes string, converts to lowercase, removes non-alpha
+            characters, and converts spaces to hyphens.
             '''
             return self._second('-', u(self._first(
                 '', normalize('NFKD', u(value)).encode('ascii', 'ignore')
