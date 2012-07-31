@@ -64,10 +64,6 @@ def lru(maxsize=100):
 
     By Raymond Hettinger
     '''
-    # Users should only access the lru through its public API:
-    #   f.__wrapped__
-    # The internals of the lru are encapsulated for thread safety and
-    # to allow the implementation to change (including a possible C version).
     def decorator(user_function):
         cache = dict()
         items_ = items
