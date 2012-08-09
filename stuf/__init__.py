@@ -3,7 +3,7 @@
 
 from stuf.core import defaultstuf, fixedstuf, frozenstuf, orderedstuf, stuf
 
-__version__ = (0, 8, 21)
+__version__ = (0, 8, 22)
 
 __all__ = 'defaultstuf fixedstuf frozenstuf orderedstuf stuf'.split()
 

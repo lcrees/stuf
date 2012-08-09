@@ -56,9 +56,10 @@ else:
     del X
 
 
-def _add_doc(func, doc):
+def add_doc(func, doc):
     '''add documentation to a function.'''
     func.__doc__ = doc
+    return func
 
 
 class _LazyDescr(object):
@@ -228,7 +229,7 @@ else:
 
     callable = callable
 
-_add_doc(
+add_doc(
     get_unbound_function, 'Get the function out of a possibly unbound function'
 )
 
@@ -289,8 +290,8 @@ else:
     int2byte = chr
     import StringIO
     StringIO = BytesIO = StringIO.StringIO
-_add_doc(b, '''Byte literal''')
-_add_doc(u, '''Text literal''')
+add_doc(b, '''Byte literal''')
+add_doc(u, '''Text literal''')
 
 if PY3:
     import builtins  # @UnresolvedImport
@@ -365,7 +366,7 @@ else:
             write(arg)
         write(end)
 
-_add_doc(reraise, '''Reraise an exception.''')
+add_doc(reraise, '''Reraise an exception.''')
 
 
 def with_metaclass(meta, base=object):

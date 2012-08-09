@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 '''stuf deep object utilities'''
 
+from functools import partial
 from operator import attrgetter, getitem
 
 from stuf.six import get_ident
@@ -81,6 +82,20 @@ def getter(this, key):
         return object.__getattribute__(this, key)
     except (AttributeError, TypeError):
         return getattr(this, key)
+
+
+def members(this):
+    '''
+    Iterator version of ``inspect.getmembers``.
+    '''
+    getr = partial(getattr, this)
+    for key in dir(this):
+        try:
+            value = getr(key)
+        except AttributeError:
+            pass
+        else:
+            yield key, value
 
 
 def recursive_repr(this):
