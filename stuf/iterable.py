@@ -6,14 +6,14 @@ from itertools import starmap
 from stuf.six import items, map
 
 
-def breakcount(func, length):
+def breakcount(call, length):
     '''
     Run an iterator until it reaches its original length.
 
     :param iterable: an iterable to exhaust
     '''
     while length:
-        yield func()
+        yield call()
         length -= 1
 
 
@@ -31,9 +31,9 @@ def count(iterable, enumerate=enumerate, next=next, S=StopIteration):
                 return 0
 
 
-def deferfunc(func):
-    '''Defer running `func`.'''
-    yield func()
+def deferfunc(call):
+    '''Defer running `call`.'''
+    yield call()
 
 
 def deferiter(iterator):
@@ -108,12 +108,12 @@ def exhauststar(call, iterable, exception=StopIteration, _n=next, map=starmap):
         pass
 
 
-def iterexcept(func, exception, start=None):
+def iterexcept(call, exception, start=None):
     '''
     Call a function repeatedly until an exception is raised.
 
     Converts a call-until-exception interface to an iterator interface. Like
-    `__builtin__.iter(func, sentinel)` but uses an exception instead of a
+    `__builtin__.iter(call, sentinel)` but uses an exception instead of a
     sentinel to end the loop.
 
     Raymond Hettinger Python Cookbook recipe # 577155
@@ -122,6 +122,6 @@ def iterexcept(func, exception, start=None):
         if start is not None:
             yield start()
         while 1:
-            yield func()
+            yield call()
     except exception:
         pass
