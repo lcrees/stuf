@@ -338,8 +338,6 @@ else:
             write(arg)
         write(end)
 
-reraise = add_doc(reraise, 'Reraise an exception.')
-
 
 def with_metaclass(meta, base=object):
     '''Create a base class with a metaclass.'''
