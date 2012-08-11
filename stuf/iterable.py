@@ -3,15 +3,11 @@
 
 from itertools import starmap
 
-from stuf.six import items, map
+from stuf.six import items, map, next
 
 
 def breakcount(call, length):
-    '''
-    Run an iterator until it reaches its original length.
-
-    :param iterable: an iterable to exhaust
-    '''
+    '''Call function `call` until it reaches its original `length`.'''
     while length:
         yield call()
         length -= 1
@@ -26,7 +22,7 @@ def count(iterable, enumerate=enumerate, next=next, S=StopIteration):
             idx = next(counter)
         except S:
             try:
-                return next(idx.__iter__())
+                return next(iter(idx))
             except S:
                 return 0
 
@@ -42,12 +38,7 @@ def deferiter(iterator):
 
 
 def exhaust(iterable, exception=StopIteration, _n=next):
-    '''
-    Call next on an iterator until it's exhausted.
-
-    :param iterable: an iterable to exhaust
-    :param exception: exception that marks end of iteration
-    '''
+    '''Call `next` on an `iterable` until it's exhausted.'''
     try:
         while 1:
             _n(iterable)
@@ -56,67 +47,29 @@ def exhaust(iterable, exception=StopIteration, _n=next):
 
 
 def exhaustmap(mapping, call, filter=None, exception=StopIteration, _n=next):
-    '''
-    Call `next` on an iterator until it's exhausted.
-
-    :param mapping: a mapping to exhaust
-    :param call: call to handle what survives the filter
-    :param filter: a filter to apply to mapping
-    :param exception: exception sentinel
-    '''
+    '''Call `call` with optional `filter` on a `mapping` until exhausted.'''
     iterable = starmap(
         call,
-        filter(filter, items(mapping)) if
-        filter is not None else items(mapping),
+        items(mapping) if filter is None else filter(filter, items(mapping)),
     )
-    try:
-        while 1:
-            _n(iterable)
-    except exception:
-        pass
+    exhaust(iterable, exception)
 
 
 def exhaustcall(call, iterable, exception=StopIteration, _n=next, map=map):
-    '''
-    Call function on an iterator until it's exhausted.
-
-    :param call: call that does the exhausting
-    :param iterable: iterable to exhaust
-    :param exception: exception marking end of iteration
-    '''
-    iterable = map(call, iterable)
-    try:
-        while 1:
-            _n(iterable)
-    except exception:
-        pass
+    '''Call function `call` on an `iterable` until it's exhausted.'''
+    exhaust(map(call, iterable), exception)
 
 
 def exhauststar(call, iterable, exception=StopIteration, _n=next, map=starmap):
-    '''
-    Call function on an iterator until it's exhausted.
-
-    :param call: call that does the exhausting
-    :param iterable: iterable to exhaust
-    :param exception: exception marking end of iteration
-    '''
-    iterable = map(call, iterable)
-    try:
-        while 1:
-            _n(iterable)
-    except exception:
-        pass
+    '''Call function `call` on an `iterable` until it's exhausted.'''
+    exhaust(map(call, iterable), exception)
 
 
 def iterexcept(call, exception, start=None):
     '''
-    Call a function repeatedly until an exception is raised.
+    Call function `call` repeatedly until `exception` is raised.
 
-    Converts a call-until-exception interface to an iterator interface. Like
-    `__builtin__.iter(call, sentinel)` but uses an exception instead of a
-    sentinel to end the loop.
-
-    Raymond Hettinger Python Cookbook recipe # 577155
+    from Raymond Hettinger Python Cookbook recipe # 577155
     '''
     try:
         if start is not None:

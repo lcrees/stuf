@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 '''stuf utility tests'''
 
-from stuf.six import unittest, callable
+from stuf.six import unittest, callable, next
 
 
 class TestUtils(unittest.TestCase):

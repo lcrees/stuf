@@ -42,7 +42,7 @@ class lazy_class(_lazyinit):
 
     def __get__(self, this, that):
         return self._set(that)
-    
+
 
 class lazypartial(lazy):
 
@@ -73,7 +73,7 @@ class lazyset(lazy):
 
 
 class bothbase(_lazyinit):
-    
+
     '''Base for two-way lazy descriptors.'''
 
     def __init__(self, method, expr=None, _wrap=update_wrapper):

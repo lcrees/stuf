@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 '''stuf utilities'''
 
-import re
 from threading import Lock
 from itertools import count
 from keyword import iskeyword
@@ -12,7 +11,7 @@ from functools import update_wrapper, partial
 
 from stuf.six import (
     PY3, HIGHEST_PROTOCOL, items, isstring, function_code, ld, dumps, u, b,
-    intern)
+    intern, next, first, rcompile)
 
 # count
 count = partial(next, count())
@@ -64,7 +63,7 @@ def lru(maxsize=100):
 
     By Raymond Hettinger
     '''
-    def decorator(user_function):
+    def decorator(call):
         cache = dict()
         items_ = items
         repr_ = repr
@@ -91,7 +90,7 @@ def lru(maxsize=100):
                 result = cache_get(key, root)
                 if result is not root:
                     return result
-                result = user_function(*args, **kw)
+                result = call(*args, **kw)
                 cache[intern_(key)] = result
                 return result
         else:
@@ -112,9 +111,9 @@ def lru(maxsize=100):
                         link[PREV] = last
                         link[NEXT] = root
                         return result
-                result = user_function(*args, **kw)
+                result = call(*args, **kw)
                 with lock:
-                    root = nonlocal_root[0]
+                    root = first(nonlocal_root)
                     if len_(cache) < maxsize:
                         # put result in a new link at the front of the list
                         last = root[PREV]
@@ -136,12 +135,12 @@ def lru(maxsize=100):
             # clear the cache and cache statistics
             with lock:
                 cache.clear()
-                root = nonlocal_root[0]
+                root = first(nonlocal_root)
                 root[:] = [root, root, None, None]
-        wrapper.__wrapped__ = user_function
+        wrapper.__wrapped__ = call
         wrapper.clear = clear
         try:
-            return update_wrapper(wrapper, user_function)
+            return update_wrapper(wrapper, call)
         except AttributeError:
             return wrapper
     return decorator
@@ -222,10 +221,12 @@ class CheckName(object):
     '''Ensures string is legal Python name.'''
 
     # Illegal characters for Python names
-    ic = '()[]{}@,:`=;+*/%&|^><\'"#\\$?!~'
+    ic = frozenset('()[]{}@,:`=;+*/%&|^><\'"#\\$?!~'.split())
 
     def __call__(self, name):
-        ''':argument name: name to check.'''
+        '''
+        :argument str name: name to check.
+        '''
         # Remove characters that are illegal in a Python name
         name = name.strip().lower().replace('-', '_').replace(
             '.', '_'
@@ -237,8 +238,8 @@ class CheckName(object):
 
 class Sluggify(object):
 
-    _first = staticmethod(re.compile('[^\w\s-]').sub)
-    _second = staticmethod(re.compile('[-\s]+').sub)
+    _first = staticmethod(rcompile('[^\w\s-]').sub)
+    _second = staticmethod(rcompile('[-\s]+').sub)
 
     if PY3:
         def __call__(self, value):
@@ -259,6 +260,6 @@ class Sluggify(object):
                 '', normalize('NFKD', u(value)).encode('ascii', 'ignore')
             ).strip().lower()))
 
-lru_wrapped = lru
+
 sluggify = Sluggify()
 checkname = CheckName()

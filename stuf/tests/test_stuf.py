@@ -14,8 +14,8 @@ class TestStuf(unittest.TestCase):
 
     @property
     def _maketwo(self):
-        from stuf import istuf
-        return istuf
+        from stuf import stuf
+        return stuf
 
     def setUp(self):
         self.stuf = self._makeone(
@@ -209,8 +209,8 @@ class TestDefaultStuf(unittest.TestCase):
 
     @property
     def _maketwo(self):
-        from stuf import idefaultstuf
-        return idefaultstuf
+        from stuf import defaultstuf
+        return defaultstuf
 
     def setUp(self):
         self.stuf = self._makeone(
@@ -427,8 +427,8 @@ class TestFixedStuf(unittest.TestCase):
 
     @property
     def _maketwo(self):
-        from stuf import ifixedstuf
-        return ifixedstuf
+        from stuf import fixedstuf
+        return fixedstuf
 
     def setUp(self):
         self.stuf = self._makeone(
@@ -608,8 +608,8 @@ class TestFrozenStuf(unittest.TestCase):
 
     @property
     def _maketwo(self):
-        from stuf import ifrozenstuf
-        return ifrozenstuf
+        from stuf import frozenstuf
+        return frozenstuf
 
     def setUp(self):
         self.stuf = self._makeone(
@@ -792,8 +792,8 @@ class TestOrderedStuf(unittest.TestCase):
 
     @property
     def _maketwo(self):
-        from stuf import iorderedstuf
-        return iorderedstuf
+        from stuf import orderedstuf
+        return orderedstuf
 
     def setUp(self):
         self.stuf = self._makeone(

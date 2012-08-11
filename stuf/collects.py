@@ -8,15 +8,14 @@ try:
 except  ImportError:
     from ordereddict import OrderedDict  # @UnusedImport
 
-from stuf.deep import recursive_repr
-from stuf.six import items, map as imap
+from stuf.deep import recursive_repr, getcls
 from stuf.six.moves import filterfalse, zip_longest  # @UnresolvedImport @UnusedImport @IgnorePep8
+from stuf.six import items, map as imap, first, second
 
-if not sys.version_info[0] == 2 and sys.version_info[1] < 7:
+if not first(sys.version_info) == 2 and second(sys.version_info) < 7:
     from collections import Counter  # @UnresolvedImport
 else:
     from heapq import nlargest
-    from operator import itemgetter
 
     class Counter(dict):
 
@@ -30,7 +29,7 @@ else:
             super(Counter, self).__init__()
             self.update(iterable, **kw)
 
-        def most_common(self, n=None, nl=nlargest, i=items, g=itemgetter):
+        def most_common(self, n=None, nl=nlargest, i=items, g=second):
             '''
             list the n most common elements and their counts from the most
             common to the least
@@ -39,8 +38,8 @@ else:
             '''
             # Emulate Bag.sortedByCount from Smalltalk
             if n is None:
-                return sorted(i(self), key=g(1), reverse=True)
-            return nl(n, i(self), key=g(1))
+                return sorted(i(self), key=g, reverse=True)
+            return nl(n, i(self), key=g)
 
         def update(self, iterable=None):
             '''like dict.update() but add counts instead of replacing them'''
@@ -124,27 +123,27 @@ except ImportError:
             New ChainMap or subclass with a new copy of maps[0] and refs to
             maps[1:]
             '''
-            return self.__class__(self.maps[0].copy(), *self.maps[1:])
+            return getcls(self)(first(self.maps).copy(), *self.maps[1:])
 
         __copy__ = copy
 
         def new_child(self):
             '''New ChainMap with a new dict followed by all previous maps.'''
             # like Django's Context.push()
-            return self.__class__({}, *self.maps)
+            return getcls(self)({}, *self.maps)
 
         @property
         def parents(self):
             '''New ChainMap from maps[1:].'''
             # like Django's Context.pop()
-            return self.__class__(*self.maps[1:])
+            return getcls(self)(*self.maps[1:])
 
         def __setitem__(self, key, value):
-            self.maps[0][key] = value
+            first(self.maps)[key] = value
 
         def __delitem__(self, key):
             try:
-                del self.maps[0][key]
+                del first(self.maps)[key]
             except KeyError:
                 raise KeyError(
                     'Key not found in the first mapping: {!r}'.format(key)
@@ -156,7 +155,7 @@ except ImportError:
             maps[0] is empty.
             '''
             try:
-                return self.maps[0].popitem()
+                return first(self.maps).popitem()
             except KeyError:
                 raise KeyError('No keys found in the first mapping.')
 
@@ -166,7 +165,7 @@ except ImportError:
             *key* not in maps[0].
             '''
             try:
-                return self.maps[0].pop(key, *args)
+                return first(self.maps).pop(key, *args)
             except KeyError:
                 raise KeyError(
                     'Key not found in the first mapping: {!r}'.format(key)
@@ -174,4 +173,4 @@ except ImportError:
 
         def clear(self):
             '''Clear maps[0], leaving maps[1:] intact.'''
-            self.maps[0].clear()
+            first(self.maps).clear()

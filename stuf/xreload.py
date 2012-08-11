@@ -34,24 +34,21 @@ Some of the many limitiations include:
 
 import imp
 import sys
-import types
-import marshal
+from marshal import load
+from inspect import getdoc, isclass, isfunction, ismethod
+
+from stuf.deep import clsdict, selfname
+from stuf.six import (
+    method_function, function_code, _func_code, _func_defaults,
+    function_defaults)
 
 
-def xreload(mod):
-    '''
-    Reload a module in place, updating classes, methods and functions.
-
-    Args:
-      mod: a module object
-
-    Returns:
-      The (updated) input object itself.
-    '''
+def xreload(module):
+    '''Reload `module` in place, updating classes, methods and functions.'''
     # Get the module name, e.g. 'foo.bar.whatever'
-    modname = mod.__name__
+    modname = selfname(module)
     # Get the module namespace (dict) early; this is part of the type check
-    modns = mod.__dict__
+    modns = clsdict(module)
     # Parse it into package name and module name, e.g. 'foo.bar' and 'whatever'
     i = modname.rfind('.')
     if i >= 0:
@@ -65,8 +62,7 @@ def xreload(mod):
         path = pkg.__path__  # Search inside the package
     else:
         # Search the top-level module path
-        pkg = None
-        path = None  # Make find_module() uses the default search path
+        pkg = path = None  # Make find_module() uses the default search path
     # Find the module; may raise ImportError
     (stream, filename, (_, _, kind)) = imp.find_module(modname, path)
     # Turn it into a code object
@@ -74,12 +70,12 @@ def xreload(mod):
         # Is it Python source code or byte code read from a file?
         if kind not in (imp.PY_COMPILED, imp.PY_SOURCE):
             # Fall back to built-in reload()
-            return reload(mod)
+            return reload(module)
         if kind == imp.PY_SOURCE:
             source = stream.read()
             code = compile(source, filename, 'exec')
         else:
-            code = marshal.load(stream)
+            code = load(stream)
     finally:
         if stream:
             stream.close()
@@ -99,7 +95,7 @@ def xreload(mod):
     for name in oldnames & newnames:
         modns[name] = _update(tmpns[name], modns[name])
     # Done!
-    return mod
+    return module
 
 
 def _update(oldobj, newobj):
@@ -124,11 +120,11 @@ def _update(oldobj, newobj):
     if hasattr(newobj, '__reload_update__'):
         # Provide a hook for updating
         return newobj.__reload_update__(oldobj)
-    if isinstance(newobj, types.ClassType):
+    if isclass(newobj):
         return _update_class(oldobj, newobj)
-    if isinstance(newobj, types.FunctionType):
+    if isfunction(newobj):
         return _update_function(oldobj, newobj)
-    if isinstance(newobj, types.MethodType):
+    if ismethod(newobj):
         return _update_method(oldobj, newobj)
     if isinstance(newobj, classmethod):
         return _update_classmethod(oldobj, newobj)
@@ -143,24 +139,24 @@ def _update(oldobj, newobj):
 
 def _update_function(oldfunc, newfunc):
     '''Update a function object.'''
-    oldfunc.__doc__ = newfunc.__doc__
-    oldfunc.__dict__.update(newfunc.__dict__)
-    oldfunc.__code__ = newfunc.__code__
-    oldfunc.__defaults__ = newfunc.__defaults__
+    setattr(oldfunc, '__doc__', getdoc(newfunc))
+    clsdict(oldfunc).update(clsdict(newfunc))
+    setattr(oldfunc, _func_code, function_code(newfunc))
+    setattr(oldfunc, _func_defaults, function_defaults(newfunc))
     return oldfunc
 
 
 def _update_method(oldmeth, newmeth):
     '''Update a method object.'''
     # XXX What if im_func is not a function?
-    _update(oldmeth.im_func, newmeth.im_func)
+    _update(method_function(oldmeth), method_function(newmeth))
     return oldmeth
 
 
 def _update_class(oldclass, newclass):
     '''Update a class object.'''
-    olddict = oldclass.__dict__
-    newdict = newclass.__dict__
+    olddict = clsdict(oldclass)
+    newdict = clsdict(newclass)
     oldnames = set(olddict)
     newnames = set(newdict)
     for name in newnames - oldnames:

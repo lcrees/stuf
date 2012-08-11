@@ -4,16 +4,10 @@
 from os import sep
 from functools import partial
 
-# use next generation regular expression library if available
-try:
-    from regex import compile as rcompile, escape as rescape, sub as rsub
-except ImportError:
-    from re import compile as rcompile, escape as rescape, sub as rsub
-
 from stuf.utils import lru
 from parse import compile as pcompile
-from stuf.six import isstring, filter
 from stuf.six.moves import filterfalse  # @UnresolvedImport
+from stuf.six import isstring, filter, map, rcompile, rescape, rsub
 
 parse = lambda expr: pcompile(expr)._search_re.search
 regex = lambda expr: rcompile(expr, 32).search
@@ -76,7 +70,7 @@ def include(patterns):
     if not patterns:
         # trivial case: exclude everything
         return lambda x: x[0:0]
-    patterns = tuple(searcher(i) for i in patterns)
+    patterns = tuple(map(searcher, patterns))
     # handle general case for inclusion
     return partial(filter, lambda x: any(p(x) for p in patterns))
 
@@ -86,12 +80,12 @@ def exclude(patterns):
     if not patterns:
         # trivial case: include everything
         return lambda x: x
-    patterns = tuple(searcher(i) for i in patterns)
+    patterns = tuple(map(searcher, patterns))
     # handle general case for exclusion
     return partial(filterfalse, lambda x: any(p(x) for p in patterns))
 
 
 def detect(patterns):
     '''Create filter from inclusion `patterns`.'''
-    patterns = tuple(searcher(i) for i in patterns)
+    patterns = tuple(map(searcher, patterns))
     return lambda x: any(p(x[0]) for p in patterns)

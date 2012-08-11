@@ -6,11 +6,17 @@ from operator import attrgetter, getitem
 
 from stuf.six import get_ident
 
+clsdict = attrgetter('__dict__')
+selfname = attrgetter('__name__')
+# Get class of instance.
+getcls = attrgetter('__class__')
+clsname = lambda this: selfname(getcls(this))
+
 # lightweight object manipulation
-hasit = lambda x, y: y in x.__dict__
-getit = lambda x, y: x.__dict__[y]
-setit = lambda x, y, z: x.__dict__.__setitem(y, z)
-delit = lambda x, y: x.__dict__.__delitem__(y)
+hasit = lambda x, y: y in clsdict(x)
+getit = lambda x, y: clsdict(x)[y]
+setit = lambda x, y, z: clsdict(x).__setitem__(y, z)
+delit = lambda x, y: clsdict(x).__delitem__(y)
 
 
 def attr_or_item(this, key):
@@ -24,15 +30,6 @@ def attr_or_item(this, key):
         return getitem(this, key)
     except (KeyError, TypeError):
         return getter(this, key)
-
-
-def clsname(this):
-    '''
-    Get class name.
-
-    :argument this: an object
-    '''
-    return getattr(this.__class__, '__name__')
 
 
 def deepget(this, key, default=None):
@@ -60,15 +57,6 @@ def deleter(this, key):
         object.__delattr__(this, key)
     except (TypeError, AttributeError):
         delattr(this, key)
-
-
-def getcls(this):
-    '''
-    Get class of instance.
-
-    :argument this: an instance
-    '''
-    return getter(this, '__class__')
 
 
 def getter(this, key):
@@ -120,15 +108,6 @@ def recursive_repr(this):
     wrapper.__doc__ = getattr(this, '__doc__')
     wrapper.__name__ = selfname(this)
     return wrapper
-
-
-def selfname(this):
-    '''
-    Get object name.
-
-    :argument this: an object
-    '''
-    return getter(this, '__name__')
 
 
 def setter(this, key, value):
