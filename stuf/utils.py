@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-'''stuf utilities'''
+'''stuf utilities.'''
 
 from threading import Lock
 from itertools import count
@@ -263,3 +263,4 @@ class Sluggify(object):
 
 sluggify = Sluggify()
 checkname = CheckName()
+moptimize = memoize(optimize)

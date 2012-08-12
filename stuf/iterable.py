@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-'''stuf iterable helpers'''
+'''stuf iterable helpers.'''
 
 from itertools import starmap
 

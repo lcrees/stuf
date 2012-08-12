@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-'''stuf search pattern utilities'''
+'''stuf search pattern utilities.'''
 
 from os import sep
 from functools import partial
@@ -7,11 +7,11 @@ from functools import partial
 from stuf.utils import lru
 from parse import compile as pcompile
 from stuf.six.moves import filterfalse  # @UnresolvedImport
-from stuf.six import isstring, filter, map, rcompile, rescape, rsub
+from stuf.six import isstring, filter, map, rcompile, rescape, rsub, first
 
-parse = lambda expr: pcompile(expr)._search_re.search
-regex = lambda expr: rcompile(expr, 32).search
-glob = lambda expr: rcompile(globpattern(expr), 32).search
+parse = lambda expr, flag: pcompile(expr)._search_re.search
+regex = lambda expr, flag: rcompile(expr, flag).search
+glob = lambda expr, flag: rcompile(globpattern(expr), flag).search
 _SEARCH = dict(parse=parse, glob=glob, regex=regex)
 
 
@@ -56,11 +56,11 @@ def globpattern(expr):
 
 
 @lru()
-def searcher(expr):
+def searcher(expr, flag=32):
     '''Build search function from `expr`.'''
     try:
         scheme, expr = expr.split(':', 1) if isstring(expr) else expr
-        return _SEARCH[scheme](expr)
+        return _SEARCH[scheme](expr, flag)
     except KeyError:
         raise TypeError('"{0}" is not a valid search scheme'.format(scheme))
 
@@ -88,4 +88,4 @@ def exclude(patterns):
 def detect(patterns):
     '''Create filter from inclusion `patterns`.'''
     patterns = tuple(map(searcher, patterns))
-    return lambda x: any(p(x[0]) for p in patterns)
+    return lambda x: any(p(first(x)) for p in patterns)

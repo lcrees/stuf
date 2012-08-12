@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-'''utilities for writing code that runs on Python 2 and 3'''
+'''utilities for writing code that runs on Python 2 and 3.'''
 
 import sys
 import types

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-'''stuf has attributes'''
+'''stuf has attributes.'''
 
 from stuf.core import defaultstuf, fixedstuf, frozenstuf, orderedstuf, stuf
 

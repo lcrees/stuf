@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-'''stuf deep object utilities'''
+'''stuf deep object utilities.'''
 
 from functools import partial
 from operator import attrgetter, getitem

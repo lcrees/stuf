@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-'''core stuf'''
+'''core stuf.'''
 
 from itertools import chain
 from operator import methodcaller, attrgetter

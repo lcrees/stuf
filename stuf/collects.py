@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-'''stuf collections'''
+'''stuf collections.'''
 
 import sys
 from collections import MutableMapping
