@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-'''stuf has attributes.'''
+'''dictionaries with attribute-style access.'''
 
 from stuf.core import defaultstuf, fixedstuf, frozenstuf, orderedstuf, stuf
 
