@@ -3,20 +3,21 @@
 
 from threading import Lock
 from itertools import count
-from keyword import iskeyword
 from pickletools import genops
 from unicodedata import normalize
 from importlib import import_module
 from functools import update_wrapper, partial
 
 from stuf.six import (
-    PY3, HIGHEST_PROTOCOL, items, isstring, function_code, ld, dumps, u, b,
-    intern, next, first, rcompile)
+    PY3, items, isstring, func_code, b, next, intern, first, pickle, u,
+    rcompile)
 
+
+norm = partial(normalize, 'NFKD')
+one = partial(rcompile('[^\w\s-]').sub, '')
+two = partial(rcompile('[-\s]+').sub, '-')
 # count
 count = partial(next, count())
-# check for None
-isnone = lambda x, y: x if y is None else y
 # import loader
 lazyload = lambda x: lazyimport(x) if isstring(x) and '.' in x else x
 
@@ -149,7 +150,7 @@ def lru(maxsize=100):
 def memoize(f, i=intern, z=items, r=repr, uw=update_wrapper):
     '''Memoize function.'''
     f.cache = {}.setdefault
-    if function_code(f).co_argcount == 1:
+    if func_code(f).co_argcount == 1:
         def memoize_(arg):
             return f.cache(i(r(arg)), f(arg))
     else:
@@ -160,21 +161,15 @@ def memoize(f, i=intern, z=items, r=repr, uw=update_wrapper):
     return uw(f, memoize_)
 
 
-if PY3:
-    loads = memoize(lambda x: ld(x, encoding='latin-1'))
-else:
-    loads = memoize(lambda x: ld(x))
-
-
 def optimize(
     obj,
-    d=dumps,
-    p=HIGHEST_PROTOCOL,
-    s=set,
-    g=genops,
+    S=StopIteration,
     b_=b,
+    d=pickle.dumps,
+    g=genops,
     n=next,
-    S=StopIteration
+    p=pickle.HIGHEST_PROTOCOL,
+    s=set,
 ):
     '''
     Optimize a pickle string by removing unused PUT opcodes.
@@ -184,10 +179,9 @@ def optimize(
     # set of args used by a GET opcode
     this = d(obj, p)
     gets = s()
-    # (arg, startpos, stoppos) for the PUT opcodes
-    # set to pos if previous opcode was a PUT
-    def iterthing(gets=gets, this=this, g=g, n=n):  # @IgnorePep8
-        gadd = gets.add
+    # (arg, startpos, stoppos) for the PUT opcodes set to pos if previous
+    # opcode was a PUT
+    def iterthing(gadd=gets.add, this=this, g=g, n=n):  # @IgnorePep8
         prevpos, prevarg = None, None
         try:
             nextr = g(this)
@@ -213,54 +207,25 @@ def optimize(
         except S:
             pass
         yield this[i:]
-    return b_('').join(i for i in iterthingy())
+    return b_('').join(iterthingy())
 
-
-class CheckName(object):
-
-    '''Ensures string is legal Python name.'''
-
-    # Illegal characters for Python names
-    ic = frozenset('()[]{}@,:`=;+*/%&|^><\'"#\\$?!~'.split())
-
-    def __call__(self, name):
-        '''
-        :argument str name: name to check.
-        '''
-        # Remove characters that are illegal in a Python name
-        name = name.strip().lower().replace('-', '_').replace(
-            '.', '_'
-        ).replace(' ', '_')
-        name = ''.join(i for i in name if i not in self.ic)
-        # Add _ if value is a Python keyword
-        return name + '_' if iskeyword(name) else name
-
-
-class Sluggify(object):
-
-    _first = staticmethod(rcompile('[^\w\s-]').sub)
-    _second = staticmethod(rcompile('[-\s]+').sub)
-
-    if PY3:
-        def __call__(self, value):
-            '''
-            Normalizes string, converts to lowercase, removes non-alpha
-            characters, and converts spaces to hyphens.
-            '''
-            return self._second('-', self._first(
-                '', normalize('NFKD', value)
-            )).strip().lower()
-    else:
-        def __call__(self, value):
-            '''
-            Normalizes string, converts to lowercase, removes non-alpha
-            characters, and converts spaces to hyphens.
-            '''
-            return self._second('-', u(self._first(
-                '', normalize('NFKD', u(value)).encode('ascii', 'ignore')
-            ).strip().lower()))
-
-
-sluggify = Sluggify()
-checkname = CheckName()
 moptimize = memoize(optimize)
+
+if PY3:
+    loads = memoize(lambda x: pickle.loads(x, encoding='latin-1'))
+
+    def sluggify(value, n=norm, o=one, t=two):
+        '''
+        Normalize `value`, convert to lowercase, remove non-alpha characters,
+        and convert spaces to hyphens.
+        '''
+        return t(o(n(value)).strip().lower())
+else:
+    loads = memoize(lambda x: pickle.loads(x))
+
+    def sluggify(value, n=norm, o=one, t=two):
+        '''
+        Normalize `value`, convert to lowercase, remove non-alpha characters,
+        and convert spaces to hyphens.
+        '''
+        return t(u(o(n(u(value)).encode('ascii', 'ignore')).strip().lower()))

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-'''stuf iterable helpers.'''
+'''stuf iterables.'''
 
 from itertools import starmap
 
@@ -48,11 +48,10 @@ def exhaust(iterable, exception=StopIteration, _n=next):
 
 def exhaustmap(mapping, call, filter=None, exception=StopIteration, _n=next):
     '''Call `call` with optional `filter` on a `mapping` until exhausted.'''
-    iterable = starmap(
+    exhaust(starmap(
         call,
         items(mapping) if filter is None else filter(filter, items(mapping)),
-    )
-    exhaust(iterable, exception)
+    ), exception)
 
 
 def exhaustcall(call, iterable, exception=StopIteration, _n=next, map=map):

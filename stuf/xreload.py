@@ -39,8 +39,7 @@ from inspect import getdoc, isclass, isfunction, ismethod
 
 from stuf.deep import clsdict, selfname
 from stuf.six import (
-    method_function, function_code, _func_code, _func_defaults,
-    function_defaults)
+    method_func, func_code, _func_code, _func_defaults, func_defaults)
 
 
 def xreload(module):
@@ -141,15 +140,15 @@ def _update_function(oldfunc, newfunc):
     '''Update a function object.'''
     setattr(oldfunc, '__doc__', getdoc(newfunc))
     clsdict(oldfunc).update(clsdict(newfunc))
-    setattr(oldfunc, _func_code, function_code(newfunc))
-    setattr(oldfunc, _func_defaults, function_defaults(newfunc))
+    setattr(oldfunc, _func_code, func_code(newfunc))
+    setattr(oldfunc, _func_defaults, func_defaults(newfunc))
     return oldfunc
 
 
 def _update_method(oldmeth, newmeth):
     '''Update a method object.'''
     # XXX What if im_func is not a function?
-    _update(method_function(oldmeth), method_function(newmeth))
+    _update(method_func(oldmeth), method_func(newmeth))
     return oldmeth
 
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-'''stuf descriptor utilities.'''
+'''stuf descriptors.'''
 
 from threading import local
 from functools import update_wrapper, partial

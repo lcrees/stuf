@@ -182,7 +182,7 @@ class TestUtils(unittest.TestCase):
         self.assertTrue(callable(fsum))
 
     def test_checkname(self):
-        from stuf.utils import checkname
+        from stuf.patterns import checkname
         self.assertEqual(checkname('from'), 'from_')
 
     def test_sluggify(self):
@@ -190,7 +190,7 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(sluggify('This is a slug'), 'this-is-a-slug')
 
     def test_lru(self):
-        from stuf.utils import sluggify, lru
+        from stuf.utils import lru, sluggify
         slug = lru(2)(sluggify)
         self.assertEqual(slug('This is a slug'), 'this-is-a-slug')
         self.assertEqual(slug('This is a plug'), 'this-is-a-plug')

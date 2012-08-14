@@ -4,6 +4,7 @@
 import sys
 import types
 from functools import partial
+from operator import itemgetter
 try:
     import unittest2 as unittest
 except ImportError:
@@ -16,31 +17,29 @@ except ImportError:
         from dummy_thread import get_ident
     except ImportError:
         from _thread import get_ident  # @UnusedImport
-from operator import attrgetter, methodcaller, itemgetter
-try:
-    from __builtin__ import intern
-    from future_builtins import filter, map, zip
-    from cPickle import loads as ld, dumps, HIGHEST_PROTOCOL
-except ImportError:
-    from sys import intern  # @UnusedImport
-    from builtins import filter, map, zip  # @UnusedImport
-    from pickle import loads as ld, dumps, HIGHEST_PROTOCOL  # @UnusedImport
+from operator import attrgetter, methodcaller, lt, gt
 # use next generation regular expression library if available
 try:
-    from regex import compile, escape, sub
+    from regex import compile as rcompile, escape as rescape, sub as rsub
 except ImportError:
-    from re import compile, escape, sub
+    from re import compile as rcompile, escape as rescape, sub as rsub  # @UnusedImport @IgnorePep8
+try:
+    import cPickle as pickle
+    from __builtin__ import intern
+    from future_builtins import filter, map, zip
+except ImportError:
+    import pickle  # @UnusedImport
+    from sys import intern  # @UnusedImport
+    from builtins import filter, map, zip  # @UnusedImport
 
-rcompile = compile
-rescape = escape
-rsub = sub
-getframe = partial(sys._getframe, 1)
-identity = lambda x: x
 first = itemgetter(0)
 second = itemgetter(1)
-
+getframe = partial(sys._getframe, 1)
+identity = lambda x: x
+isnone = lambda x, y: x if y is None else y
 # True if we are running on Python 3.
 PY3 = first(sys.version_info) == 3
+
 if PY3:
     strings = str,
     integers = int,
@@ -233,14 +232,14 @@ else:
         def next(self):
             return type(self).__next__(self)
 
-function_code = attrgetter(_func_code)
-function_defaults = attrgetter(_func_defaults)
+func_code = attrgetter(_func_code)
+func_defaults = attrgetter(_func_defaults)
 getitems = attrgetter(_iteritems)
 getkeys = attrgetter(_iterkeys)
 getvalues = attrgetter(_itervalues)
 items = methodcaller(_iteritems)
 keys = methodcaller(_iterkeys)
-method_function = attrgetter(_meth_func)
+method_func = attrgetter(_meth_func)
 method_self = attrgetter(_meth_self)
 values = methodcaller(_itervalues)
 
@@ -288,9 +287,7 @@ else:
             locs = globs
         exec('''exec code in globs, locs''')
 
-    exec_('''def reraise(tp, value, tb=None):
-    raise tp, value, tb
-''')
+    exec_('def reraise(tp, value, tb=None): raise tp, value, tb')
 
     def printf(*args, **kw):
         '''The new-style print function.'''
@@ -358,8 +355,8 @@ def tobytes(thing, encoding='utf-8', errors='strict'):
 
 isbinary = add_doc(lambda value: isinstance(value, binaries), 'is binary?')
 isclass = add_doc(lambda value: isinstance(value, classes), 'is class?')
-isgtemax = add_doc(lambda value: value > MAXSIZE, 'greater than max size?')
+isgtemax = add_doc(partial(gt, MAXSIZE), 'Less than max size?')
 isinteger = add_doc(lambda value: isinstance(value, integers), 'is integer?')
-isltemax = add_doc(lambda value: value < MAXSIZE, 'less than max size?')
+isltemax = add_doc(partial(lt, MAXSIZE), 'Greater than max size?')
 isstring = add_doc(lambda value: isinstance(value, strings), 'is string')
 isunicode = add_doc(lambda value: isinstance(value, texts), 'is text?')

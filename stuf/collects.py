@@ -9,8 +9,8 @@ except  ImportError:
     from ordereddict import OrderedDict  # @UnusedImport
 
 from stuf.deep import recursive_repr, getcls
+from stuf.six import items, map as imap, second, first
 from stuf.six.moves import filterfalse, zip_longest  # @UnresolvedImport @UnusedImport @IgnorePep8
-from stuf.six import items, map as imap, first, second
 
 if not first(sys.version_info) == 2 and second(sys.version_info) < 7:
     from collections import Counter  # @UnresolvedImport
@@ -31,7 +31,7 @@ else:
 
         def most_common(self, n=None, nl=nlargest, i=items, g=second):
             '''
-            list the n most common elements and their counts from the most
+            List the n most common elements and their counts from the most
             common to the least
 
             If n is None, then list all element counts.
@@ -56,12 +56,12 @@ except ImportError:
     class ChainMap(MutableMapping):
 
         '''
-        ChainMap groups multiple dicts (or other mappings) together to create a
-        single, updateable view.
+        `ChainMap` groups multiple dicts (or other mappings) together to create
+        a single, updateable view.
 
-        The underlying mappings are stored in a list.  That list is public and
-        can accessed or updated using the *maps* attribute.  There is no other
-        state.
+        The underlying mappings are stored in a `list`. That `list` is public
+        and can accessed or updated using the `maps` attribute. There is no
+        other state.
 
         Lookups search the underlying mappings successively until a key is
         found. In contrast, writes, updates, and deletions only operate on the
@@ -70,7 +70,7 @@ except ImportError:
 
         def __init__(self, *maps):
             '''
-            Initialize a ChainMap by setting *maps* to the given mappings.
+            Initialize `ChainMap` by setting *maps* to the given mappings.
             If no mappings are provided, a single empty dictionary is used.
             '''
             # always at least one map

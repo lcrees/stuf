@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-'''stuf deep object utilities.'''
+'''stuf deep objectry.'''
 
-from functools import partial
+from functools import partial, wraps
 from operator import attrgetter, getitem
 
 from stuf.six import get_ident
@@ -93,7 +93,8 @@ def recursive_repr(this):
     :argument this: an object
     '''
     repr_running = set()
-    def wrapper(self): #@IgnorePep8
+    @wraps(this) #@IgnorePep8
+    def wrapper(self):
         key = id(self), get_ident()
         if key in repr_running:
             return '...'
@@ -103,10 +104,6 @@ def recursive_repr(this):
         finally:
             repr_running.discard(key)
         return result
-    # Can't use functools.wraps() here because of bootstrap issues
-    wrapper.__module__ = getattr(this, '__module__')
-    wrapper.__doc__ = getattr(this, '__doc__')
-    wrapper.__name__ = selfname(this)
     return wrapper
 
 
@@ -115,7 +112,7 @@ def setter(this, key, value):
     Set attribute.
 
     :argument this: an object
-    :argument key: key to set
+    :argument str key: key to set
     :argument value: value to set
     '''
     # it's an instance
@@ -130,7 +127,7 @@ def setter(this, key, value):
 
 def setdefault(this, key, default=None):
     '''
-    Get an attribute, creating and setting it if needed
+    Get an attribute, creating and setting it if needed.
 
     :argument this: an object
     :argument key: key to lookup
