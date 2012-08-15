@@ -12,9 +12,10 @@ from stuf.six import (
     PY3, items, isstring, func_code, b, next, intern, first, pickle, u,
     rcompile)
 
-
 norm = partial(normalize, 'NFKD')
+# first slug pattern
 one = partial(rcompile('[^\w\s-]').sub, '')
+# second slug pattern
 two = partial(rcompile('[-\s]+').sub, '-')
 # count
 count = partial(next, count())
@@ -47,6 +48,17 @@ def lazyimport(path, attribute=None, i=import_module, g=getattr, s=isstring):
         if attribute:
             path = g(path, attribute)
     return path
+
+
+def backport(paths):
+    '''Rotate through import `paths` until one imports or everything fails.'''
+    for path in paths:
+        try:
+            return lazyimport(path)
+        except ImportError:
+            continue
+    else:
+        raise ImportError('no path')
 
 
 def lru(maxsize=100):

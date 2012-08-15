@@ -8,7 +8,7 @@ from stuf.six import get_ident
 
 clsdict = attrgetter('__dict__')
 selfname = attrgetter('__name__')
-# Get class of instance.
+# get class of instance.
 getcls = attrgetter('__class__')
 clsname = lambda this: selfname(getcls(this))
 
