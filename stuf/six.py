@@ -1,42 +1,29 @@
 # -*- coding: utf-8 -*-
-'''utilities for writing code that runs on Python 2 and 3.'''
+'''Utilities for writing code that runs on Python 2 and 3.'''
+
+from stuf.base import first, add_doc, identity, getframe, backport
 
 import sys
 import types
 from functools import partial
-from operator import itemgetter
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest  # @UnusedImport
 from importlib import import_module
-try:
-    from thread import get_ident
-except ImportError:
-    try:
-        from dummy_thread import get_ident
-    except ImportError:
-        from _thread import get_ident  # @UnusedImport
 from operator import attrgetter, methodcaller, lt, gt
-# use next generation regular expression library if available
-try:
-    from regex import compile as rcompile, escape as rescape, sub as rsub
-except ImportError:
-    from re import compile as rcompile, escape as rescape, sub as rsub  # @UnusedImport @IgnorePep8
-try:
-    import cPickle as pickle
-    from __builtin__ import intern
-    from future_builtins import filter, map, zip
-except ImportError:
-    import pickle  # @UnusedImport
-    from sys import intern  # @UnusedImport
-    from builtins import filter, map, zip  # @UnusedImport
 
-first = itemgetter(0)
-second = itemgetter(1)
-getframe = partial(sys._getframe, 1)
-identity = lambda x: x
-isnone = lambda x, y: x if y is None else y
+intern = backport('__builtin__.intern', 'sys.intern')
+OrderedDict = backport('collections.OrderedDict', 'ordereddict.OrderedDict')
+unittest = backport('unittest2', 'unittest')
+get_ident = backport(
+    'thread.get_ident', 'dummy_thread.get_ident', '_thread.get_ident',
+)
+pickle = backport('cPickle', 'pickle')
+filter = backport('future_builtins.filter', 'builtins.filter')
+map = backport('future_builtins.map', 'builtins.map')
+zip = backport('future_builtins.zip', 'builtins.zip')
+# use next generation regular expression library if available
+rcompile = backport('regex.compile', 're.compile')
+rescape = backport('regex.escape', 're.escape')
+rsub = backport('regex.sub', 're.sub')
+
 # True if we are running on Python 3.
 PY3 = first(sys.version_info) == 3
 
@@ -67,12 +54,6 @@ else:
         # 64-bit
         MAXSIZE = int((1 << 63) - 1)
     del X
-
-
-def add_doc(func, doc):
-    '''add documentation to a function.'''
-    func.__doc__ = doc
-    return func
 
 
 class _LazyDescr(object):
@@ -121,12 +102,10 @@ class MovedAttribute(_LazyDescr):
             self.attr = old_attr
 
     def _resolve(self):
-        module = import_module(self.mod)
-        return getattr(module, self.attr)
+        return getattr(import_module(self.mod), self.attr)
 
 
 class _MovedItems(types.ModuleType):
-
     '''Lazy loading of moved objects.'''
 
 
@@ -165,7 +144,6 @@ _moved_attributes = [
     MovedModule('BaseHTTPServer', 'BaseHTTPServer', 'http.server'),
     MovedModule('CGIHTTPServer', 'CGIHTTPServer', 'http.server'),
     MovedModule('SimpleHTTPServer', 'SimpleHTTPServer', 'http.server'),
-    MovedModule('pickle', 'cPickle', 'pickle'),
     MovedModule('queue', 'Queue'),
     MovedModule('reprlib', 'repr'),
     MovedModule('socketserver', 'SocketServer'),
@@ -176,7 +154,6 @@ _moved_attributes = [
 for attr in _moved_attributes:
     setattr(_MovedItems, attr.name, attr)
 del attr
-
 moves = sys.modules['stuf.six.moves'] = _MovedItems('moves')
 
 
@@ -193,7 +170,7 @@ def remove_move(name):
         try:
             del moves.__dict__[name]
         except KeyError:
-            raise AttributeError('no such move, %r' % (name,))
+            raise AttributeError('no such move, {r}'.format(name))
 
 if PY3:
     _meth_func = '__func__'
@@ -221,9 +198,7 @@ next = advance_iterator
 if PY3:
     unbound_function = identity
     Iterator = object
-
-    def callable(obj):
-        return any('__call__' in klass.__dict__ for klass in type(obj).__mro__)
+    callable = lambda o: any('__call__' in k.__dict__ for k in type(o).__mro__)
 else:
     callable = callable
     unbound_function = attrgetter('im_func')
@@ -261,8 +236,8 @@ else:
     import StringIO
     StringIO = BytesIO = StringIO.StringIO
 
-b = add_doc(b, 'Byte literal')
-u = add_doc(u, 'Text literal')
+b = add_doc(b, 'Byte literal.')
+u = add_doc(u, 'Text literal.')
 
 if PY3:
     import builtins  # @UnresolvedImport
@@ -342,21 +317,23 @@ def with_metaclass(meta, base=object):
 
 
 def tounicode(thing, encoding='utf-8', errors='strict'):
-    return (
-        thing.decode(encoding, errors) if isbinary(thing) else
-        texts(texts(thing).encode(encoding, errors), encoding, errors)
-    )
+    '''Convert string `thing` to unicode string with `encoding`.'''
+    if isbinary(thing):
+        return thing.decode(encoding, errors)
+    return texts(texts(thing).encode(encoding, errors), encoding, errors)
 
 
 def tobytes(thing, encoding='utf-8', errors='strict'):
-    return (
-        thing if isbinary(thing) else texts(thing).encode(encoding, errors)
-    )
+    '''Convert string `thing` to byte string `encoding`.'''
+    if isbinary(thing):
+        return thing
+    return texts(thing).encode(encoding, errors)
 
+# strings
+isstring = add_doc(lambda value: isinstance(value, strings), 'is string')
+isunicode = add_doc(lambda value: isinstance(value, texts), 'is text?')
 isbinary = add_doc(lambda value: isinstance(value, binaries), 'is binary?')
-isclass = add_doc(lambda value: isinstance(value, classes), 'is class?')
+# numbers
 isgtemax = add_doc(partial(gt, MAXSIZE), 'Less than max size?')
 isinteger = add_doc(lambda value: isinstance(value, integers), 'is integer?')
 isltemax = add_doc(partial(lt, MAXSIZE), 'Greater than max size?')
-isstring = add_doc(lambda value: isinstance(value, strings), 'is string')
-isunicode = add_doc(lambda value: isinstance(value, texts), 'is text?')

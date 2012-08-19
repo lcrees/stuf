@@ -73,9 +73,7 @@ def getter(this, key):
 
 
 def members(this):
-    '''
-    Iterator version of ``inspect.getmembers``.
-    '''
+    '''Iterator version of ``inspect.getmembers``.'''
     getr = partial(getattr, this)
     for key in dir(this):
         try:

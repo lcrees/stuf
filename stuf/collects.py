@@ -3,17 +3,13 @@
 
 import sys
 from collections import MutableMapping
-try:
-    from collections import OrderedDict
-except  ImportError:
-    from ordereddict import OrderedDict  # @UnusedImport
 
+from stuf.base import second, first
 from stuf.deep import recursive_repr, getcls
-from stuf.six import items, map as imap, second, first
-from stuf.six.moves import filterfalse, zip_longest  # @UnresolvedImport @UnusedImport @IgnorePep8
+from stuf.six import OrderedDict, items, map as imap
 
 if not first(sys.version_info) == 2 and second(sys.version_info) < 7:
-    from collections import Counter  # @UnresolvedImport
+    from collections import Counter
 else:
     from heapq import nlargest
 
@@ -151,7 +147,7 @@ except ImportError:
 
         def popitem(self):
             '''
-            Remove and return an item pair from maps[0]. Raise KeyError is
+            Remove and return an item pair from maps[0]. Raise `KeyError` is
             maps[0] is empty.
             '''
             try:

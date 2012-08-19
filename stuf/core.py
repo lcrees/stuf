@@ -3,25 +3,20 @@
 
 from itertools import chain
 from operator import methodcaller, attrgetter
-from collections import (
-    Mapping, MutableMapping, Sequence, defaultdict, namedtuple)
+from collections import Mapping, MutableMapping, defaultdict, namedtuple
 
 from stuf.desc import lazy
 from stuf.collects import OrderedDict
 from stuf.iterable import exhaust, exhaustmap
+from stuf.base import issequence, ismapping, maporseq
 from stuf.deep import recursive_repr, clsname, getcls, clsdict
 from stuf.six import items, map, getvalues, getitems, getkeys, isstring
 
 __all__ = 'defaultstuf fixedstuf frozenstuf orderedstuf stuf'.split()
 wraps = attrgetter('_wrapped')
-mapseq = lambda x: isinstance(x, (Mapping, Sequence))
-ismap = lambda x: isinstance(x, Mapping)
-isseq = lambda x: isinstance(x, Sequence)
 
 
 class corestuf(object):
-
-    '''stuf core stuff'''
 
     _map = dict
     _reserved = 'allowed _wrapped _map'.split()
@@ -55,9 +50,9 @@ class corestuf(object):
         # add class to handle potential nested objects of the same class
         kw = kind()
         update = kw.update
-        if ismap(iterable):
+        if ismapping(iterable):
             update(kind(items(iterable)))
-        elif isseq(iterable):
+        elif issequence(iterable):
             # extract appropriate key-values from sequence
             def coro(arg, update=update):
                 try:
@@ -78,7 +73,7 @@ class corestuf(object):
     @classmethod
     def _populate(cls, past, future):
         def _coro(key, value, new=cls._new):
-            if mapseq(value) and not isstring(value):
+            if maporseq(value) and not isstring(value):
                 # see if stuf can be converted to nested stuf
                 trial = new(value)
                 future[key] = trial if len(trial) > 0 else value
@@ -148,8 +143,6 @@ class wrapstuf(corestuf):
 
 class writewrapstuf(wrapstuf, writestuf, MutableMapping):
 
-    '''Wraps mappings for stuf.'''
-
     def __getitem__(self, key):
         return wraps(self)[key]
 
@@ -196,9 +189,9 @@ class defaultstuf(directstuf, defaultdict):
         # add class to handle potential nested objects of the same class
         kw = kind(default)
         update = kw.update
-        if ismap(iterable):
+        if ismapping(iterable):
             update(kind(default, iterable))
-        elif isseq(iterable):
+        elif issequence(iterable):
             # extract appropriate key-values from sequence
             def coro(arg):
                 try:
@@ -214,7 +207,7 @@ class defaultstuf(directstuf, defaultdict):
 
     def _populate(self, past, future):
         def _coro(key, value, new=self._new, default=self.default_factory):
-            if mapseq(value):
+            if maporseq(value):
                 # see if stuf can be converted to nested stuf
                 trial = new(default, value)
                 future[key] = trial if len(trial) > 0 else value
@@ -258,7 +251,7 @@ class fixedstuf(writewrapstuf):
 
 class frozenstuf(wrapstuf, Mapping):
 
-    '''immutable dictionary with attribute-style access'''
+    '''Immutable dictionary with attribute-style access.'''
 
     __slots__ = ['_wrapped']
 
@@ -284,7 +277,7 @@ class frozenstuf(wrapstuf, Mapping):
 
 class orderedstuf(writewrapstuf):
 
-    '''dictionary with dot attributes that remembers insertion order'''
+    '''Dictionary with dot attributes that remembers insertion order.'''
 
     _mapping = OrderedDict
 
@@ -294,4 +287,4 @@ class orderedstuf(writewrapstuf):
 
 class stuf(directstuf, dict):
 
-    '''dictionary with attribute-style access'''
+    '''Dictionary with attribute-style access.'''

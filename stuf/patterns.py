@@ -1,32 +1,29 @@
 # -*- coding: utf-8 -*-
 '''stuf search.'''
 
+import sys
+import traceback
 from os import sep
 from functools import partial
-from keyword import iskeyword
+from collections import namedtuple
 
 from stuf.utils import lru
+from stuf.core import stuf
+from stuf.base import first, add_doc
+from stuf.deep import recursive_repr
 from parse import compile as pcompile
 from stuf.six.moves import filterfalse  # @UnresolvedImport
-from stuf.six import isstring, filter, map, first, rcompile, rescape, rsub
+from stuf.six import (
+    StringIO, isstring, filter, map, rcompile, rescape, rsub, items)
 
 regex = lambda expr, flag: rcompile(expr, flag).search
 parse = lambda expr, flag: pcompile(expr)._search_re.search
 glob = lambda expr, flag: rcompile(globpattern(expr), flag).search
+gauntlet = lambda tests, this: all(test(this) for test in tests)
+UNTRUTH = hash('UNTRUTH')
+Fixed = namedtuple('Fixed', 'these true false')
+Named = namedtuple('Named', 'these true false')
 SEARCH = dict(parse=parse, glob=glob, regex=regex)
-# Illegal characters for Python names
-ic = frozenset('()[]{}@,:`=;+*/%&|^><\'"#\\$?!~'.split())
-
-
-def checkname(name, ic=ic, ik=iskeyword):
-    '''Ensures `name` is legal Python name.'''
-    # Remove characters that are illegal in a Python name
-    name = name.strip().lower().replace('-', '_').replace(
-        '.', '_'
-    ).replace(' ', '_')
-    name = ''.join(i for i in name if i not in ic)
-    # Add _ if value is a Python keyword
-    return name + '_' if ik(name) else name
 
 
 def detect(patterns):
@@ -103,3 +100,102 @@ def searcher(expr, flag=32):
         return SEARCH[scheme](expr, flag)
     except KeyError:
         raise TypeError('"{0}" is not a valid search scheme'.format(scheme))
+
+
+def error(info, this, tb=False):
+    if not tb:
+        raise Untrue('value must be {0}, got {r} instead'.format(
+            info, recursive_repr(this),
+        ))
+    with StringIO() as sio:
+        tb = sys.exc_info()
+        traceback.print_exception(tb[0], tb[1], tb[2], None, sio)
+        s = sio.getvalue()
+    raise Untrue(
+        'value must be {0} but got {r} instead with exception {2}'.format(
+            info, recursive_repr(this), s[:-1] if s[-1:] == '\n' else s,
+        )
+    )
+
+
+def truthexcept(call, doc):
+    def test(call, data):
+        try:
+            call(data)
+            return True
+        except:
+            return False
+    return add_doc(partial(test, call), doc)
+
+
+def truthpattern(expr, doc, flags=32):
+    return add_doc(
+        partial(lambda x, y: bool(x(y)), rcompile(expr, flags).search), doc,
+    )
+
+
+def change(call, doc=None, info=None, default=None, tb=False, **kw):
+    def change(call, err, this, default=None):
+        try:
+            return call(this)
+        except:
+            if default is not None:
+                return default
+            err(this)
+    return add_doc(
+        partial(
+            change,
+            partial(call, **kw),
+            partial(error, info, tb=tb),
+            default=default,
+        ),
+        doc,
+    )
+
+
+def truth(call, doc=None, info=None, default=None, tb=False, cmp=None):
+    def truth(call, err, this, default=None):
+        try:
+            if call(this):
+                return this
+        except:
+            if default is not None:
+                return default
+            err(this)
+    if cmp is not None:
+        call = partial(call, cmp)
+    return add_doc(
+        partial(truth, call, partial(error, info, tb=tb), default=default), doc
+    )
+
+
+def fixed(tests, these):
+    results = Fixed(these, [], [])
+    tappend = results.true.append
+    fappend = results.false.append
+    for idx, test in enumerate(tests):
+        try:
+            tappend(test(tests[idx]))
+            fappend(False)
+        except Untrue as e:
+            tappend(UNTRUTH)
+            fappend(e)
+    return results
+
+
+def named(tests, these):
+    results = Named(these, stuf(), stuf())
+    tsetitem = results.true.__setitem__
+    fsetitem = results.false.__setitem__
+    for k, v in items(tests):
+        try:
+            tsetitem(k, v(these[k]))
+            fsetitem(k, False)
+        except Untrue as e:
+            tsetitem(k, UNTRUTH)
+            fsetitem(k, e)
+    return results
+
+
+class Untrue(Exception):
+    '''Value is untrue.'''

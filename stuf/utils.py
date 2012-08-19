@@ -5,18 +5,18 @@ from threading import Lock
 from itertools import count
 from pickletools import genops
 from unicodedata import normalize
-from importlib import import_module
 from functools import update_wrapper, partial
 
 from stuf.six import (
-    PY3, items, isstring, func_code, b, next, intern, first, pickle, u,
-    rcompile)
+    PY3, items, isstring, func_code, b, next, intern, rcompile, first, pickle,
+    u)
+from stuf.base import importer
 
 norm = partial(normalize, 'NFKD')
 # first slug pattern
-one = partial(rcompile('[^\w\s-]').sub, '')
+one = partial(rcompile(r'[^\w\s-]').sub, '')
 # second slug pattern
-two = partial(rcompile('[-\s]+').sub, '-')
+two = partial(rcompile(r'[-\s]+').sub, '-')
 # count
 count = partial(next, count())
 # import loader
@@ -30,7 +30,7 @@ def diff(current, past):
     return dict((k, v) for k, v in items(current) if k in changed)
 
 
-def lazyimport(path, attribute=None, i=import_module, g=getattr, s=isstring):
+def lazyimport(path, attribute=None, i=importer, s=isstring):
     '''
     Deferred module loader.
 
@@ -38,27 +38,8 @@ def lazyimport(path, attribute=None, i=import_module, g=getattr, s=isstring):
     :keyword str attribute: attribute on loaded module to return
     '''
     if s(path):
-        try:
-            dot = path.rindex('.')
-            # import module
-            path = g(i(path[:dot]), path[dot + 1:])
-        # If nothing but module name, import the module
-        except (AttributeError, ValueError):
-            path = i(path)
-        if attribute:
-            path = g(path, attribute)
+        return importer(path, attribute)
     return path
-
-
-def backport(paths):
-    '''Rotate through import `paths` until one imports or everything fails.'''
-    for path in paths:
-        try:
-            return lazyimport(path)
-        except ImportError:
-            continue
-    else:
-        raise ImportError('no path')
 
 
 def lru(maxsize=100):

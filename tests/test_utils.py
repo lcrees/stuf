@@ -182,7 +182,7 @@ class TestUtils(unittest.TestCase):
         self.assertTrue(callable(fsum))
 
     def test_checkname(self):
-        from stuf.patterns import checkname
+        from stuf.base import checkname
         self.assertEqual(checkname('from'), 'from_')
 
     def test_sluggify(self):
