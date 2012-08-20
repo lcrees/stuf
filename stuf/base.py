@@ -8,8 +8,6 @@ from operator import itemgetter
 from importlib import import_module
 from collections import Sequence, Mapping
 
-# add documentation to a callable
-
 getframe = partial(sys._getframe, 1)
 identity = lambda x: x
 isnone = lambda x, y: x if y is None else y
@@ -23,6 +21,7 @@ ic = frozenset('()[]{}@,:`=;+*/%&|^><\'"#\\$?!~'.split())
 
 
 def add_doc(callable, doc):
+    '''Add documentation to a callable.'''
     callable.__doc__ = doc
     return callable
 

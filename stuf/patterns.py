@@ -16,30 +16,22 @@ from stuf.six.moves import filterfalse  # @UnresolvedImport
 from stuf.six import (
     StringIO, isstring, filter, map, rcompile, rescape, rsub, items)
 
-regex = lambda expr, flag: rcompile(expr, flag).search
-parse = lambda expr, flag: pcompile(expr)._search_re.search
-glob = lambda expr, flag: rcompile(globpattern(expr), flag).search
-gauntlet = lambda tests, this: all(test(this) for test in tests)
+# truth marker
+TRUTH = hash('TRUTH')
+# untruth marker
 UNTRUTH = hash('UNTRUTH')
+# fixed values
 Fixed = namedtuple('Fixed', 'these true false')
+# named values
 Named = namedtuple('Named', 'these true false')
+# regular expression search
+regex = lambda expr, flag: rcompile(expr, flag).search
+# parse search
+parse = lambda expr, flag: pcompile(expr)._search_re.search
+# glob search
+glob = lambda expr, flag: rcompile(globpattern(expr), flag).search
+# search dictionary
 SEARCH = dict(parse=parse, glob=glob, regex=regex)
-
-
-def detect(patterns):
-    '''Create filter from inclusion `patterns`.'''
-    patterns = tuple(map(searcher, patterns))
-    return lambda x: any(p(first(x)) for p in patterns)
-
-
-def exclude(patterns):
-    '''Create filter from exclusion `patterns`.'''
-    if not patterns:
-        # trivial case: include everything
-        return lambda x: x
-    patterns = tuple(map(searcher, patterns))
-    # handle general case for exclusion
-    return partial(filterfalse, lambda x: any(p(x) for p in patterns))
 
 
 def globpattern(expr):
@@ -82,40 +74,14 @@ def globpattern(expr):
     )
 
 
-def include(patterns):
-    '''Create filter from inclusion `patterns`.'''
-    if not patterns:
-        # trivial case: exclude everything
-        return lambda x: x[0:0]
-    patterns = tuple(map(searcher, patterns))
-    # handle general case for inclusion
-    return partial(filter, lambda x: any(p(x) for p in patterns))
-
-
 @lru()
-def searcher(expr, flag=32):
+def searcher(expr, flags=32):
     '''Build search function from `expr`.'''
     try:
         scheme, expr = expr.split(':', 1) if isstring(expr) else expr
-        return SEARCH[scheme](expr, flag)
+        return SEARCH[scheme](expr, flags)
     except KeyError:
-        raise TypeError('"{0}" is not a valid search scheme'.format(scheme))
-
-
-def error(info, this, tb=False):
-    if not tb:
-        raise Untrue('value must be {0}, got {r} instead'.format(
-            info, recursive_repr(this),
-        ))
-    with StringIO() as sio:
-        tb = sys.exc_info()
-        traceback.print_exception(tb[0], tb[1], tb[2], None, sio)
-        s = sio.getvalue()
-    raise Untrue(
-        'value must be {0} but got {r} instead with exception {2}'.format(
-            info, recursive_repr(this), s[:-1] if s[-1:] == '\n' else s,
-        )
-    )
+        raise TypeError('"{0}" is invalid search scheme'.format(scheme))
 
 
 def truthexcept(call, doc):
@@ -132,6 +98,56 @@ def truthpattern(expr, doc, flags=32):
     return add_doc(
         partial(lambda x, y: bool(x(y)), rcompile(expr, flags).search), doc,
     )
+
+
+# run multiple callables on one value to verify truth
+gauntlet = lambda tests, this: all(test(this) for test in tests)
+
+
+class Untrue(Exception):
+    '''Data is untrue.'''
+
+
+def detect(patterns):
+    '''Create filter from inclusion `patterns`.'''
+    patterns = tuple(map(searcher, patterns))
+    return lambda x: any(p(first(x)) for p in patterns)
+
+
+def exclude(patterns):
+    '''Create filter from exclusion `patterns`.'''
+    if not patterns:
+        # trivial case: include everything
+        return lambda x: x
+    patterns = tuple(map(searcher, patterns))
+    # handle general case for exclusion
+    return partial(filterfalse, lambda x: any(p(x) for p in patterns))
+
+
+def error(info, this, tb=False):
+    if not tb:
+        raise Untrue('value must be {0}, got {r} instead'.format(
+            info, recursive_repr(this),
+        ))
+    with StringIO() as sio:
+        tb = sys.exc_info()
+        traceback.print_exception(tb[0], tb[1], tb[2], None, sio)
+        s = sio.getvalue()
+    raise Untrue(
+        'value must be {0} but got {r} with exception {2} instead'.format(
+            info, recursive_repr(this), s[:-1] if s[-1:] == '\n' else s,
+        )
+    )
+
+
+def include(patterns):
+    '''Create filter from inclusion `patterns`.'''
+    if not patterns:
+        # trivial case: exclude everything
+        return lambda x: x[0:0]
+    patterns = tuple(map(searcher, patterns))
+    # handle general case for inclusion
+    return partial(filter, lambda x: any(p(x) for p in patterns))
 
 
 def change(call, doc=None, info=None, default=None, tb=False, **kw):
@@ -176,7 +192,7 @@ def fixed(tests, these):
     for idx, test in enumerate(tests):
         try:
             tappend(test(tests[idx]))
-            fappend(False)
+            fappend(TRUTH)
         except Untrue as e:
             tappend(UNTRUTH)
             fappend(e)
@@ -190,12 +206,8 @@ def named(tests, these):
     for k, v in items(tests):
         try:
             tsetitem(k, v(these[k]))
-            fsetitem(k, False)
+            fsetitem(k, TRUTH)
         except Untrue as e:
             tsetitem(k, UNTRUTH)
             fsetitem(k, e)
     return results
-
-
-class Untrue(Exception):
-    '''Value is untrue.'''
