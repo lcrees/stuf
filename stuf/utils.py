@@ -7,10 +7,10 @@ from pickletools import genops
 from unicodedata import normalize
 from functools import update_wrapper, partial
 
+from stuf.base import importer
 from stuf.six import (
     PY3, items, isstring, func_code, b, next, intern, rcompile, first, pickle,
     u)
-from stuf.base import importer
 
 norm = partial(normalize, 'NFKD')
 # first slug pattern

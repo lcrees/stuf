@@ -98,9 +98,9 @@ class TestUtils(unittest.TestCase):
         )
         self.assertEqual(list(deferred), [1, 1, 2, 3])
 
-    def test_exhaustcall(self):
-        from stuf.iterable import exhaustcall
-        deferred = exhaustcall(lambda x: x + x, iter([1, 2, 3]), StopIteration)
+    def test_exhaustmap(self):
+        from stuf.iterable import exhaustmap
+        deferred = exhaustmap(lambda x: x + x, iter([1, 2, 3]), StopIteration)
         self.assertIsNone(deferred)
 
     def test_exhauststar(self):
@@ -108,9 +108,9 @@ class TestUtils(unittest.TestCase):
         deferred = exhauststar(lambda x, y: x + y, iter([(1, 2), (3, 4)]))
         self.assertIsNone(deferred)
 
-    def test_exhaustmap(self):
-        from stuf.iterable import exhaustmap
-        deferred = exhaustmap({1: 2}, lambda x, y: x + y)
+    def test_exhaustitems(self):
+        from stuf.iterable import exhaustitems
+        deferred = exhaustitems(lambda x, y: x + y, {1: 2})
         self.assertIsNone(deferred)
 
     def test_lazy_class(self):

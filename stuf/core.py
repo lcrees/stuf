@@ -7,7 +7,7 @@ from collections import Mapping, MutableMapping, defaultdict, namedtuple
 
 from stuf.desc import lazy
 from stuf.collects import OrderedDict
-from stuf.iterable import exhaust, exhaustmap
+from stuf.iterable import exhaust, exhaustitems
 from stuf.base import issequence, ismapping, maporseq
 from stuf.deep import recursive_repr, clsname, getcls, clsdict
 from stuf.six import items, map, getvalues, getitems, getkeys, isstring
@@ -72,14 +72,14 @@ class corestuf(object):
 
     @classmethod
     def _populate(cls, past, future):
-        def _coro(key, value, new=cls._new):
+        def closure(key, value, new=cls._new):
             if maporseq(value) and not isstring(value):
                 # see if stuf can be converted to nested stuf
                 trial = new(value)
                 future[key] = trial if len(trial) > 0 else value
             else:
                 future[key] = value
-        exhaustmap(past, _coro)
+        exhaustitems(closure, past)
         return cls._postpopulate(future)
 
     @classmethod
@@ -206,14 +206,14 @@ class defaultstuf(directstuf, defaultdict):
         return cls(default, cls._build(default, iterable))
 
     def _populate(self, past, future):
-        def _coro(key, value, new=self._new, default=self.default_factory):
+        def closure(key, value, new=self._new, default=self.default_factory):
             if maporseq(value):
                 # see if stuf can be converted to nested stuf
                 trial = new(default, value)
                 future[key] = trial if len(trial) > 0 else value
             else:
                 future[key] = value
-        exhaustmap(past, _coro)
+        exhaustitems(closure, past)
 
     def _prepopulate(self, *args, **kw):
         kw.update(self._build(self.default_factory, args))

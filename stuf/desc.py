@@ -5,7 +5,7 @@ from threading import local
 from functools import update_wrapper, partial
 
 from stuf.six import items
-from stuf.iterable import exhaustmap
+from stuf.iterable import exhaustitems
 from stuf.deep import selfname, setter, getcls
 
 
@@ -138,9 +138,9 @@ class ResetMixin(local):
     def reset(self):
         '''Reset previously accessed :class:`lazybase` attributes.'''
         attrs = set(vars(self))
-        exhaustmap(
-            items(vars(getcls(self))),
+        exhaustitems(
             delattr,
+            items(vars(getcls(self))),
             lambda x, y: x in attrs and isinstance(y, lazybase),
         )
 

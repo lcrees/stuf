@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 '''stuf iterables.'''
 
+from functools import partial
 from itertools import starmap
 
 from stuf.six import items, map, next
@@ -46,27 +47,32 @@ def exhaust(iterable, exception=StopIteration, _n=next):
         pass
 
 
-def exhaustmap(mapping, call, filter=None, exception=StopIteration, _n=next):
+def exhaustitems(call, mapping, filter=None, exception=StopIteration, _n=next):
     '''Call `call` with optional `filter` on a `mapping` until exhausted.'''
-    exhaust(starmap(
+    iterable = starmap(
         call,
         items(mapping) if filter is None else filter(filter, items(mapping)),
-    ), exception)
+    )
+    try:
+        while 1:
+            _n(iterable)
+    except exception:
+        pass
 
 
-def exhaustcall(call, iterable, exception=StopIteration, _n=next, map=map):
+def _xhaust(call, iterable, exception=StopIteration, n=next, map=map):
     '''Call function `call` on an `iterable` until it's exhausted.'''
-    exhaust(map(call, iterable), exception)
-
-
-def exhauststar(call, iterable, exception=StopIteration, _n=next, map=starmap):
-    '''Call function `call` on an `iterable` until it's exhausted.'''
-    exhaust(map(call, iterable), exception)
+    iterable = map(call, iterable)
+    try:
+        while 1:
+            n(iterable)
+    except exception:
+        pass
 
 
 def iterexcept(call, exception, start=None):
     '''
-    Call function `call` repeatedly until `exception` is raised.
+    Call function `call` until `exception` is raised.
 
     from Raymond Hettinger Python Cookbook recipe # 577155
     '''
@@ -77,3 +83,7 @@ def iterexcept(call, exception, start=None):
             yield call()
     except exception:
         pass
+
+
+exhaustmap = partial(_xhaust, map=map)
+exhauststar = partial(_xhaust, map=starmap)

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 '''Utilities for writing code that runs on Python 2 and 3.'''
 
-from stuf.base import first, add_doc, identity, getframe, backport
+from stuf.base import first, docit, identity, getframe, backport
 
 import sys
 import types
@@ -236,8 +236,8 @@ else:
     import StringIO
     StringIO = BytesIO = StringIO.StringIO
 
-b = add_doc(b, 'Byte literal.')
-u = add_doc(u, 'Text literal.')
+b = docit(b, 'Byte literal.')
+u = docit(u, 'Text literal.')
 
 if PY3:
     import builtins  # @UnresolvedImport
@@ -330,10 +330,10 @@ def tobytes(thing, encoding='utf-8', errors='strict'):
     return texts(thing).encode(encoding, errors)
 
 # strings
-isstring = add_doc(lambda value: isinstance(value, strings), 'is string')
-isunicode = add_doc(lambda value: isinstance(value, texts), 'is text?')
-isbinary = add_doc(lambda value: isinstance(value, binaries), 'is binary?')
+isstring = docit(lambda value: isinstance(value, strings), 'is string')
+isunicode = docit(lambda value: isinstance(value, texts), 'is text?')
+isbinary = docit(lambda value: isinstance(value, binaries), 'is binary?')
 # numbers
-isgtemax = add_doc(partial(gt, MAXSIZE), 'Less than max size?')
-isinteger = add_doc(lambda value: isinstance(value, integers), 'is integer?')
-isltemax = add_doc(partial(lt, MAXSIZE), 'Greater than max size?')
+isgtemax = docit(partial(gt, MAXSIZE), 'Less than max size?')
+isinteger = docit(lambda value: isinstance(value, integers), 'is integer?')
+isltemax = docit(partial(lt, MAXSIZE), 'Greater than max size?')

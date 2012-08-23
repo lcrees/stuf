@@ -20,7 +20,7 @@ issequence = lambda x: isinstance(x, Sequence)
 ic = frozenset('()[]{}@,:`=;+*/%&|^><\'"#\\$?!~'.split())
 
 
-def add_doc(callable, doc):
+def docit(callable, doc):
     '''Add documentation to a callable.'''
     callable.__doc__ = doc
     return callable
@@ -38,6 +38,7 @@ def checkname(name, ic=ic, ik=iskeyword):
 
 
 def importer(path, attribute=None, i=import_module, g=getattr):
+    '''Import module `path`, optionally with `attribute`.'''
     try:
         dot = path.rindex('.')
         # import module
