@@ -205,7 +205,7 @@ def optimize(
 moptimize = memoize(optimize)
 
 if PY3:
-    loads = memoize(lambda x: pickle.loads(x, encoding='latin-1'))
+    ld = loads = memoize(lambda x: pickle.loads(x, encoding='latin-1'))
 
     def sluggify(value, n=norm, o=one, t=two):
         '''
@@ -214,7 +214,7 @@ if PY3:
         '''
         return t(o(n(value)).strip().lower())
 else:
-    loads = memoize(lambda x: pickle.loads(x))
+    ld = loads = memoize(lambda x: pickle.loads(x))
 
     def sluggify(value, n=norm, o=one, t=two):
         '''
