@@ -99,7 +99,7 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(list(deferred), [1, 1, 2, 3])
 
     def test_exhaustmap(self):
-        from stuf.iterable import exhaustmap
+        from stuf import exhaustmap
         deferred = exhaustmap(lambda x: x + x, iter([1, 2, 3]), StopIteration)
         self.assertIsNone(deferred)
 
@@ -109,7 +109,7 @@ class TestUtils(unittest.TestCase):
         self.assertIsNone(deferred)
 
     def test_exhaustitems(self):
-        from stuf.iterable import exhaustitems
+        from stuf import exhaustitems
         deferred = exhaustitems(lambda x, y: x + y, {1: 2})
         self.assertIsNone(deferred)
 

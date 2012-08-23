@@ -47,7 +47,7 @@ def exhaust(iterable, exception=StopIteration, _n=next):
         pass
 
 
-def exhaustitems(call, mapping, filter=None, exception=StopIteration, _n=next):
+def exhaustmap(call, mapping, filter=None, exception=StopIteration, _n=next):
     '''Call `call` with optional `filter` on a `mapping` until exhausted.'''
     iterable = starmap(
         call,
@@ -85,5 +85,5 @@ def iterexcept(call, exception, start=None):
         pass
 
 
-exhaustmap = partial(_xhaust, map=map)
+exhaustcall = partial(_xhaust, map=map)
 exhauststar = partial(_xhaust, map=starmap)

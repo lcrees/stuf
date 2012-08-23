@@ -1,2 +1,2 @@
-parse>=1.4.1
+parse==1.4.1
 distribute

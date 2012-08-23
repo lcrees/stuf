@@ -5,7 +5,7 @@ from threading import local
 from functools import update_wrapper, partial
 
 from stuf.six import items
-from stuf.iterable import exhaustitems
+from stuf import exhaustitems
 from stuf.deep import selfname, setter, getcls
 
 

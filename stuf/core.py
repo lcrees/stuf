@@ -6,8 +6,9 @@ from operator import methodcaller, attrgetter
 from collections import Mapping, MutableMapping, defaultdict, namedtuple
 
 from stuf.desc import lazy
+from stuf import exhaustitems
+from stuf.iterable import exhaust
 from stuf.collects import OrderedDict
-from stuf.iterable import exhaust, exhaustitems
 from stuf.base import issequence, ismapping, maporseq
 from stuf.deep import recursive_repr, clsname, getcls, clsdict
 from stuf.six import items, map, getvalues, getitems, getkeys, isstring
