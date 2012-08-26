@@ -2,9 +2,11 @@
 '''stuf base.'''
 
 import sys
+from os.path import dirname
 from functools import partial
 from keyword import iskeyword
 from operator import itemgetter
+from inspect import getframeinfo
 from importlib import import_module
 from collections import Sequence, Mapping
 
@@ -16,6 +18,10 @@ second = itemgetter(1)
 maporseq = lambda x: isinstance(x, (Mapping, Sequence))
 ismapping = lambda x: isinstance(x, Mapping)
 issequence = lambda x: isinstance(x, Sequence)
+# launch directory
+launchdir = partial(
+    lambda a, b, c: a(b(c()).filename), dirname, getframeinfo, getframe,
+)
 # illegal characters for Python names
 ic = frozenset('()[]{}@,:`=;+*/%&|^><\'"#\\$?!~'.split())
 

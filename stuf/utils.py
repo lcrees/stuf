@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 '''stuf utilities.'''
 
+
 from threading import Lock
 from itertools import count
 from pickletools import genops
+
 from unicodedata import normalize
 from functools import update_wrapper, partial
 
@@ -19,8 +21,6 @@ one = partial(rcompile(r'[^\w\s-]').sub, '')
 two = partial(rcompile(r'[-\s]+').sub, '-')
 # count
 count = partial(next, count())
-# import loader
-lazyload = lambda x: lazyimport(x) if isstring(x) and '.' in x else x
 
 
 def diff(current, past):
@@ -40,6 +40,13 @@ def lazyimport(path, attribute=None, i=importer, s=isstring):
     if s(path):
         return importer(path, attribute)
     return path
+
+# import loader
+lazyload = partial(
+    lambda y, z, x: y(x) if z(x) and '.' in x else x,
+    lazyimport,
+    isstring,
+)
 
 
 def lru(maxsize=100):

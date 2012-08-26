@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 '''stuf search.'''
 
-
 from os import sep
 from functools import partial
 
