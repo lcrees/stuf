@@ -8,6 +8,8 @@ from operator import itemgetter
 from importlib import import_module
 from collections import Sequence, Mapping
 
+# two frame
+two = lambda a, b, *args: a(b(*args))
 getframe = partial(sys._getframe, 1)
 identity = lambda x: x
 isnone = lambda x, y: x if y is None else y

@@ -87,3 +87,9 @@ def iterexcept(call, exception, start=None):
 
 exhaustcall = partial(_xhaust, map=map)
 exhauststar = partial(_xhaust, map=starmap)
+xpartmap = partial(
+    lambda x, b, c, d, *a, **k: x(b(c, *a, **k), d), exhaustcall, partial,
+)
+xpartstar = partial(
+    lambda x, b, c, d, *a, **k: x(b(c, *a, **k), d), exhauststar, partial,
+)
