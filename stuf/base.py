@@ -13,6 +13,7 @@ identity = lambda x: x
 isnone = lambda x, y: x if y is None else y
 first = itemgetter(0)
 second = itemgetter(1)
+last = itemgetter(-1)
 maporseq = lambda x: isinstance(x, (Mapping, Sequence))
 ismapping = lambda x: isinstance(x, Mapping)
 issequence = lambda x: isinstance(x, Sequence)
