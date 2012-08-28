@@ -1,18 +1,15 @@
 # -*- coding: utf-8 -*-
 '''stuf utilities.'''
 
-
 from threading import Lock
 from itertools import count
 from pickletools import genops
-
 from unicodedata import normalize
 from functools import update_wrapper, partial
 
-from stuf.base import importer
+from stuf.base import importer, first
 from stuf.six import (
-    PY3, items, isstring, func_code, b, next, intern, rcompile, first, pickle,
-    u)
+    PY3, items, isstring, func_code, b, next, intern, rcompile, pickle, u)
 
 norm = partial(normalize, 'NFKD')
 # first slug pattern
