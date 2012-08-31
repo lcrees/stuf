@@ -25,12 +25,6 @@ issequence = lambda x: isinstance(x, Sequence)
 ic = frozenset('()[]{}@,:`=;+*/%&|^><\'"#\\$?!~'.split())
 
 
-def docit(callable, doc):
-    '''Add documentation to a callable.'''
-    callable.__doc__ = doc
-    return callable
-
-
 def checkname(name, ic=ic, ik=iskeyword):
     '''Ensures `name` is legal for Python.'''
     # Remove characters that are illegal in a Python name
@@ -40,6 +34,12 @@ def checkname(name, ic=ic, ik=iskeyword):
     name = ''.join(i for i in name if i not in ic)
     # add _ if value is Python keyword
     return name + '_' if ik(name) else name
+
+
+def docit(callable, doc):
+    '''Add documentation to a callable.'''
+    callable.__doc__ = doc
+    return callable
 
 
 def importer(path, attribute=None, i=import_module, g=getattr):

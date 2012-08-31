@@ -7,6 +7,16 @@ from itertools import starmap
 from stuf.six import items, map, next
 
 
+def _xhaust(call, iterable, exception=StopIteration, n=next, map=map):
+    '''Call function `call` on an `iterable` until it's exhausted.'''
+    iterable = map(call, iterable)
+    try:
+        while 1:
+            n(iterable)
+    except exception:
+        pass
+
+
 def breakcount(call, length):
     '''Call function `call` until it reaches its original `length`.'''
     while length:
@@ -60,14 +70,11 @@ def exhaustmap(call, mapping, filter=None, exception=StopIteration, _n=next):
         pass
 
 
-def _xhaust(call, iterable, exception=StopIteration, n=next, map=map):
-    '''Call function `call` on an `iterable` until it's exhausted.'''
-    iterable = map(call, iterable)
-    try:
-        while 1:
-            n(iterable)
-    except exception:
-        pass
+def gauntlet(throws, this):
+    '''Run sequence of callables in `thrown` on `this` object.'''
+    for thrown in throws:
+        this = thrown(this)
+    return this
 
 
 def iterexcept(call, exception, start=None):
@@ -92,4 +99,9 @@ xpartmap = partial(
 )
 xpartstar = partial(
     lambda x, b, c, d, *a, **k: x(b(c, *a, **k), d), exhauststar, partial,
+)
+xpartitems = partial(
+    lambda x, p, c, i, f=None, *a, **k: x(p(c, *a, **k), i, f),
+    exhaustmap,
+    partial,
 )
