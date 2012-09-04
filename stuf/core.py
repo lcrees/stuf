@@ -55,12 +55,12 @@ class corestuf(object):
             update(kind(items(iterable)))
         elif issequence(iterable):
             # extract appropriate key-values from sequence
-            def coro(arg, update=update):
+            def closure(arg, update=update):
                 try:
                     update(arg)
                 except (ValueError, TypeError):
                     pass
-            exhaust(map(coro, iterable))
+            exhaust(map(closure, iterable))
         return kw
 
     @classmethod
@@ -194,12 +194,12 @@ class defaultstuf(directstuf, defaultdict):
             update(kind(default, iterable))
         elif issequence(iterable):
             # extract appropriate key-values from sequence
-            def coro(arg):
+            def closure(arg):
                 try:
                     update(arg)
                 except (ValueError, TypeError):
                     pass
-            exhaust(map(coro, iterable))
+            exhaust(map(closure, iterable))
         return kw
 
     @classmethod
