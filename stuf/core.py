@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 '''core stuf.'''
 
+from pprint import saferepr
 from itertools import chain
 from operator import methodcaller, attrgetter
 from collections import Mapping, MutableMapping, defaultdict, namedtuple
@@ -9,8 +10,8 @@ from stuf.desc import lazy
 from stuf import exhaustitems
 from stuf.iterable import exhaust
 from stuf.collects import OrderedDict
+from stuf.deep import clsname, getcls, clsdict
 from stuf.base import issequence, ismapping, maporseq
-from stuf.deep import recursive_repr, clsname, getcls, clsdict
 from stuf.six import items, map, getvalues, getitems, getkeys, isstring
 
 __all__ = 'defaultstuf fixedstuf frozenstuf orderedstuf stuf'.split()
@@ -34,9 +35,10 @@ class corestuf(object):
         except KeyError:
             return _getter(self, key)
 
-    @recursive_repr
     def __repr__(self):
-        return '{0}({1})'.format(clsname(self), methodcaller('items')(self))
+        return '{0}({1})'.format(
+            clsname(self), saferepr(methodcaller('items')(self)),
+        )
 
     @lazy
     def _classkeys(self):

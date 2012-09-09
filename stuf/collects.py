@@ -2,10 +2,11 @@
 '''stuf collections.'''
 
 import sys
+from pprint import saferepr
 from collections import MutableMapping
 
+from stuf.deep import getcls
 from stuf.base import second, first
-from stuf.deep import recursive_repr, getcls
 from stuf.six import OrderedDict, items, map as imap
 
 if not first(sys.version_info) == 2 and second(sys.version_info) < 7:
@@ -101,10 +102,9 @@ except ImportError:
         def __bool__(self, any=any):
             return any(self.maps)
 
-        @recursive_repr
         def __repr__(self):
             return '{0.__class__.__name__}({1})'.format(
-                self, ', '.join(imap(repr, self.maps))
+                self, ', '.join(imap(saferepr, self.maps))
             )
 
         @classmethod

@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 '''stuf deep objectry.'''
 
-from functools import partial, wraps
+from functools import partial
 from operator import attrgetter, getitem
-
-from stuf.six import get_ident
 
 clsdict = attrgetter('__dict__')
 selfname = attrgetter('__name__')
@@ -84,27 +82,6 @@ def members(this):
             yield key, value
 
 
-def recursive_repr(this):
-    '''
-    Decorator to make a repr function return "..." for a recursive call.
-
-    :argument this: an object
-    '''
-    repr_running = set()
-    @wraps(this) #@IgnorePep8
-    def wrapper(self):
-        key = id(self), get_ident()
-        if key in repr_running:
-            return '...'
-        repr_running.add(key)
-        try:
-            result = this(self)
-        finally:
-            repr_running.discard(key)
-        return result
-    return wrapper
-
-
 def setter(this, key, value):
     '''
     Set attribute.
@@ -121,6 +98,24 @@ def setter(this, key, value):
     except TypeError:
         setattr(this, key, value)
         return value
+
+
+def setthis(this, key, value):
+    '''
+    Set attribute.
+
+    :argument this: an object
+    :argument str key: key to set
+    :argument value: value to set
+    '''
+    # it's an instance
+    try:
+        this.__dict__[key] = value
+        return this
+    # it's a class
+    except TypeError:
+        setattr(this, key, value)
+        return this
 
 
 def setdefault(this, key, default=None):
