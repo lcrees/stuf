@@ -18,12 +18,7 @@ delit = lambda x, y: clsdict(x).__delitem__(y)
 
 
 def attr_or_item(this, key):
-    '''
-    Get attribute or item.
-
-    :argument this: an object
-    :argument key: key to lookup
-    '''
+    '''Get attribute or item `key` from `this`.'''
     try:
         return getitem(this, key)
     except (KeyError, TypeError):
@@ -31,13 +26,7 @@ def attr_or_item(this, key):
 
 
 def deepget(this, key, default=None):
-    '''
-    Get an attribute with deep attribute path
-
-    :argument this: an object
-    :argument str key: key to lookup
-    :keyword default: default value returned if key not found
-    '''
+    '''Get deep attribut `key` on `this`, setting it to `default` if unset.'''
     try:
         return attrgetter(key)(this)
     except AttributeError:
@@ -45,25 +34,15 @@ def deepget(this, key, default=None):
 
 
 def deleter(this, key):
-    '''
-    Delete an attribute.
-
-    :argument this: an object
-    :argument str key: key to lookup
-    '''
+    '''Delete attribute `key` from `this`.'''
     try:
         object.__delattr__(this, key)
-    except (TypeError, AttributeError):
+    except (AttributeError, TypeError):
         delattr(this, key)
 
 
 def getter(this, key):
-    '''
-    Get an attribute.
-
-    :argument this: an object
-    :argument str key: key to lookup
-    '''
+    '''Get attribute `key` from `this`.'''
     try:
         return object.__getattribute__(this, key)
     except (AttributeError, TypeError):
@@ -83,13 +62,7 @@ def members(this):
 
 
 def setter(this, key, value):
-    '''
-    Set attribute.
-
-    :argument this: an object
-    :argument str key: key to set
-    :argument value: value to set
-    '''
+    '''Set attribute `key` on `this` to value and return `value`.'''
     # it's an instance
     try:
         this.__dict__[key] = value
@@ -101,13 +74,7 @@ def setter(this, key, value):
 
 
 def setthis(this, key, value):
-    '''
-    Set attribute.
-
-    :argument this: an object
-    :argument str key: key to set
-    :argument value: value to set
-    '''
+    '''Set attribute `key` on `this` to value and return `this`.'''
     # it's an instance
     try:
         this.__dict__[key] = value
@@ -119,13 +86,7 @@ def setthis(this, key, value):
 
 
 def setdefault(this, key, default=None):
-    '''
-    Get an attribute, creating and setting it if needed.
-
-    :argument this: an object
-    :argument key: key to lookup
-    :argument default: default value returned if key not found
-    '''
+    '''Get attribute `key` on `this`, setting it with `default` if unset.'''
     try:
         return getter(this, key)
     except AttributeError:
