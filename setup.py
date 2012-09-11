@@ -16,12 +16,11 @@ def getversion(fname):
         if line.startswith('__version__'):
             return '%s.%s.%s' % eval(line[13:].rstrip())
 
-
-install_requires = list(l for l in open(
-    join(getcwd(), 'reqs/requires.txt'), 'r',
-).readlines())
-if sys.version_info[0] == 2 and sys.version_info[1] < 7:
-    install_requires.extend(['ordereddict', 'importlib'])
+if float('%d.%d' % sys.version_info[:2]) < 2.7:
+    reqs = 'reqs/requires-2.6.txt'
+else:
+    reqs = 'reqs/requires.txt'
+install_requires = list(l for l in open(join(getcwd(), reqs), 'r').readlines())
 
 setup(
     name='stuf',
@@ -50,6 +49,7 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.1',
         'Programming Language :: Python :: 3.2',
+        'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: Implementation :: CPython',
         'Topic :: Software Development',
         'Topic :: Software Development :: Libraries',

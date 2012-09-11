@@ -23,6 +23,7 @@ zip = backport('future_builtins.zip', 'builtins.zip')
 rcompile = backport('regex.compile', 're.compile')
 rescape = backport('regex.escape', 're.escape')
 rsub = backport('regex.sub', 're.sub')
+subprocess = backport('subprocess32', 'subprocess')
 
 # True if we are running on Python 3.
 PY3 = first(sys.version_info) == 3
