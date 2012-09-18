@@ -92,6 +92,9 @@ def iterexcept(call, exception, start=None):
         pass
 
 
+partmap = partial(
+    lambda m, p, c, d, *a, **k: m(p(c, *a, **k), d), map, partial,
+)
 exhaustcall = partial(_xhaust, map=map)
 exhauststar = partial(_xhaust, map=starmap)
 xpartmap = partial(
