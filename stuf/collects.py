@@ -2,12 +2,34 @@
 '''stuf collections.'''
 
 import sys
-from pprint import saferepr
 from collections import MutableMapping
 
 from stuf.deep import getcls
 from stuf.base import second, first
-from stuf.six import OrderedDict, items, map as imap
+from stuf.six import OrderedDict, items, map as imap, get_ident
+
+try:
+    from reprlib import recursive_repr  # @UnusedImport
+except ImportError:
+    def recursive_repr(fillvalue='...'):
+        def decorating_function(user_function):
+            repr_running = set()
+            def wrapper(self):  #@IgnorePep8
+                key = id(self), get_ident()
+                if key in repr_running:
+                    return fillvalue
+                repr_running.add(key)
+                try:
+                    result = user_function(self)
+                finally:
+                    repr_running.discard(key)
+                return result
+            # Can't use functools.wraps() here because of bootstrap issues
+            wrapper.__module__ = getattr(user_function, '__module__')
+            wrapper.__doc__ = getattr(user_function, '__doc__')
+#            wrapper.__name__ = getattr(user_function, '__name__')
+            return wrapper
+        return decorating_function
 
 if not first(sys.version_info) == 2 and second(sys.version_info) < 7:
     from collections import Counter
@@ -102,9 +124,10 @@ except ImportError:
         def __bool__(self, any=any):
             return any(self.maps)
 
+        @recursive_repr()
         def __repr__(self):
             return '{0.__class__.__name__}({1})'.format(
-                self, ', '.join(imap(saferepr, self.maps))
+                self, ', '.join(imap(repr, self.maps))
             )
 
         @classmethod
