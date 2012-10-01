@@ -151,7 +151,7 @@ def memoize(f, i=intern, z=items, r=repr, uw=update_wrapper):
         def memoize_(arg):
             return f.cache(i(r(arg)), f(arg))
     else:
-        def memoize_(*args, **kw): #@IgnorePep8
+        def memoize_(*args, **kw):  # @IgnorePep8
             return f.setdefault(
                 i(r(args, z(kw)) if kw else r(args)), f(*args, **kw)
             )
@@ -178,6 +178,7 @@ def optimize(
     gets = s()
     # (arg, startpos, stoppos) for the PUT opcodes set to pos if previous
     # opcode was a PUT
+
     def iterthing(gadd=gets.add, this=this, g=g, n=n):  # @IgnorePep8
         prevpos, prevarg = None, None
         try:
@@ -194,6 +195,7 @@ def optimize(
         except S:
             pass
     # Copy the pickle string except for PUTS without a corresponding GET
+
     def iterthingy(iterthing=iterthing(), this=this, n=n):  # @IgnorePep8
         i = 0
         try:

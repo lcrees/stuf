@@ -14,7 +14,8 @@ except ImportError:
     def recursive_repr(fillvalue='...'):
         def decorating_function(user_function):
             repr_running = set()
-            def wrapper(self):  #@IgnorePep8
+
+            def wrapper(self):  # @IgnorePep8
                 key = id(self), get_ident()
                 if key in repr_running:
                     return fillvalue

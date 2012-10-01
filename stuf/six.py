@@ -31,6 +31,7 @@ PY3 = first(sys.version_info) == 3
 if PY3:
     strings = str,
     integers = int,
+    long = int
     classes = type,
     native = texts = str
     binaries = bytes
