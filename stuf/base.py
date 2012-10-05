@@ -25,37 +25,6 @@ issequence = lambda x: isinstance(x, Sequence)
 ic = frozenset('()[]{}@,:`=;+*/%&|^><\'"#\\$?!~'.split())
 
 
-def checkname(name, ic=ic, ik=iskeyword):
-    '''Ensures `name` is legal for Python.'''
-    # Remove characters that are illegal in a Python name
-    name = name.strip().lower().replace('-', '_').replace(
-        '.', '_'
-    ).replace(' ', '_')
-    name = ''.join(i for i in name if i not in ic)
-    # add _ if value is Python keyword
-    return name + '_' if ik(name) else name
-
-
-def docit(callable, doc):
-    '''Add documentation to a callable.'''
-    callable.__doc__ = doc
-    return callable
-
-
-def importer(path, attribute=None, i=import_module, g=getattr):
-    '''Import module `path`, optionally with `attribute`.'''
-    try:
-        dot = path.rindex('.')
-        # import module
-        path = g(i(path[:dot]), path[dot + 1:])
-    # If nothing but module name, import the module
-    except (AttributeError, ValueError):
-        path = i(path)
-    if attribute:
-        path = g(path, attribute)
-    return path
-
-
 def backport(*paths):
     '''Go through import `paths` until one imports or everything fails.'''
     load = None
@@ -70,6 +39,17 @@ def backport(*paths):
     return load
 
 
+def checkname(name, ic=ic, ik=iskeyword):
+    '''Ensures `name` is legal for Python.'''
+    # Remove characters that are illegal in a Python name
+    name = name.strip().lower().replace('-', '_').replace(
+        '.', '_'
+    ).replace(' ', '_')
+    name = ''.join(i for i in name if i not in ic)
+    # add _ if value is Python keyword
+    return name + '_' if ik(name) else name
+
+
 def coroutine(func):
     '''The Dave Beazley co-routine decorator.'''
     def start(*args, **kw):
@@ -77,3 +57,23 @@ def coroutine(func):
         cr.next()
         return cr
     return start
+
+
+def docit(call, doc):
+    '''Add documentation to a callable.'''
+    call.__doc__ = doc
+    return call
+
+
+def importer(path, attribute=None, i=import_module, g=getattr):
+    '''Import module `path`, optionally with `attribute`.'''
+    try:
+        dot = path.rindex('.')
+        # import module
+        path = g(i(path[:dot]), path[dot + 1:])
+    # If nothing but module name, import the module
+    except (AttributeError, ValueError):
+        path = i(path)
+    if attribute:
+        path = g(path, attribute)
+    return path

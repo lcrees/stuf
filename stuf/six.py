@@ -138,6 +138,7 @@ _moved_attributes = [
     MovedAttribute('parse_qs', 'cgi', 'urllib.parse', 'parse_qs'),
     MovedAttribute('urlencode', 'urllib', 'urllib.parse', 'urlencode'),
     MovedAttribute('quote', 'urllib', 'urllib.parse'),
+    MovedAttribute('input', '__builtin__', 'builtins', 'raw_input', 'input'),
     MovedModule('builtins', '__builtin__'),
     MovedModule('configparser', 'ConfigParser'),
     MovedModule('copyreg', 'copy_reg'),
