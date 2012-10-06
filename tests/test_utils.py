@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 '''stuf utility tests'''
 
-from stuf.six import unittest, callable, next
+from stuf.six import unittest
 
 
 class TestUtils(unittest.TestCase):
@@ -71,11 +71,13 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(setter(foo, 'b', 1), 1)
 
     def test_deferfunc(self):
+        from stuf.six import next
         from stuf.iterable import deferfunc
         deferred = deferfunc(lambda: 1)
         self.assertEqual(next(deferred), 1)
 
     def test_deferiter(self):
+        from stuf.six import next
         from stuf.iterable import deferiter
         deferred = deferiter(iter([1, 2, 3]))
         self.assertEqual(next(deferred), 1)
@@ -85,12 +87,14 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(count([1, 2, 3]), 3)
 
     def test_breakcount(self):
+        from stuf.six import next
         from functools import partial
         from stuf.iterable import breakcount
         deferred = breakcount(partial(next, iter([1, 2, 3])), 2)
         self.assertEqual(list(deferred), [1, 2])
 
     def test_iterexcept(self):
+        from stuf.six import next
         from functools import partial
         from stuf.iterable import iterexcept
         deferred = iterexcept(
@@ -175,6 +179,7 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(foo.this, 1)
 
     def test_lazyimport(self):
+        from stuf.six import callable
         from stuf.utils import lazyimport
         fsum = lazyimport('math.fsum')
         self.assertTrue(callable(fsum))
