@@ -9,6 +9,8 @@ from functools import partial
 from importlib import import_module
 from operator import attrgetter, methodcaller, lt, gt
 
+from stuf.base import isfactory
+
 intern = backport('__builtin__.intern', 'sys.intern')
 OrderedDict = backport('collections.OrderedDict', 'ordereddict.OrderedDict')
 unittest = backport('unittest2', 'unittest')
@@ -59,6 +61,16 @@ else:
             # 64-bit
             MAXSIZE = int((1 << 63) - 1)
         del X
+
+# numbers
+isgtemax = docit(partial(gt, MAXSIZE), 'Less than max size?')
+isinteger = docit(isfactory(integers), 'is integer?')
+isltemax = docit(partial(lt, MAXSIZE), 'Greater than max size?')
+# strings
+isstring = docit(isfactory(strings), 'is string')
+isunicode = docit(isfactory(texts), 'is text?')
+isnative = docit(isfactory(native), 'is native string')
+isbinary = docit(isfactory(binaries), 'is binary?')
 
 
 class _LazyDescr(object):
@@ -128,10 +140,8 @@ _moved_attributes = [
     MovedAttribute(
         'zip_longest', 'itertools', 'itertools', 'izip_longest', 'zip_longest',
     ),
-    MovedAttribute('cStringIO', 'cStringIO', 'io', 'StringIO'),
     MovedAttribute('reload_module', '__builtin__', 'imp', 'reload'),
     MovedAttribute('reduce', '__builtin__', 'functools'),
-    MovedAttribute('StringIO', 'StringIO', 'io'),
     MovedAttribute('xrange', '__builtin__', 'builtins', 'xrange', 'range'),
     MovedAttribute('parsedate_tz', 'rfc822', 'email.utils', 'parsedate_tz'),
     MovedAttribute('formatdate', 'rfc822', 'email.utils', 'formatdate'),
@@ -223,12 +233,14 @@ keys = methodcaller(_iterkeys)
 method_func = attrgetter(_meth_func)
 method_self = attrgetter(_meth_self)
 values = methodcaller(_itervalues)
+getdoc = attrgetter('__doc__')
+getmod = attrgetter('__module__')
 
 if PY3:
-    b = lambda s: s.encode('latin-1')
+    b = methodcaller('encode', 'latin-1')
     u = identity
     if sys.version_info[1] <= 1:
-        int2byte = lambda i: bytes((i,))
+        int2byte = partial(lambda x, i: x((i,)), bytes)
     else:
         # This is about 2x faster than the implementation above on 3.2+
         int2byte = methodcaller('to_bytes', 1, 'big')
@@ -237,13 +249,14 @@ if PY3:
     BytesIO = io.BytesIO
 else:
     b = identity
-    u = lambda s: unicode(s, 'unicode_escape')
+    u = partial(lambda x, s: x(s, 'unicode_escape'), unicode)
     int2byte = chr
     import StringIO
     StringIO = BytesIO = StringIO.StringIO
 
 b = docit(b, 'Byte literal.')
 u = docit(u, 'Text literal.')
+
 
 if PY3:
     import builtins  # @UnresolvedImport
@@ -275,34 +288,33 @@ else:
         fp = kw.pop('file', sys.stdout)
         if fp is None:
             return
-
-        def write(data):
-            if not isinstance(data, basestring):
+        def write(data):  # @IgnorePep8
+            if not isstring(data):
                 data = str(data)
             fp.write(data)
         want_unicode = False
         sep = kw.pop('sep', None)
         if sep is not None:
-            if isinstance(sep, unicode):
+            if isunicode(sep):
                 want_unicode = True
-            elif not isinstance(sep, str):
+            elif not isbinary(sep):
                 raise TypeError('sep must be None or a string')
         end = kw.pop('end', None)
         if end is not None:
-            if isinstance(end, unicode):
+            if isunicode(end):
                 want_unicode = True
-            elif not isinstance(end, str):
+            elif not isbinary(end):
                 raise TypeError('end must be None or a string')
         if kw:
             raise TypeError('invalid keyword arguments to print()')
         if not want_unicode:
             for arg in args:
-                if isinstance(arg, unicode):
+                if isunicode(arg):
                     want_unicode = True
                     break
         if want_unicode:
-            newline = unicode('\n')
-            space = unicode(' ')
+            newline = texts('\n')
+            space = texts(' ')
         else:
             newline = '\n'
             space = ' '
@@ -331,15 +343,4 @@ def tounicode(thing, encoding='utf-8', errors='strict'):
 
 def tobytes(thing, encoding='utf-8', errors='strict'):
     '''Convert string `thing` to byte string `encoding`.'''
-    if isbinary(thing):
-        return thing
-    return texts(thing).encode(encoding, errors)
-
-# strings
-isstring = docit(lambda value: isinstance(value, strings), 'is string')
-isunicode = docit(lambda value: isinstance(value, texts), 'is text?')
-isbinary = docit(lambda value: isinstance(value, binaries), 'is binary?')
-# numbers
-isgtemax = docit(partial(gt, MAXSIZE), 'Less than max size?')
-isinteger = docit(lambda value: isinstance(value, integers), 'is integer?')
-isltemax = docit(partial(lt, MAXSIZE), 'Greater than max size?')
+    return thing if isbinary(thing) else texts(thing).encode(encoding, errors)

@@ -12,15 +12,18 @@ from collections import Sequence, Mapping
 one = lambda a, b: a(b)
 # two frame
 two = lambda a, b, *args: a(b(*args))
+# factory for "is" checkers
+isfactory = lambda x: partial(lambda x, y, z: x(z, y), isinstance, x)
+# next frame up
 getframe = partial(sys._getframe, 1)
 identity = lambda x: x
 isnone = lambda x, y: x if y is None else y
 first = itemgetter(0)
 second = itemgetter(1)
 last = itemgetter(-1)
-maporseq = lambda x: isinstance(x, (Mapping, Sequence))
-ismapping = lambda x: isinstance(x, Mapping)
-issequence = lambda x: isinstance(x, Sequence)
+maporseq = isfactory((Mapping, Sequence))
+ismapping = isfactory(Mapping)
+issequence = isfactory(Sequence)
 # illegal characters for Python names
 ic = frozenset('()[]{}@,:`=;+*/%&|^><\'"#\\$?!~'.split())
 
@@ -39,7 +42,7 @@ def backport(*paths):
     return load
 
 
-def checkname(name, ic=ic, ik=iskeyword):
+def checkname(name, ic=ic):
     '''Ensures `name` is legal for Python.'''
     # Remove characters that are illegal in a Python name
     name = name.strip().lower().replace('-', '_').replace(
@@ -47,7 +50,7 @@ def checkname(name, ic=ic, ik=iskeyword):
     ).replace(' ', '_')
     name = ''.join(i for i in name if i not in ic)
     # add _ if value is Python keyword
-    return name + '_' if ik(name) else name
+    return name + '_' if iskeyword(name) else name
 
 
 def coroutine(func):

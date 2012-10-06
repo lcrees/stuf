@@ -2,15 +2,16 @@
 '''stuf collections.'''
 
 import sys
-from collections import MutableMapping
 
 from stuf.deep import getcls
 from stuf.base import second, first
-from stuf.six import OrderedDict, items, map as imap, get_ident
+from stuf.six import OrderedDict, items
 
 try:
-    from reprlib import recursive_repr  # @UnusedImport
+    from reprlib import recursive_repr
 except ImportError:
+    from stuf.six import get_ident, getdoc, getmod, docit
+
     def recursive_repr(fillvalue='...'):
         def decorating_function(user_function):
             repr_running = set()
@@ -25,17 +26,19 @@ except ImportError:
                 finally:
                     repr_running.discard(key)
                 return result
-            # Can't use functools.wraps() here because of bootstrap issues
-            wrapper.__module__ = getattr(user_function, '__module__')
-            wrapper.__doc__ = getattr(user_function, '__doc__')
-#            wrapper.__name__ = getattr(user_function, '__name__')
+            wrapper.__module__ = getmod(user_function)
+            docit(wrapper, getdoc(user_function))
             return wrapper
         return decorating_function
 
-if not first(sys.version_info) == 2 and second(sys.version_info) < 7:
+version = sys.version_info
+if version[0] == 3 and version[1] > 1:
     from collections import Counter
 else:
     from heapq import nlargest
+    from stuf.deep import clsname
+    from stuf.base import ismapping
+    from itertools import chain, starmap, repeat
 
     class Counter(dict):
 
@@ -49,43 +52,215 @@ else:
             super(Counter, self).__init__()
             self.update(iterable, **kw)
 
+        def __missing__(self, key):
+            'The count of elements not in the Counter is zero.'
+            return 0
+
+        def __reduce__(self):
+            return getcls(self), (dict(self),)
+
+        def __delitem__(self, elem):
+            'Like dict.__delitem__() but does not raise KeyError for missing'
+            'values.'
+            if elem in self:
+                super(Counter, self).__delitem__(elem)
+
+        def __repr__(self):
+            if not self:
+                return '%s()' % clsname(self)
+            try:
+                items = ', '.join(map('%r: %r'.__mod__, self.most_common()))
+                return '%s({%s})' % (clsname(self), items)
+            except TypeError:
+                # handle case where values are not orderable
+                return '{0}({1!r})'.format(clsname(self), dict(self))
+
+        def __add__(self, other):
+            '''Add counts from two counters.'''
+            if not isinstance(other, Counter):
+                return NotImplemented
+            result = getcls(self)()
+            for elem, count in items(self):
+                newcount = count + other[elem]
+                if newcount > 0:
+                    result[elem] = newcount
+            for elem, count in items(other):
+                if elem not in self and count > 0:
+                    result[elem] = count
+            return result
+
+        def __sub__(self, other):
+            '''Subtract count, but keep only results with positive counts.'''
+            if not isinstance(other, Counter):
+                return NotImplemented
+            result = getcls(self)()
+            for elem, count in items(self):
+                newcount = count - other[elem]
+                if newcount > 0:
+                    result[elem] = newcount
+            for elem, count in items(other):
+                if elem not in self and count < 0:
+                    result[elem] = 0 - count
+            return result
+
+        def __or__(self, other):
+            '''
+            Union is the maximum of value in either of the input counters.
+            '''
+            if not isinstance(other, Counter):
+                return NotImplemented
+            result = getcls(self)()
+            for elem, count in items(self):
+                other_count = other[elem]
+                newcount = other_count if count < other_count else count
+                if newcount > 0:
+                    result[elem] = newcount
+            for elem, count in items(other):
+                if elem not in self and count > 0:
+                    result[elem] = count
+            return result
+
+        def __and__(self, other):
+            '''Intersection is the minimum of corresponding counts.'''
+            if not isinstance(other, Counter):
+                return NotImplemented
+            result = getcls(self)()
+            for elem, count in items(self):
+                other_count = other[elem]
+                newcount = count if count < other_count else other_count
+                if newcount > 0:
+                    result[elem] = newcount
+            return result
+
+        def __pos__(self):
+            '''
+            Adds an empty counter, effectively stripping negative and zero
+            counts.
+            '''
+            return self + getcls(self)()
+
+        def __neg__(self):
+            '''
+            Subtracts from an empty counter. Strips positive and zero counts,
+            and flips the sign on negative counts.
+            '''
+            return getcls(self)() - self
+
+        def _keep_positive(self):
+            '''
+            Internal method to strip elements with a negative or zero count
+            '''
+            for elem in (e for e, c in items(self) if not c > 0):
+                del self[elem]
+            return self
+
+        def __iadd__(self, other):
+            '''
+            Inplace add from another counter, keeping only positive counts.
+            '''
+            for elem, count in items(other):
+                self[elem] += count
+            return self._keep_positive()
+
+        def __isub__(self, other):
+            '''
+            Inplace subtract counter, but keep only results with positive
+            counts.
+            '''
+            for elem, count in items(other):
+                self[elem] -= count
+            return self._keep_positive()
+
+        def __ior__(self, other):
+            '''Inplace union is the maximum of value from either counter.'''
+            for elem, other_count in items(other):
+                count = self[elem]
+                if other_count > count:
+                    self[elem] = other_count
+            return self._keep_positive()
+
+        def __iand__(self, other):
+            '''Inplace intersection is the minimum of corresponding counts.'''
+            for elem, count in items(self):
+                other_count = other[elem]
+                if other_count < count:
+                    self[elem] = other_count
+            return self._keep_positive()
+
         def most_common(self, n=None, nl=nlargest, i=items, g=second):
             '''
             List the n most common elements and their counts from the most
-            common to the least
-
-            If n is None, then list all element counts.
+            common to the least. If n is None, then list all element counts.
             '''
-            # Emulate Bag.sortedByCount from Smalltalk
             if n is None:
                 return sorted(i(self), key=g, reverse=True)
             return nl(n, i(self), key=g)
 
-        def update(self, iterable=None):
-            '''like dict.update() but add counts instead of replacing them'''
+        def elements(self):
+            '''
+            Iterator over elements repeating each as many times as its count.
+            '''
+            return chain.from_iterable(starmap(repeat, items(self)))
+
+        @classmethod
+        def fromkeys(cls, iterable, v=None):
+            raise NotImplementedError(
+                'Counter.fromkeys() undefined. Use Counter(iterable) instead.'
+            )
+
+        def update(self, iterable=None, **kwds):
+            '''Like dict.update() but add counts instead of replacing them.'''
+            if iterable is not None:
+                if ismapping(iterable):
+                    if self:
+                        self_get = self.get
+                        for elem, count in items(iterable):
+                            self[elem] = count + self_get(elem, 0)
+                    else:
+                        super(Counter, self).update(iterable)
+                else:
+                    mapping_get = self.get
+                    for elem in iterable:
+                        self[elem] = mapping_get(elem, 0) + 1
+            if kwds:
+                self.update(kwds)
+
+        def subtract(self, iterable=None, **kwds):
+            '''
+            Like dict.update() but subtracts counts instead of replacing them.
+            Counts can be reduced below zero.  Both the inputs and outputs are
+            allowed to contain zero and negative counts.
+
+            Source can be an iterable, a dictionary, or another Counter
+            instance.
+            '''
             if iterable is not None:
                 self_get = self.get
-                for elem in iterable:
-                    self[elem] = self_get(elem, 0) + 1
+                if ismapping(iterable):
+                    for elem, count in items(iterable):
+                        self[elem] = self_get(elem, 0) - count
+                else:
+                    for elem in iterable:
+                        self[elem] = self_get(elem, 0) - 1
+            if kwds:
+                self.subtract(kwds)
 
+        def copy(self):
+            'Return a shallow copy.'
+            return getcls(self)(self)
 
 try:
     from collections import ChainMap  # @UnusedImport
 except ImportError:
+    from stuf.six import map as imap
+    from collections import MutableMapping
+
     # not until Python >= 3.3
     class ChainMap(MutableMapping):
 
         '''
         `ChainMap` groups multiple dicts (or other mappings) together to create
         a single, updateable view.
-
-        The underlying mappings are stored in a `list`. That `list` is public
-        and can accessed or updated using the `maps` attribute. There is no
-        other state.
-
-        Lookups search the underlying mappings successively until a key is
-        found. In contrast, writes, updates, and deletions only operate on the
-        first mapping.
         '''
 
         def __init__(self, *maps):

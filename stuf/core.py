@@ -6,15 +6,22 @@ from operator import methodcaller, attrgetter
 from collections import Mapping, MutableMapping, defaultdict, namedtuple
 
 from stuf import exhaustitems
-from stuf.desc import lazy_class
 from stuf.iterable import exhaust
+from stuf.desc import lazy_class, lazy
 from stuf.deep import clsname, getcls, clsdict
 from stuf.collects import OrderedDict, recursive_repr
 from stuf.base import issequence, ismapping, maporseq
-from stuf.six import items, map, getvalues, getitems, getkeys, isstring
+from stuf.six import map, getvalues, getitems, getkeys, isstring
 
 __all__ = 'defaultstuf fixedstuf frozenstuf orderedstuf stuf'.split()
+
 wraps = attrgetter('_wrapped')
+delitem = attrgetter('_wrapped.__delitem__')
+getitem = attrgetter('_wrapped.__getitem__')
+setitem = attrgetter('_wrapped.__setitem__')
+length = attrgetter('_wrapped.__len__')
+_iter = attrgetter('_wrapped.__iter__')
+asdict = attrgetter('_wrapped._asdict')
 
 
 class corestuf(object):
@@ -47,20 +54,13 @@ class corestuf(object):
 
     @classmethod
     def _build(cls, iterable):
-        kind = cls._map
         # add class to handle potential nested objects of the same class
-        kw = kind()
-        update = kw.update
+        kw = cls._map()
         if ismapping(iterable):
-            update(kind(items(iterable)))
+            kw.update(iterable)
         elif issequence(iterable):
             # extract appropriate key-values from sequence
-            def closure(arg, update=update):
-                try:
-                    update(arg)
-                except (ValueError, TypeError):
-                    pass
-            exhaust(map(closure, iterable))
+            exhaust(map(kw.update, iterable))
         return kw
 
     @classmethod
@@ -71,25 +71,25 @@ class corestuf(object):
     def _new(cls, iterable):
         return cls(cls._build(iterable))
 
+    def _prepop(self, *args, **kw):
+        kw.update(self._build(args))
+        return kw
+
     @classmethod
-    def _populate(cls, past, future):
+    def _pop(cls, past, future):
         def closure(key, value, new=cls._new):
             if maporseq(value) and not isstring(value):
                 # see if stuf can be converted to nested stuf
                 trial = new(value)
-                future[key] = trial if len(trial) > 0 else value
+                future[key] = trial if trial else value
             else:
                 future[key] = value
         exhaustitems(closure, past)
-        return cls._postpopulate(future)
+        return cls._postpop(future)
 
     @classmethod
-    def _postpopulate(cls, future):
+    def _postpop(cls, future):
         return future
-
-    def _prepopulate(self, *args, **kw):
-        kw.update(self._build(args))
-        return kw
 
     def copy(self):
         return self._new(self._map(self))
@@ -117,61 +117,54 @@ class writestuf(corestuf):
                 raise AttributeError(key)
 
     def update(self, *args, **kw):
-        self._populate(self._prepopulate(*args, **kw), self)
-
-
-class directstuf(writestuf):
-
-    __init__ = writestuf.update
+        self._pop(self._prepop(*args, **kw), self)
 
 
 class wrapstuf(corestuf):
 
     def __init__(self, *args, **kw):
-        '''
-        :param *args: iterable of keys/value pairs
-        :param **kw: keyword arguments
-        '''
         super(wrapstuf, self).__init__()
-        self._wrapped = self._populate(
-            self._prepopulate(*args, **kw), self._map(),
-        )
+        self._wrapped = self._pop(self._prepop(*args, **kw), self._map())
 
     @classmethod
-    def _postpopulate(cls, future):
+    def _postpop(cls, future):
         return cls._mapping(future)
 
 
 class writewrapstuf(wrapstuf, writestuf, MutableMapping):
 
-    def __getitem__(self, key):
-        return wraps(self)[key]
+    @lazy
+    def __getitem__(self):
+        return getitem(self)
 
-    def __setitem__(self, key, value):
-        wraps(self)[key] = value
+    @lazy
+    def __setitem__(self):
+        return setitem(self)
 
-    def __delitem__(self, key):
-        del wraps(self)[key]
+    @lazy
+    def __delitem__(self):
+        return delitem(self)
 
+    @lazy
     def __iter__(self):
-        return iter(wraps(self))
+        return _iter(self)
 
+    @lazy
     def __len__(self):
-        return len(wraps(self))
-
-    def clear(self):
-        wraps(self).clear()
+        return length(self)
 
     def __reduce__(self):
         return (getcls(self), (wraps(self).copy(),))
 
 
-class defaultstuf(directstuf, defaultdict):
+class defaultstuf(writestuf, defaultdict):
 
     '''
     Dictionary with attribute-style access and a factory function to provide a
     default value for keys with no value.
     '''
+
+    __slots__ = []
 
     _map = defaultdict
 
@@ -182,7 +175,7 @@ class defaultstuf(directstuf, defaultdict):
         :param **kw: keyword arguments
         '''
         defaultdict.__init__(self, default)
-        directstuf.__init__(self, *args, **kw)
+        writestuf.update(self, *args, **kw)
 
     @classmethod
     def _build(cls, default, iterable):
@@ -206,7 +199,11 @@ class defaultstuf(directstuf, defaultdict):
     def _new(cls, default, iterable):
         return cls(default, cls._build(default, iterable))
 
-    def _populate(self, past, future):
+    def _prepop(self, *args, **kw):
+        kw.update(self._build(self.default_factory, args))
+        return kw
+
+    def _pop(self, past, future):
         def closure(key, value, new=self._new, default=self.default_factory):
             if maporseq(value):
                 # see if stuf can be converted to nested stuf
@@ -215,10 +212,6 @@ class defaultstuf(directstuf, defaultdict):
             else:
                 future[key] = value
         exhaustitems(closure, past)
-
-    def _prepopulate(self, *args, **kw):
-        kw.update(self._build(self.default_factory, args))
-        return kw
 
     def copy(self):
         return self._new(self.default_factory, dict(self))
@@ -238,10 +231,13 @@ class fixedstuf(writewrapstuf):
         else:
             raise KeyError('key "{0}" not allowed'.format(key))
 
-    def _prepopulate(self, *args, **kw):
-        iterable = super(fixedstuf, self)._prepopulate(*args, **kw)
+    def _prepop(self, *args, **kw):
+        iterable = super(fixedstuf, self)._prepop(*args, **kw)
         self.allowed = frozenset(iterable)
         return iterable
+
+    def clear(self):
+        wraps(self).clear()
 
     def popitem(self):
         raise AttributeError()
@@ -263,13 +259,13 @@ class frozenstuf(wrapstuf, Mapping):
             raise KeyError('key {0} not found'.format(key))
 
     def __iter__(self):
-        return iter(wraps(self)._asdict())
+        return iter(asdict(self)())
 
     def __len__(self):
-        return len(wraps(self)._asdict())
+        return len(asdict(self)())
 
     def __reduce__(self):
-        return (getcls(self), (wraps(self)._asdict().copy(),))
+        return (getcls(self), (asdict(self)().copy(),))
 
     @classmethod
     def _mapping(self, mapping):
@@ -282,10 +278,14 @@ class orderedstuf(writewrapstuf):
 
     _mapping = OrderedDict
 
+    @lazy
     def __reversed__(self):
-        return wraps(self).__reversed__()
+        return wraps(self).__reversed__
 
 
-class stuf(directstuf, dict):
+class stuf(writestuf, dict):
 
     '''Dictionary with attribute-style access.'''
+
+    __slots__ = []
+    __init__ = writestuf.update
