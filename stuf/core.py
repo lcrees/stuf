@@ -6,12 +6,12 @@ from operator import methodcaller, attrgetter
 from collections import Mapping, MutableMapping, defaultdict, namedtuple
 
 from stuf import exhaustitems
-from stuf.iterable import exhaust
+from stuf.iterable import exhaustcall
 from stuf.desc import lazy_class, lazy
 from stuf.deep import clsname, getcls, clsdict
 from stuf.collects import OrderedDict, recursive_repr
 from stuf.base import issequence, ismapping, maporseq
-from stuf.six import map, getvalues, getitems, getkeys, isstring
+from stuf.six import getvalues, getitems, getkeys, isstring
 
 __all__ = 'defaultstuf fixedstuf frozenstuf orderedstuf stuf'.split()
 
@@ -52,32 +52,28 @@ class corestuf(object):
             iter(vars(self)), iter(vars(getcls(self))), self._reserved,
         ))
 
-    @classmethod
-    def _build(cls, iterable):
+    def _build(self, iterable):
         # add class to handle potential nested objects of the same class
-        kw = cls._map()
+        kw = self._map()
         if ismapping(iterable):
             kw.update(iterable)
         elif issequence(iterable):
             # extract appropriate key-values from sequence
-            exhaust(map(kw.update, iterable))
+            exhaustcall(kw.update, iterable)
         return kw
 
-    @classmethod
-    def _mapping(cls, iterable):
-        return cls._map(iterable)
+    def _mapping(self, iterable):
+        return self._map(iterable)
 
-    @classmethod
-    def _new(cls, iterable):
-        return cls(cls._build(iterable))
+    def _new(self, iterable):
+        return getcls(self)(self._build(iterable))
 
     def _prepop(self, *args, **kw):
         kw.update(self._build(args))
         return kw
 
-    @classmethod
-    def _pop(cls, past, future):
-        def closure(key, value, new=cls._new):
+    def _pop(self, past, future):
+        def closure(key, value, new=self._new):
             if maporseq(value) and not isstring(value):
                 # see if stuf can be converted to nested stuf
                 trial = new(value)
@@ -85,14 +81,13 @@ class corestuf(object):
             else:
                 future[key] = value
         exhaustitems(closure, past)
-        return cls._postpop(future)
+        return self._postpop(future)
 
-    @classmethod
-    def _postpop(cls, future):
+    def _postpop(self, future):
         return future
 
     def copy(self):
-        return self._new(self._map(self))
+        return self._new(dict(self))
 
 
 class writestuf(corestuf):
@@ -126,9 +121,8 @@ class wrapstuf(corestuf):
         super(wrapstuf, self).__init__()
         self._wrapped = self._pop(self._prepop(*args, **kw), self._map())
 
-    @classmethod
-    def _postpop(cls, future):
-        return cls._mapping(future)
+    def _postpop(self, future):
+        return self._mapping(future)
 
 
 class writewrapstuf(wrapstuf, writestuf, MutableMapping):
@@ -177,44 +171,24 @@ class defaultstuf(writestuf, defaultdict):
         defaultdict.__init__(self, default)
         writestuf.update(self, *args, **kw)
 
-    @classmethod
-    def _build(cls, default, iterable):
-        kind = cls._map
+    def _build(self, iterable):
+        kind = self._map
         # add class to handle potential nested objects of the same class
-        kw = kind(default)
-        update = kw.update
+        kw = kind(self.default_factory)
         if ismapping(iterable):
-            update(kind(default, iterable))
+            kw.update(kind(self.default_factory, iterable))
         elif issequence(iterable):
             # extract appropriate key-values from sequence
-            def closure(arg):
+            def closure(arg, update=kw.update):
                 try:
                     update(arg)
                 except (ValueError, TypeError):
                     pass
-            exhaust(map(closure, iterable))
+            exhaustcall(closure, iterable)
         return kw
 
-    @classmethod
-    def _new(cls, default, iterable):
-        return cls(default, cls._build(default, iterable))
-
-    def _prepop(self, *args, **kw):
-        kw.update(self._build(self.default_factory, args))
-        return kw
-
-    def _pop(self, past, future):
-        def closure(key, value, new=self._new, default=self.default_factory):
-            if maporseq(value):
-                # see if stuf can be converted to nested stuf
-                trial = new(default, value)
-                future[key] = trial if len(trial) > 0 else value
-            else:
-                future[key] = value
-        exhaustitems(closure, past)
-
-    def copy(self):
-        return self._new(self.default_factory, dict(self))
+    def _new(self, iterable):
+        return getcls(self)(self.default_factory, self._build(iterable))
 
 
 class fixedstuf(writewrapstuf):
