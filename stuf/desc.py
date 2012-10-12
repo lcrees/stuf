@@ -6,7 +6,7 @@ from functools import update_wrapper, partial
 
 from stuf.six import items
 from stuf import exhaustitems
-from stuf.deep import selfname, setter, getcls
+from stuf.deep import selfname, setter, getcls, setpart
 
 
 class lazybase(object):
@@ -151,3 +151,12 @@ class ContextMixin(ResetMixin):
 
     def __enter__(self):
         return self
+
+
+class Setter(object):
+
+    '''Partial setter.'''
+
+    @lazypartial
+    def _setter(self):
+        return setpart, self

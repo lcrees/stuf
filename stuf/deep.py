@@ -66,10 +66,10 @@ def setter(this, key, value):
     # it's an instance
     try:
         this.__dict__[key] = value
-        return value
     # it's a class
     except TypeError:
         setattr(this, key, value)
+    else:
         return value
 
 
@@ -78,10 +78,10 @@ def setthis(this, key, value):
     # it's an instance
     try:
         this.__dict__[key] = value
-        return this
     # it's a class
     except TypeError:
         setattr(this, key, value)
+    else:
         return this
 
 
@@ -91,3 +91,17 @@ def setdefault(this, key, default=None):
         return getter(this, key)
     except AttributeError:
         return setter(this, key, default)
+
+
+def setpart(this, key, method, *args):
+    '''
+    Set attribute `key` on `this` to partial method and return partial method.
+    '''
+    part = partial(method, *args)
+    try:
+        this.__dict__[key] = part
+    # it's a class
+    except TypeError:
+        setattr(this, key, part)
+    else:
+        return part

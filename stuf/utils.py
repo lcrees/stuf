@@ -2,9 +2,9 @@
 '''stuf utilities.'''
 
 from threading import Lock
-from itertools import count
 from pickletools import genops
 from unicodedata import normalize
+from itertools import count, repeat
 from functools import update_wrapper, partial
 
 from stuf.base import importer, first
@@ -18,6 +18,8 @@ one = partial(rcompile(r'[^\w\s-]').sub, '')
 two = partial(rcompile(r'[-\s]+').sub, '-')
 # count
 count = partial(next, count())
+# light range
+lrange = partial(repeat, None)
 
 
 def diff(current, past):
