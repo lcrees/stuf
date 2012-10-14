@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 '''stuf utilities.'''
 
+from uuid import uuid4
 from threading import Lock
 from pickletools import genops
 from unicodedata import normalize
@@ -20,6 +21,10 @@ two = partial(rcompile(r'[-\s]+').sub, '-')
 count = partial(next, count())
 # light range
 lrange = partial(repeat, None)
+# unique identifier selection
+unique_id = lambda: b(uuid4().get_hex().upper())
+# return one or all values
+oneorall = lambda value: value[0] if len(value) == 1 else value
 
 
 def diff(current, past):

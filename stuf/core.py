@@ -9,9 +9,8 @@ from stuf import exhaustitems
 from stuf.iterable import exhaustcall
 from stuf.desc import lazy_class, lazy
 from stuf.deep import clsname, getcls, clsdict
+from stuf.six import getvalues, getitems, getkeys
 from stuf.collects import OrderedDict, recursive_repr
-from stuf.base import issequence, ismapping, maporseq
-from stuf.six import getvalues, getitems, getkeys, isstring
 
 __all__ = 'defaultstuf fixedstuf frozenstuf orderedstuf stuf'.split()
 
@@ -54,12 +53,12 @@ class corestuf(object):
 
     def _build(self, iterable):
         # add class to handle potential nested objects of the same class
-        kw = self._map()
-        if ismapping(iterable):
-            kw.update(iterable)
-        elif issequence(iterable):
+        try:
+            kw = self._map()
             # extract appropriate key-values from sequence
             exhaustcall(kw.update, iterable)
+        except ValueError:
+            kw.update(iterable)
         return kw
 
     def _mapping(self, iterable):
@@ -74,12 +73,14 @@ class corestuf(object):
 
     def _pop(self, past, future):
         def closure(key, value, new=self._new):
-            if maporseq(value) and not isstring(value):
-                # see if stuf can be converted to nested stuf
-                trial = new(value)
-                future[key] = trial if trial else value
-            else:
-                future[key] = value
+            try:
+                if not hasattr(value, 'capitalize'):
+                    # see if stuf can be converted to nested stuf
+                    trial = new(value)
+                    value = trial if trial else value
+            except (TypeError, IOError):
+                pass
+            future[key] = value
         exhaustitems(closure, past)
         return self._postpop(future)
 
@@ -172,19 +173,14 @@ class defaultstuf(writestuf, defaultdict):
         writestuf.update(self, *args, **kw)
 
     def _build(self, iterable):
-        kind = self._map
         # add class to handle potential nested objects of the same class
-        kw = kind(self.default_factory)
-        if ismapping(iterable):
-            kw.update(kind(self.default_factory, iterable))
-        elif issequence(iterable):
+        try:
+            kind = self._map
+            kw = kind(self.default_factory)
             # extract appropriate key-values from sequence
-            def closure(arg, update=kw.update):
-                try:
-                    update(arg)
-                except (ValueError, TypeError):
-                    pass
-            exhaustcall(closure, iterable)
+            exhaustcall(kw.update, iterable)
+        except (ValueError, TypeError):
+            kw.update(kind(self.default_factory, iterable))
         return kw
 
     def _new(self, iterable):

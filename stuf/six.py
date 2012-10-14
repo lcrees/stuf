@@ -256,8 +256,8 @@ else:
     import StringIO
     StringIO = BytesIO = StringIO.StringIO
 
-b = docit(b, 'Byte literal.')
-u = docit(u, 'Text literal.')
+#b = docit(b, 'Byte literal.')
+#u = docit(u, 'Text literal.')
 
 
 if PY3:

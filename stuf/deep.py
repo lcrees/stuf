@@ -69,6 +69,7 @@ def setter(this, key, value):
     # it's a class
     except TypeError:
         setattr(this, key, value)
+        return value
     else:
         return value
 
@@ -81,6 +82,7 @@ def setthis(this, key, value):
     # it's a class
     except TypeError:
         setattr(this, key, value)
+        return this
     else:
         return this
 
