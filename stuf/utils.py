@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 '''stuf utilities.'''
 
+from uuid import uuid4
 from threading import Lock
-from itertools import count
 from pickletools import genops
 from unicodedata import normalize
+from itertools import count, repeat
 from functools import update_wrapper, partial
 
 from stuf.base import importer, first
@@ -18,6 +19,12 @@ one = partial(rcompile(r'[^\w\s-]').sub, '')
 two = partial(rcompile(r'[-\s]+').sub, '-')
 # count
 count = partial(next, count())
+# light range
+lrange = partial(repeat, None)
+# unique identifier selection
+unique_id = lambda: b(uuid4().get_hex().upper())
+# return one or all values
+oneorall = lambda value: value[0] if len(value) == 1 else value
 
 
 def diff(current, past):

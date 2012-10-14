@@ -187,6 +187,13 @@ class Base(object):
         self.assertEqual(self.stuf['test2'], 6)
         self.assertEqual(self.stuf['test3'], dict(f=2), self.stuf)
 
+    def test_nofile(self):
+        import sys
+        s = self._impone(a=sys.stdout, b=1)
+        self.assertEqual(s.a, sys.stdout)
+        t = self._impone(a=[sys.stdout], b=1)
+        self.assertEqual(t.a, [sys.stdout])
+
 
 class TestStuf(Base, unittest.TestCase):
 
@@ -261,6 +268,13 @@ class TestDefaultStuf(Base, unittest.TestCase):
         self.assertEqual(self.stuf['test1'], [])
         self.assertEqual(self.stuf['test2'], [])
         self.assertEqual(self.stuf['test3'], [])
+
+    def test_nofile(self):
+        import sys
+        s = self._impone(list, a=sys.stdout, b=1)
+        self.assertEqual(s.a, sys.stdout)
+        t = self._impone(list, a=[sys.stdout], b=1)
+        self.assertEqual(t.a, [sys.stdout])
 
 
 class TestFixedStuf(Base, unittest.TestCase):

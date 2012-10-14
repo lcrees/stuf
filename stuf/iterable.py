@@ -7,9 +7,9 @@ from itertools import starmap
 from stuf.six import items, map, next
 
 
-def _xhaust(call, iterable, exception=StopIteration, n=next, map=map):
+def _xhaust(mapfunc, call, iterable, exception=StopIteration, n=next):
     '''Call function `call` on an `iterable` until it's exhausted.'''
-    iterable = map(call, iterable)
+    iterable = mapfunc(call, iterable)
     try:
         while 1:
             n(iterable)
@@ -24,16 +24,16 @@ def breakcount(call, length):
         length -= 1
 
 
-def count(iterable, enumerate=enumerate, next=next, S=StopIteration):
+def count(iterable, _n=next, S=StopIteration):
     '''Lazily calculate number of items in `iterable`.'''
     counter = enumerate(iterable, 1)
     idx = ()
     while 1:
         try:
-            idx = next(counter)
+            idx = _n(counter)
         except S:
             try:
-                return next(iter(idx))
+                return _n(iter(idx))
             except S:
                 return 0
 
@@ -95,8 +95,8 @@ def iterexcept(call, exception, start=None):
 partmap = partial(
     lambda m, p, c, d, *a, **k: m(p(c, *a, **k), d), map, partial,
 )
-exhaustcall = partial(_xhaust, map=map)
-exhauststar = partial(_xhaust, map=starmap)
+exhaustcall = partial(_xhaust, map)
+exhauststar = partial(_xhaust, starmap)
 xpartmap = partial(
     lambda x, b, c, d, *a, **k: x(b(c, *a, **k), d), exhaustcall, partial,
 )

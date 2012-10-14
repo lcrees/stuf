@@ -35,15 +35,15 @@ if PY3:
     integers = int,
     long = int
     classes = type,
-    native = texts = str
-    binaries = bytes
+    utfme = native = texts = str
+    byteme = binaries = bytes
     MAXSIZE = sys.maxsize
 else:
     strings = basestring,
     integers = (int, long)
     classes = (type, types.ClassType)
-    texts = unicode
-    native = binaries = str
+    utfme = texts = unicode
+    byteme = native = binaries = str
     if sys.platform == "java":
         # Jython always uses 32 bits.
         MAXSIZE = int((1 << 31) - 1)
@@ -68,9 +68,9 @@ isinteger = docit(isfactory(integers), 'is integer?')
 isltemax = docit(partial(lt, MAXSIZE), 'Greater than max size?')
 # strings
 isstring = docit(isfactory(strings), 'is string')
-isunicode = docit(isfactory(texts), 'is text?')
+isunicode = docit(isfactory(utfme), 'is text?')
 isnative = docit(isfactory(native), 'is native string')
-isbinary = docit(isfactory(binaries), 'is binary?')
+isbinary = isbytes = docit(isfactory(byteme), 'is binary?')
 
 
 class _LazyDescr(object):
@@ -212,10 +212,12 @@ except NameError:
 next = advance_iterator
 
 if PY3:
+    range = range
     unbound_function = identity
     Iterator = object
     callable = lambda o: any('__call__' in k.__dict__ for k in type(o).__mro__)
 else:
+    range = xrange
     callable = callable
     unbound_function = attrgetter('im_func')
 
@@ -254,8 +256,8 @@ else:
     import StringIO
     StringIO = BytesIO = StringIO.StringIO
 
-b = docit(b, 'Byte literal.')
-u = docit(u, 'Text literal.')
+#b = docit(b, 'Byte literal.')
+#u = docit(u, 'Text literal.')
 
 
 if PY3:
@@ -297,13 +299,13 @@ else:
         if sep is not None:
             if isunicode(sep):
                 want_unicode = True
-            elif not isbinary(sep):
+            elif not isbytes(sep):
                 raise TypeError('sep must be None or a string')
         end = kw.pop('end', None)
         if end is not None:
             if isunicode(end):
                 want_unicode = True
-            elif not isbinary(end):
+            elif not isbytes(end):
                 raise TypeError('end must be None or a string')
         if kw:
             raise TypeError('invalid keyword arguments to print()')
@@ -313,8 +315,8 @@ else:
                     want_unicode = True
                     break
         if want_unicode:
-            newline = texts('\n')
-            space = texts(' ')
+            newline = utfme('\n')
+            space = utfme(' ')
         else:
             newline = '\n'
             space = ' '
@@ -336,11 +338,11 @@ def with_metaclass(meta, base=object):
 
 def tounicode(thing, encoding='utf-8', errors='strict'):
     '''Convert string `thing` to unicode string with `encoding`.'''
-    if isbinary(thing):
+    if isbytes(thing):
         return thing.decode(encoding, errors)
-    return texts(texts(thing).encode(encoding, errors), encoding, errors)
+    return utfme(utfme(thing).encode(encoding, errors), encoding, errors)
 
 
 def tobytes(thing, encoding='utf-8', errors='strict'):
     '''Convert string `thing` to byte string `encoding`.'''
-    return thing if isbinary(thing) else texts(thing).encode(encoding, errors)
+    return thing if isbytes(thing) else utfme(thing).encode(encoding, errors)
