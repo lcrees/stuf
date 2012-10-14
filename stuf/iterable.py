@@ -92,17 +92,13 @@ def iterexcept(call, exception, start=None):
         pass
 
 
-partmap = partial(
-    lambda m, p, c, d, *a, **k: m(p(c, *a, **k), d), map, partial,
-)
+_part = lambda m, p, c, d, *a, **k: m(p(c, *a, **k), d)
+partmap = partial(_part, map, partial,)
+partstar = partial(_part, starmap, partial)
 exhaustcall = partial(_xhaust, map)
 exhauststar = partial(_xhaust, starmap)
-xpartmap = partial(
-    lambda x, b, c, d, *a, **k: x(b(c, *a, **k), d), exhaustcall, partial,
-)
-xpartstar = partial(
-    lambda x, b, c, d, *a, **k: x(b(c, *a, **k), d), exhauststar, partial,
-)
+xpartmap = partial(_part, exhaustcall, partial)
+xpartstar = partial(_part, exhauststar, partial)
 xpartitems = partial(
     lambda x, p, c, i, f=None, *a, **k: x(p(c, *a, **k), i, f),
     exhaustmap,
