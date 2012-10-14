@@ -152,16 +152,16 @@ class writewrapstuf(wrapstuf, writestuf, MutableMapping):
         return (getcls(self), (wraps(self).copy(),))
 
 
-#class chainstuf(writewrapstuf):
-#
-#    _mapping = ChainMap
-#
-#    @lazy
-#    def maps(self):
-#        return wraps(self).maps
-#
-#    def new_child(self):
-#        return getcls(self)({}, *self.maps)
+class chainstuf(writewrapstuf):
+
+    _mapping = ChainMap
+
+    @lazy
+    def maps(self):
+        return wraps(self).maps
+
+    def new_child(self):
+        return getcls(self)({}, *self.maps)
 
 
 class countstuf(writestuf, Counter):
