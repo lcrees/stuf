@@ -17,6 +17,7 @@ isfactory = lambda x: partial(lambda x, y, z: x(z, y), isinstance, x)
 # next frame up
 getframe = partial(sys._getframe, 1)
 identity = lambda x: x
+dualidentity = lambda x, y: (x, y)
 isnone = lambda x, y: x if y is None else y
 first = itemgetter(0)
 second = itemgetter(1)
