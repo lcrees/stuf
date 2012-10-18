@@ -9,7 +9,7 @@ from functools import partial
 from importlib import import_module
 from operator import attrgetter, methodcaller, lt, gt
 
-from stuf.base import isfactory, norm
+from stuf.base import isfactory
 
 intern = backport('__builtin__.intern', 'sys.intern')
 OrderedDict = backport('collections.OrderedDict', 'ordereddict.OrderedDict')
@@ -339,7 +339,7 @@ def with_metaclass(meta, base=object):
 def tounicode(thing, encoding='utf-8', errors='strict'):
     '''Convert string `thing` to unicode string with `encoding`.'''
     if isbytes(thing):
-        return norm(thing).decode(encoding, errors)
+        return thing.decode(encoding, errors)
     return utfme(utfme(thing).encode(encoding, errors), encoding, errors)
 
 
@@ -347,4 +347,4 @@ def tobytes(thing, encoding='utf-8', errors='strict'):
     '''Convert string `thing` to byte string `encoding`.'''
     if isbytes(thing):
         return thing
-    return utfme(norm(thing)).encode(encoding, errors)
+    return utfme(thing).encode(encoding, errors)
