@@ -4,15 +4,13 @@
 from uuid import uuid4
 from threading import Lock
 from pickletools import genops
-from unicodedata import normalize
 from itertools import count, repeat
 from functools import update_wrapper, partial
 
-from stuf.base import importer, first
+from stuf.base import importer, first, norm
 from stuf.six import (
     PY3, items, isstring, func_code, b, next, intern, rcompile, pickle, u)
 
-norm = partial(normalize, 'NFKD')
 # first slug pattern
 one = partial(rcompile(r'[^\w\s-]').sub, '')
 # second slug pattern
