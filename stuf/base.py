@@ -5,6 +5,7 @@ import sys
 from functools import partial
 from keyword import iskeyword
 from operator import itemgetter
+from unicodedata import normalize
 from importlib import import_module
 from collections import Sequence, Mapping
 
@@ -25,6 +26,7 @@ last = itemgetter(-1)
 maporseq = isfactory((Mapping, Sequence))
 ismapping = isfactory(Mapping)
 issequence = isfactory(Sequence)
+norm = partial(normalize, 'NFKD')
 # illegal characters for Python names
 ic = frozenset('()[]{}@,:`=;+*/%&|^><\'"#\\$?!~'.split())
 
