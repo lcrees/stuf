@@ -22,7 +22,7 @@ count = partial(next, count())
 # light range
 lrange = partial(repeat, None)
 # unique identifier selection
-unique_id = lambda: b(uuid4().get_hex().upper())
+unique_id = lambda: b(uuid4().hex.upper())
 # return one or all values
 oneorall = lambda value: value[0] if len(value) == 1 else value
 
