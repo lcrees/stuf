@@ -5,5 +5,5 @@ from stuf.iterable import (
     exhaustmap as exhaustitems, exhaustcall as exhaustmap, exhauststar)
 from stuf.core import defaultstuf, fixedstuf, frozenstuf, orderedstuf, stuf
 
-__version__ = (0, 9, 7)
+__version__ = (0, 9, 8)
 __all__ = 'defaultstuf fixedstuf frozenstuf orderedstuf stuf'.split()

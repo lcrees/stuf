@@ -44,7 +44,7 @@ else:
     classes = (type, types.ClassType)
     utfme = texts = unicode
     byteme = native = binaries = str
-    if sys.platform == "java":
+    if sys.platform == 'java':
         # Jython always uses 32 bits.
         MAXSIZE = int((1 << 31) - 1)
     else:
@@ -345,4 +345,6 @@ def tounicode(thing, encoding='utf-8', errors='strict'):
 
 def tobytes(thing, encoding='utf-8', errors='strict'):
     '''Convert string `thing` to byte string `encoding`.'''
-    return thing if isbytes(thing) else utfme(thing).encode(encoding, errors)
+    if isbytes(thing):
+        return thing
+    return utfme(thing).encode(encoding, errors)

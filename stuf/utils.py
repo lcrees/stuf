@@ -4,15 +4,13 @@
 from uuid import uuid4
 from threading import Lock
 from pickletools import genops
-from unicodedata import normalize
 from itertools import count, repeat
 from functools import update_wrapper, partial
 
-from stuf.base import importer, first
+from stuf.base import importer, first, norm
 from stuf.six import (
     PY3, items, isstring, func_code, b, next, intern, rcompile, pickle, u)
 
-norm = partial(normalize, 'NFKD')
 # first slug pattern
 one = partial(rcompile(r'[^\w\s-]').sub, '')
 # second slug pattern
@@ -22,7 +20,7 @@ count = partial(next, count())
 # light range
 lrange = partial(repeat, None)
 # unique identifier selection
-unique_id = lambda: b(uuid4().get_hex().upper())
+unique_id = lambda: b(uuid4().hex.upper())
 # return one or all values
 oneorall = lambda value: value[0] if len(value) == 1 else value
 
