@@ -341,14 +341,14 @@ def tounicode(thing, encoding='utf-8', errors='strict'):
     if isbytes(thing):
         return thing.decode(encoding, errors)
     elif isunicode(thing):
-        return norm(utfme(thing)).encode(encoding, errors)
+        return norm(utfme(thing)).decode(encoding, errors)
     return utfme(utfme(thing).encode(encoding, errors), encoding, errors)
 
 
 def tobytes(thing, encoding='utf-8', errors='strict'):
     '''Convert string `thing` to byte string `encoding`.'''
     if isbytes(thing):
-        return thing
+        return thing.encode(encoding, errors)
     elif isunicode(thing):
-        return utfme(norm(thing)).encode(encoding, errors)
+        return norm(utfme(thing)).encode(encoding, errors)
     return utfme(thing).encode(encoding, errors)
