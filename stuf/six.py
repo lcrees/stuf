@@ -339,9 +339,9 @@ def with_metaclass(meta, base=object):
 def tounicode(thing, encoding='utf-8', errors='strict'):
     '''Convert string `thing` to unicode string with `encoding`.'''
     if isbytes(thing):
-        return norm(thing.decode(encoding, errors))
+        return thing.decode(encoding, errors)
     elif isunicode:
-        return norm(utfme).encode(encoding, errors)
+        return norm(utfme(thing)).encode(encoding, errors)
     return utfme(utfme(thing).encode(encoding, errors), encoding, errors)
 
 
