@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 '''Utilities for writing code that runs on Python 2 and 3.'''
 
-from stuf.base import first, docit, identity, getframe, backport
+from stuf.base import first, docit, identity, getframe, backport, norm
 
 import sys
 import types
@@ -339,7 +339,9 @@ def with_metaclass(meta, base=object):
 def tounicode(thing, encoding='utf-8', errors='strict'):
     '''Convert string `thing` to unicode string with `encoding`.'''
     if isbytes(thing):
-        return thing.decode(encoding, errors)
+        return norm(thing.decode(encoding, errors))
+    elif isunicode:
+        return norm(utfme).encode(encoding, errors)
     return utfme(utfme(thing).encode(encoding, errors), encoding, errors)
 
 
@@ -347,4 +349,6 @@ def tobytes(thing, encoding='utf-8', errors='strict'):
     '''Convert string `thing` to byte string `encoding`.'''
     if isbytes(thing):
         return thing
+    elif isunicode(thing):
+        return utfme(norm(thing)).encode(encoding, errors)
     return utfme(thing).encode(encoding, errors)
