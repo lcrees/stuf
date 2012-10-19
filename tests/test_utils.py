@@ -213,6 +213,28 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(slug('This is a plug'), 'this-is-a-plug')
         self.assertEqual(slug('This is a dug'), 'this-is-a-dug')
 
+    def test_ascii(self):
+        from stuf.six import u, b, tobytes
+        self.assertEqual(
+[tobytes(i, 'ascii') for i in [[1], True, r't', b('i'), u('g'), None, (1,)]],
+[b('[1]'), b('True'), b('t'), b('i'), b('g'), b('None'), b('(1,)')]
+        )
+
+    def test_bytes(self):
+        from stuf.six import u, b, tobytes
+        self.assertEqual(
+            [tobytes(i) for i in [[1], True, r't', b('i'), u('g'), None, (1,)]],
+            [b('[1]'), b('True'), b('t'), b('i'), b('g'), b('None'), b('(1,)')]
+        )
+
+    def test_unicode(self):
+        from stuf.six import u, b, tounicode
+        self.assertEqual(
+        [tounicode(i) for i in [[1], True, r't', b('i'), u('g'), None, (1,)]],
+        [u('[1]'), u('True'), u('t'), u('i'), u('g'), u('None'), u('(1,)')]
+        )
+
+
 
 if __name__ == '__main__':
     unittest.main()
