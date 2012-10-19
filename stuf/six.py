@@ -1,69 +1,76 @@
 # -*- coding: utf-8 -*-
-'''utilities for writing code that runs on Python 2 and 3'''
+'''Utilities for writing code that runs on Python 2 and 3.'''
+
+from stuf.base import first, docit, identity, getframe, backport, norm
 
 import sys
 import types
-import operator
-try:
-    from __builtin__ import intern
-    from future_builtins import filter, map, zip
-    from cPickle import loads as ld, dumps, HIGHEST_PROTOCOL
-except ImportError:
-    from sys import intern  # @UnusedImport
-    from builtins import filter, map, zip  # @UnusedImport
-    from pickle import loads as ld, dumps, HIGHEST_PROTOCOL  # @UnusedImport
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest  # @UnusedImport
-try:
-    from thread import get_ident
-except ImportError:
-    try:
-        from dummy_thread import get_ident
-    except ImportError:
-        from _thread import get_ident  # @UnusedImport
+from functools import partial
+from importlib import import_module
+from operator import attrgetter, methodcaller, lt, gt
+
+from stuf.base import isfactory
+
+intern = backport('__builtin__.intern', 'sys.intern')
+OrderedDict = backport('collections.OrderedDict', 'ordereddict.OrderedDict')
+unittest = backport('unittest2', 'unittest')
+get_ident = backport(
+    'thread.get_ident', 'dummy_thread.get_ident', '_thread.get_ident',
+)
+pickle = backport('cPickle', 'pickle')
+filter = backport('future_builtins.filter', 'builtins.filter')
+map = backport('future_builtins.map', 'builtins.map')
+zip = backport('future_builtins.zip', 'builtins.zip')
+# use next generation regular expression library if available
+rcompile = backport('regex.compile', 're.compile')
+rescape = backport('regex.escape', 're.escape')
+rsub = backport('regex.sub', 're.sub')
+subprocess = backport('subprocess32.Popen', 'subprocess.Popen')
 
 # True if we are running on Python 3.
-PY3 = sys.version_info[0] == 3
+PY3 = first(sys.version_info) == 3
+
 if PY3:
     strings = str,
     integers = int,
+    long = int
     classes = type,
-    native = texts = str
-    binaries = bytes
+    utfme = native = texts = str
+    byteme = binaries = bytes
     MAXSIZE = sys.maxsize
 else:
     strings = basestring,
     integers = (int, long)
     classes = (type, types.ClassType)
-    texts = unicode
-    native = binaries = str
-
-    # It's possible to have sizeof(long) != sizeof(Py_ssize_t).
-    class X(object):
-        def __len__(self):
-            return 1 << 31
-    try:
-        len(X())
-    except OverflowError:
-        # 32-bit
+    utfme = texts = unicode
+    byteme = native = binaries = str
+    if sys.platform == 'java':
+        # Jython always uses 32 bits.
         MAXSIZE = int((1 << 31) - 1)
     else:
-        # 64-bit
-        MAXSIZE = int((1 << 63) - 1)
-    del X
+        # It's possible to have sizeof(long) != sizeof(Py_ssize_t).
+        class X(object):
+            def __len__(self):
+                return 1 << 31
+        try:
+            len(X())
+        except OverflowError:
+            # 32-bit
+            MAXSIZE = int((1 << 31) - 1)
+        else:
+            # 64-bit
+            MAXSIZE = int((1 << 63) - 1)
+        del X
 
-
-def _add_doc(func, doc):
-    '''add documentation to a function.'''
-    func.__doc__ = doc
-
-
-def _import_module(name):
-    '''import module, returning the module after the last dot.'''
-    __import__(name)
-    return sys.modules[name]
+# numbers
+isgtemax = docit(partial(gt, MAXSIZE), 'Less than max size?')
+isinteger = docit(isfactory(integers), 'is integer?')
+isltemax = docit(partial(lt, MAXSIZE), 'Greater than max size?')
+# strings
+isstring = docit(isfactory(strings), 'is string')
+isunicode = docit(isfactory(utfme), 'is text?')
+isnative = docit(isfactory(native), 'is native string')
+isbinary = isbytes = docit(isfactory(byteme), 'is binary?')
 
 
 class _LazyDescr(object):
@@ -91,7 +98,7 @@ class MovedModule(_LazyDescr):
             self.mod = old
 
     def _resolve(self):
-        return _import_module(self.mod)
+        return import_module(self.mod)
 
 
 class MovedAttribute(_LazyDescr):
@@ -103,10 +110,7 @@ class MovedAttribute(_LazyDescr):
                 new_mod = name
             self.mod = new_mod
             if new_attr is None:
-                if old_attr is None:
-                    new_attr = name
-                else:
-                    new_attr = old_attr
+                new_attr = name if old_attr is None else old_attr
             self.attr = new_attr
         else:
             self.mod = old_mod
@@ -115,13 +119,11 @@ class MovedAttribute(_LazyDescr):
             self.attr = old_attr
 
     def _resolve(self):
-        module = _import_module(self.mod)
-        return getattr(module, self.attr)
+        return getattr(import_module(self.mod), self.attr)
 
 
 class _MovedItems(types.ModuleType):
-
-    '''lazy loading of moved objects'''
+    '''Lazy loading of moved objects.'''
 
 
 _moved_attributes = [
@@ -138,15 +140,15 @@ _moved_attributes = [
     MovedAttribute(
         'zip_longest', 'itertools', 'itertools', 'izip_longest', 'zip_longest',
     ),
-    MovedAttribute('cStringIO', 'cStringIO', 'io', 'StringIO'),
     MovedAttribute('reload_module', '__builtin__', 'imp', 'reload'),
     MovedAttribute('reduce', '__builtin__', 'functools'),
-    MovedAttribute('StringIO', 'StringIO', 'io'),
     MovedAttribute('xrange', '__builtin__', 'builtins', 'xrange', 'range'),
     MovedAttribute('parsedate_tz', 'rfc822', 'email.utils', 'parsedate_tz'),
     MovedAttribute('formatdate', 'rfc822', 'email.utils', 'formatdate'),
     MovedAttribute('parse_qs', 'cgi', 'urllib.parse', 'parse_qs'),
     MovedAttribute('urlencode', 'urllib', 'urllib.parse', 'urlencode'),
+    MovedAttribute('quote', 'urllib', 'urllib.parse'),
+    MovedAttribute('input', '__builtin__', 'builtins', 'raw_input', 'input'),
     MovedModule('builtins', '__builtin__'),
     MovedModule('configparser', 'ConfigParser'),
     MovedModule('copyreg', 'copy_reg'),
@@ -158,7 +160,6 @@ _moved_attributes = [
     MovedModule('BaseHTTPServer', 'BaseHTTPServer', 'http.server'),
     MovedModule('CGIHTTPServer', 'CGIHTTPServer', 'http.server'),
     MovedModule('SimpleHTTPServer', 'SimpleHTTPServer', 'http.server'),
-    MovedModule('pickle', 'cPickle', 'pickle'),
     MovedModule('queue', 'Queue'),
     MovedModule('reprlib', 'repr'),
     MovedModule('socketserver', 'SocketServer'),
@@ -169,7 +170,6 @@ _moved_attributes = [
 for attr in _moved_attributes:
     setattr(_MovedItems, attr.name, attr)
 del attr
-
 moves = sys.modules['stuf.six.moves'] = _MovedItems('moves')
 
 
@@ -186,14 +186,13 @@ def remove_move(name):
         try:
             del moves.__dict__[name]
         except KeyError:
-            raise AttributeError('no such move, %r' % (name,))
+            raise AttributeError('no such move, {r}'.format(name))
 
 if PY3:
     _meth_func = '__func__'
     _meth_self = '__self__'
     _func_code = '__code__'
     _func_defaults = '__defaults__'
-
     _iterkeys = 'keys'
     _itervalues = 'values'
     _iteritems = 'items'
@@ -202,7 +201,6 @@ else:
     _meth_self = 'im_self'
     _func_code = 'func_code'
     _func_defaults = 'func_defaults'
-
     _iterkeys = 'iterkeys'
     _itervalues = 'itervalues'
     _iteritems = 'iteritems'
@@ -210,91 +208,57 @@ else:
 try:
     advance_iterator = next
 except NameError:
-    def advance_iterator(it):
-        return it.next()
+    advance_iterator = methodcaller('next')
 next = advance_iterator
 
 if PY3:
-    def get_unbound_function(unbound):
-        return unbound
-
+    range = range
+    unbound_function = identity
     Iterator = object
-
-    def callable(obj):
-        return any('__call__' in klass.__dict__ for klass in type(obj).__mro__)
+    callable = lambda o: any('__call__' in k.__dict__ for k in type(o).__mro__)
 else:
-    def get_unbound_function(unbound):
-        return unbound.im_func
+    range = xrange
+    callable = callable
+    unbound_function = attrgetter('im_func')
 
     class Iterator(object):
         def next(self):
             return type(self).__next__(self)
 
-    callable = callable
-
-_add_doc(
-    get_unbound_function, 'Get the function out of a possibly unbound function'
-)
-
-method_function = operator.attrgetter(_meth_func)
-method_self = operator.attrgetter(_meth_self)
-function_code = operator.attrgetter(_func_code)
-function_defaults = operator.attrgetter(_func_defaults)
-
-
-def getkeys(d):
-    return getattr(d, _iterkeys)
-
-
-def keys(d):
-    '''Return an iterator over the keys of a dictionary.'''
-    return getattr(d, _iterkeys)()
-
-
-def getvalues(d):
-    return getattr(d, _itervalues)
-
-
-def values(d):
-    '''Return an iterator over the values of a dictionary.'''
-    return getattr(d, _itervalues)()
-
-
-def getitems(d):
-    return getattr(d, _iteritems)
-
-
-def items(d):
-    '''Return an iterator over the (key, value) pairs of a dictionary.'''
-    return getattr(d, _iteritems)()
-
+func_code = attrgetter(_func_code)
+func_defaults = attrgetter(_func_defaults)
+getitems = attrgetter(_iteritems)
+getkeys = attrgetter(_iterkeys)
+getvalues = attrgetter(_itervalues)
+items = methodcaller(_iteritems)
+keys = methodcaller(_iterkeys)
+method_func = attrgetter(_meth_func)
+method_self = attrgetter(_meth_self)
+values = methodcaller(_itervalues)
+getdoc = attrgetter('__doc__')
+getmod = attrgetter('__module__')
 
 if PY3:
-    def b(s):
-        return s.encode('latin-1')
-
-    def u(s):
-        return s
+    b = methodcaller('encode', 'latin-1')
+    u = identity
     if sys.version_info[1] <= 1:
-        def int2byte(i):
-            return bytes((i,))
+        int2byte = partial(lambda x, i: x((i,)), bytes)
     else:
         # This is about 2x faster than the implementation above on 3.2+
-        int2byte = operator.methodcaller('to_bytes', 1, 'big')
+        int2byte = methodcaller('to_bytes', 1, 'big')
     import io
     StringIO = io.StringIO
     BytesIO = io.BytesIO
 else:
-    def b(s):
-        return s
-
-    def u(s):
-        return unicode(s, 'unicode_escape')
+    b = identity
+    u = partial(lambda x, s: x(s, 'unicode_escape'), unicode)
     int2byte = chr
     import StringIO
     StringIO = BytesIO = StringIO.StringIO
-_add_doc(b, '''Byte literal''')
-_add_doc(u, '''Text literal''')
+
+#b = docit(b, 'Byte literal.')
+#u = docit(u, 'Text literal.')
+
 
 if PY3:
     import builtins  # @UnresolvedImport
@@ -310,7 +274,7 @@ else:
     def exec_(code, globs=None, locs=None):
         '''Execute code in a namespace.'''
         if globs is None:
-            frame = sys._getframe(1)
+            frame = getframe()
             globs = frame.f_globals
             if locs is None:
                 locs = frame.f_locals
@@ -319,43 +283,40 @@ else:
             locs = globs
         exec('''exec code in globs, locs''')
 
-    exec_('''def reraise(tp, value, tb=None):
-    raise tp, value, tb
-''')
+    exec_('def reraise(tp, value, tb=None): raise tp, value, tb')
 
     def printf(*args, **kw):
         '''The new-style print function.'''
         fp = kw.pop('file', sys.stdout)
         if fp is None:
             return
-
-        def write(data):
-            if not isinstance(data, basestring):
+        def write(data):  # @IgnorePep8
+            if not isstring(data):
                 data = str(data)
             fp.write(data)
         want_unicode = False
         sep = kw.pop('sep', None)
         if sep is not None:
-            if isinstance(sep, unicode):
+            if isunicode(sep):
                 want_unicode = True
-            elif not isinstance(sep, str):
+            elif not isbytes(sep):
                 raise TypeError('sep must be None or a string')
         end = kw.pop('end', None)
         if end is not None:
-            if isinstance(end, unicode):
+            if isunicode(end):
                 want_unicode = True
-            elif not isinstance(end, str):
+            elif not isbytes(end):
                 raise TypeError('end must be None or a string')
         if kw:
             raise TypeError('invalid keyword arguments to print()')
         if not want_unicode:
             for arg in args:
-                if isinstance(arg, unicode):
+                if isunicode(arg):
                     want_unicode = True
                     break
         if want_unicode:
-            newline = unicode('\n')
-            space = unicode(' ')
+            newline = utfme('\n')
+            space = utfme(' ')
         else:
             newline = '\n'
             space = ' '
@@ -369,161 +330,28 @@ else:
             write(arg)
         write(end)
 
-_add_doc(reraise, '''Reraise an exception.''')
-
 
 def with_metaclass(meta, base=object):
     '''Create a base class with a metaclass.'''
     return meta('NewBase', (base,), {})
 
 
-class port(object):
-
-    '''python 2/3 helper'''
-
-    # is python 3?
-    PY3 = PY3
-    # types
-    BINARY = binaries
-    CLASS = classes
-    INTEGER = integers
-    MAXSIZE = MAXSIZE
-    STRING = strings
-    UNICODE = texts
-    # classes
-    BytesIO = BytesIO
-    StringIO = StringIO
-    # character data
-    b = staticmethod(b)
-    int2byte = staticmethod(int2byte)
-    u = staticmethod(u)
-    # dictionary
-    items = staticmethod(items)
-    keys = staticmethod(keys)
-    values = staticmethod(values)
-    # iterables
-    iterator = staticmethod(advance_iterator)
-    # classes
-    metaclass = staticmethod(with_metaclass)
-    # methods
-    code = staticmethod(function_code)
-    defaults = staticmethod(function_defaults)
-    method_function = staticmethod(method_function)
-    method_self = staticmethod(method_self)
-    unbound = staticmethod(get_unbound_function)
-    # exception
-    reraise = staticmethod(reraise)
-
-    @classmethod
-    def isbinary(cls, value):
-        '''is binary?'''
-        return isinstance(value, cls.BINARY)
-
-    @classmethod
-    def isclass(cls, value):
-        '''is class?'''
-        return isinstance(value, cls.CLASS)
-
-    @classmethod
-    def iscall(cls, value):
-        '''is callable?'''
-        return callable(value)
-
-    @classmethod
-    def isgtemax(cls, value):
-        '''greater than max size?'''
-        return value > cls.MAXSIZE
-
-    @classmethod
-    def isinteger(cls, value):
-        '''is integer?'''
-        return isinstance(value, cls.INTEGER)
-
-    @classmethod
-    def isltemax(cls, value):
-        '''less than max size?'''
-        return value < cls.MAXSIZE
-
-    @classmethod
-    def isstring(cls, value):
-        '''is string'''
-        return isinstance(value, cls.STRING)
-
-    @classmethod
-    def isunicode(cls, value):
-        '''is text?'''
-        return isinstance(value, cls.UNICODE)
-
-    @staticmethod
-    def printf(*args, **kw):
-        '''print output'''
-        return printf(*args, **kw)
-
-isbinary = port.isbinary
-isstring = port.isstring
-isunicode = port.isunicode
-
-
 def tounicode(thing, encoding='utf-8', errors='strict'):
-    return (
-        thing.decode(encoding, errors) if isbinary(thing) else
-        texts(texts(thing).encode(encoding, errors), encoding, errors)
-    )
+    '''Convert string `thing` to unicode string with `encoding`.'''
+    if isbytes(thing):
+        try:
+            return thing.decode(encoding, errors)
+        except UnicodeDecodeError:
+            return norm(thing).decode(encoding, errors)
+    elif isunicode(thing):
+        return thing.encode(encoding, errors).decode(encoding, errors)
+    return utfme(thing).encode(encoding, errors).decode(encoding, errors)
 
 
 def tobytes(thing, encoding='utf-8', errors='strict'):
-    return (
-        texts(thing).encode(encoding, errors) if not isbinary(thing) else thing
-    )
-
-try:
-    from functools import total_ordering  # @UnusedImport
-except ImportError:
-    def total_ordering(cls):
-        '''
-        class decorator that fills in missing ordering methods
-
-        not available for python versions < 2.7
-        '''
-        convert = {
-            '__lt__': [
-                ('__gt__', lambda self, other: not (
-                    self < other or self == other)),
-                ('__le__', lambda self, other: self < other or self == other),
-                ('__ge__', lambda self, other: not self < other),
-            ],
-            '__le__': [
-                ('__ge__',
-                lambda self, other: not self <= other or self == other),
-                ('__lt__',
-                lambda self, other: self <= other and not self == other),
-                ('__gt__', lambda self, other: not self <= other),
-            ],
-            '__gt__': [
-                ('__lt__', lambda self, other: not (
-                    self > other or self == other)),
-                ('__ge__', lambda self, other: self > other or self == other),
-                ('__le__', lambda self, other: not self > other),
-            ],
-            '__ge__': [
-                ('__le__', lambda self, other: (
-                    not self >= other) or self == other
-                ),
-                ('__gt__',
-                lambda self, other: self >= other and not self == other),
-                ('__lt__', lambda self, other: not self >= other)
-            ]
-        }
-        roots = set(dir(cls)) & set(convert)
-        if not roots:
-            raise ValueError(
-                'must define at least one ordering operation: < > <= >='
-            )
-        # prefer __lt__ to __le__ to __gt__ to __ge__
-        root = max(roots)
-        for opname, opfunc in convert[root]:
-            if opname not in roots:
-                opfunc.__name__ = opname
-                opfunc.__doc__ = getattr(int, opname).__doc__
-                setattr(cls, opname, opfunc)
-        return cls
+    '''Convert string `thing` to byte string `encoding`.'''
+    if isbytes(thing):
+        return thing
+    elif isunicode(thing):
+        return norm(thing).encode(encoding, errors)
+    return utfme(thing).encode(encoding, errors)

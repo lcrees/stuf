@@ -1,19 +1,22 @@
 # -*- coding: utf-8 -*-
-'''stuf descriptor utilities'''
+'''stuf descriptors.'''
 
+from threading import local
 from functools import update_wrapper, partial
 
-from stuf.deep import selfname, setter
+from stuf.six import items
+from stuf import exhaustitems
+from stuf.deep import selfname, setter, getcls, setpart
 
 
 class lazybase(object):
 
-    '''base for lazy descriptors'''
+    '''Base class for lazy descriptors.'''
 
 
 class _lazyinit(lazybase):
 
-    '''base for lazy descriptors'''
+    '''Base initializer for lazy descriptors.'''
 
     def __init__(self, method, _wrap=update_wrapper):
         super(_lazyinit, self).__init__()
@@ -27,42 +30,34 @@ class _lazyinit(lazybase):
 
 class lazy(_lazyinit):
 
-    '''
-    Lazily assign attributes on an instance upon first use.
-    '''
+    '''Lazily assign attributes on an instance upon first use.'''
 
     def __get__(self, this, that):
         return self if this is None else self._set(this)
 
 
-class lazypartial(lazy):
-
-    '''
-    Lazily assign attributes on an instance upon first use.
-    '''
-
-    def _set(self, this):
-        return setter(this, self.name, partial(*self.method(this)))
-
-
 class lazy_class(_lazyinit):
 
-    '''
-    Lazily assign attributes on an class upon first use.
-    '''
+    '''Lazily assign attributes on an class upon first use.'''
 
     def __get__(self, this, that):
         return self._set(that)
 
 
-class lazy_set(lazy):
+class lazypartial(lazy):
 
-    '''
-    Lazily assign attributes with a custom setter.
-    '''
+    '''Lazily assign attributes on an instance upon first use.'''
+
+    def _set(self, this):
+        return setter(this, self.name, partial(*self.method(this)))
+
+
+class lazyset(lazy):
+
+    '''Lazily assign attributes with a custom setter.'''
 
     def __init__(self, method, fget=None, _wrap=update_wrapper):
-        super(lazy_set, self).__init__(method)
+        super(lazyset, self).__init__(method)
         self.fget = fget
         _wrap(self, method)
 
@@ -78,6 +73,8 @@ class lazy_set(lazy):
 
 
 class bothbase(_lazyinit):
+
+    '''Base for two-way lazy descriptors.'''
 
     def __init__(self, method, expr=None, _wrap=update_wrapper):
         super(bothbase, self).__init__(method)
@@ -121,3 +118,45 @@ class twoway(bothbase):
 
     def __get__(self, this, that):
         return self.expr(that) if this is None else self.method(this)
+
+
+class readonly(lazybase):
+
+    '''Read-only lazy descriptor.'''
+
+    def __set__(self, this, value):
+        raise AttributeError('attribute is read-only')
+
+    def __delete__(self, this):
+        raise AttributeError('attribute is read-only')
+
+
+class ResetMixin(local):
+
+    '''Mixin for reseting descriptors subclassing :class:`lazybase`\.'''
+
+    def reset(self):
+        '''Reset previously accessed :class:`lazybase` attributes.'''
+        attrs = set(vars(self))
+        exhaustitems(
+            delattr,
+            items(vars(getcls(self))),
+            lambda x, y: x in attrs and isinstance(y, lazybase),
+        )
+
+
+class ContextMixin(ResetMixin):
+
+    '''Resetable context manager mixin.'''
+
+    def __enter__(self):
+        return self
+
+
+class Setter(object):
+
+    '''Partial setter.'''
+
+    @lazypartial
+    def _setter(self):
+        return setpart, self
