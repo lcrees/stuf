@@ -340,7 +340,7 @@ def tounicode(thing, encoding='utf-8', errors='strict'):
     '''Convert string `thing` to unicode string with `encoding`.'''
     if isbytes(thing):
         return thing.decode(encoding, errors)
-    elif isunicode:
+    elif isunicode(thing):
         return norm(utfme(thing)).encode(encoding, errors)
     return utfme(utfme(thing).encode(encoding, errors), encoding, errors)
 
