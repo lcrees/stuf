@@ -39,9 +39,7 @@ def lazyimport(path, attribute=None, i=importer, s=isstring):
     :argument path: something to load
     :keyword str attribute: attribute on loaded module to return
     '''
-    if s(path):
-        return importer(path, attribute)
-    return path
+    return importer(path, attribute) if s(path) else path
 
 # import loader
 lazyload = partial(
@@ -133,7 +131,6 @@ def lru(maxsize=100):
                         root[KEY] = None
                         root[RESULT] = None
                 return result
-
         def clear():
             # clear the cache and cache statistics
             with lock:
@@ -153,8 +150,7 @@ def memoize(f, i=intern, z=items, r=repr, uw=update_wrapper):
     '''Memoize function.'''
     f.cache = {}.setdefault
     if func_code(f).co_argcount == 1:
-        def memoize_(arg):
-            return f.cache(i(r(arg)), f(arg))
+        memoize_ = lambda arg: f.cache(i(r(arg)), f(arg))
     else:
         def memoize_(*args, **kw):  # @IgnorePep8
             return f.setdefault(
@@ -183,7 +179,6 @@ def optimize(
     gets = s()
     # (arg, startpos, stoppos) for the PUT opcodes set to pos if previous
     # opcode was a PUT
-
     def iterthing(gadd=gets.add, this=this, g=g, n=n):  # @IgnorePep8
         prevpos, prevarg = None, None
         try:
@@ -199,8 +194,7 @@ def optimize(
                     gadd(arg)
         except S:
             pass
-    # Copy the pickle string except for PUTS without a corresponding GET
-
+    # copy the pickle string except for PUTS without a corresponding GET
     def iterthingy(iterthing=iterthing(), this=this, n=n):  # @IgnorePep8
         i = 0
         try:
