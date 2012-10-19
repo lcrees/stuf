@@ -8,7 +8,7 @@ from stuf.base import second, first
 from stuf.six import OrderedDict, items
 
 try:
-    from reprlib import recursive_repr
+    from reprlib import recursive_repr  # @UnusedImport
 except ImportError:
     from stuf.six import get_ident, getdoc, getmod, docit
 
