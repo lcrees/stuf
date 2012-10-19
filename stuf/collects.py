@@ -53,15 +53,17 @@ else:
             self.update(iterable, **kw)
 
         def __missing__(self, key):
-            'The count of elements not in the Counter is zero.'
+            '''The count of elements not in the Counter is zero.'''
             return 0
 
         def __reduce__(self):
             return getcls(self), (dict(self),)
 
         def __delitem__(self, elem):
-            'Like dict.__delitem__() but does not raise KeyError for missing'
-            'values.'
+            '''
+            Like dict.__delitem__() but does not raise KeyError for missing'
+            values.
+            '''
             if elem in self:
                 super(Counter, self).__delitem__(elem)
 
@@ -77,7 +79,7 @@ else:
 
         def __add__(self, other):
             '''Add counts from two counters.'''
-            if not isinstance(other, Counter):
+            if not isinstance(other, getcls(self)):
                 return NotImplemented
             result = getcls(self)()
             for elem, count in items(self):
@@ -91,7 +93,7 @@ else:
 
         def __sub__(self, other):
             '''Subtract count, but keep only results with positive counts.'''
-            if not isinstance(other, Counter):
+            if not isinstance(other, getcls(self)):
                 return NotImplemented
             result = getcls(self)()
             for elem, count in items(self):
@@ -104,10 +106,8 @@ else:
             return result
 
         def __or__(self, other):
-            '''
-            Union is the maximum of value in either of the input counters.
-            '''
-            if not isinstance(other, Counter):
+            '''Union is the maximum of value in either of the input counters.'''
+            if not isinstance(other, getcls(self)):
                 return NotImplemented
             result = getcls(self)()
             for elem, count in items(self):
@@ -122,7 +122,7 @@ else:
 
         def __and__(self, other):
             '''Intersection is the minimum of corresponding counts.'''
-            if not isinstance(other, Counter):
+            if not isinstance(other, getcls(self)):
                 return NotImplemented
             result = getcls(self)()
             for elem, count in items(self):
@@ -252,10 +252,9 @@ else:
 try:
     from collections import ChainMap  # @UnusedImport
 except ImportError:
-    from stuf.six import map as imap
+    # not until Python >= 3.3
     from collections import MutableMapping
 
-    # not until Python >= 3.3
     class ChainMap(MutableMapping):
 
         '''
@@ -265,8 +264,8 @@ except ImportError:
 
         def __init__(self, *maps):
             '''
-            Initialize `ChainMap` by setting *maps* to the given mappings.
-            If no mappings are provided, a single empty dictionary is used.
+            Initialize `ChainMap` by setting *maps* to the given mappings. If no
+            mappings are provided, a single empty dictionary is used.
             '''
             # always at least one map
             self.maps = list(maps) or [OrderedDict()]
@@ -299,12 +298,6 @@ except ImportError:
 
         def __bool__(self, any=any):
             return any(self.maps)
-
-        @recursive_repr()
-        def __repr__(self):
-            return '{0.__class__.__name__}({1})'.format(
-                self, ', '.join(imap(repr, self.maps))
-            )
 
         @classmethod
         def fromkeys(cls, iterable, *args):

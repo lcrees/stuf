@@ -10,7 +10,7 @@ from stuf.iterable import exhaustcall
 from stuf.desc import lazy_class, lazy
 from stuf.deep import clsname, getcls, clsdict
 from stuf.six import getvalues, getitems, getkeys
-from stuf.collects import OrderedDict, recursive_repr
+from stuf.collects import ChainMap, OrderedDict, recursive_repr
 
 __all__ = 'defaultstuf fixedstuf frozenstuf orderedstuf stuf'.split()
 
@@ -21,12 +21,12 @@ setitem = attrgetter('_wrapped.__setitem__')
 length = attrgetter('_wrapped.__len__')
 _iter = attrgetter('_wrapped.__iter__')
 asdict = attrgetter('_wrapped._asdict')
+_reserved = 'allowed _wrapped _map'.split()
 
 
 class corestuf(object):
 
     _map = dict
-    _reserved = 'allowed _wrapped _map'.split()
 
     def __getattr__(self, key, _getter=object.__getattribute__):
         if key == 'iteritems':
@@ -48,7 +48,7 @@ class corestuf(object):
     def _classkeys(self):
         # protected keywords
         return frozenset(chain(
-            iter(vars(self)), iter(vars(getcls(self))), self._reserved,
+            iter(vars(self)), iter(vars(getcls(self))), _reserved,
         ))
 
     def _build(self, iterable):
@@ -150,6 +150,30 @@ class writewrapstuf(wrapstuf, writestuf, MutableMapping):
 
     def __reduce__(self):
         return (getcls(self), (wraps(self).copy(),))
+
+
+class chainstuf(writestuf, ChainMap):
+
+    '''stuf chained together.'''
+
+    def __init__(self, *args):
+        super(chainstuf, self).__init__(*args)
+        maps = self.maps
+        for idx, item in enumerate(maps):
+            maps[idx] = stuf(item)
+
+    def __reduce__(self):
+        return (getcls(self), tuple(self.maps))
+
+    @lazy_class
+    def _classkeys(self):
+        # protected keywords
+        return frozenset(chain(
+            super(chainstuf, self)._classkeys, ['maps'],
+        ))
+
+    copy = ChainMap.copy
+    update = ChainMap.update
 
 
 class defaultstuf(writestuf, defaultdict):

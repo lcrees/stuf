@@ -56,21 +56,16 @@ class Base(object):
         del self.stuf.test3.e
         self.assertEqual(len(self.stuf.test3), 0)
         del self.stuf.test3
-        self.assertRaises(AttributeError, lambda: delattr(self.stuf, 'test4'))
         self.assertEqual(len(self.stuf), 0)
-        self.assertRaises(AttributeError, lambda: self.stuf.test1)
-        self.assertRaises(AttributeError, lambda: self.stuf.test2)
-        self.assertRaises(AttributeError, lambda: self.stuf.test3)
-        self.assertRaises(AttributeError, lambda: self.stuf.test3.e)
 
     def test__delitem__(self):
         del self.stuf['test1']
         del self.stuf['test2']
         del self.stuf['test3']['e']
         self.assertNotIn('e', self.stuf['test3'])
-        self.assertTrue(len(self.stuf['test3']) == 0)
+        self.assertEqual(len(self.stuf['test3']), 0)
         del self.stuf['test3']
-        self.assertTrue(len(self.stuf) == 0)
+        self.assertEqual(len(self.stuf), 0)
         self.assertNotIn('test1', self.stuf)
         self.assertNotIn('test2', self.stuf)
         self.assertNotIn('test3', self.stuf)
@@ -421,6 +416,73 @@ class TestOrderedStuf(Base, unittest.TestCase):
         self.assertIn('test1', slist)
         self.assertIn('test2', slist)
         self.assertIn('test3', slist)
+
+
+class TestChainStuf(Base, unittest.TestCase):
+
+    @property
+    def _impone(self):
+        from stuf.core import chainstuf
+        return chainstuf
+
+    @property
+    def _makeone(self):
+        return self._impone(
+            dict(test1='test1'), dict(test2='test2'), dict(test3=dict(e=1))
+        )
+
+    def test_nofile(self):
+        import sys
+        s = self._impone(dict(a=sys.stdout), dict(b=1))
+        self.assertEqual(s.a, sys.stdout)
+        t = self._impone(dict(a=[sys.stdout]), dict(b=1))
+        self.assertEqual(t.a, [sys.stdout])
+
+    def test_clear(self):
+        self.stuf.clear()
+        self.assertEqual(len(self.stuf), 2)
+
+    def test_pop(self):
+        self.assertEqual(self.stuf.test3.pop('e'), 1)
+        self.assertEqual(self.stuf.pop('test1'), 'test1')
+        self.assertRaises(KeyError, lambda: self.stuf.pop('test2'))
+        self.assertRaises(KeyError, lambda: self.stuf.pop('test3'))
+
+    def test__delattr__(self):
+        del self.stuf.test1
+        self.assertRaises(AttributeError, lambda: delattr(self.stuf, 'test2'))
+        self.assertRaises(AttributeError, lambda: delattr(self.stuf, 'test3'))
+        self.assertRaises(AttributeError, lambda: delattr(self.stuf, 'test4'))
+        self.assertEqual(len(self.stuf), 2)
+        self.assertRaises(AttributeError, lambda: self.stuf.test1)
+        self.assertEqual(self.stuf.test2, 'test2')
+        self.assertEqual(dict(e=1), self.stuf.test3)
+        self.assertEqual(1, self.stuf.test3.e)
+
+    def test__delitem__(self):
+        from operator import delitem
+        del self.stuf['test1']
+        self.assertRaises(KeyError, lambda: delitem(self.stuf, 'test2'))
+        self.assertRaises(KeyError, lambda: delitem(self.stuf, 'test3'))
+        self.assertEqual(len(self.stuf), 2)
+        self.assertNotIn('test1', self.stuf)
+        self.assertIn('test2', self.stuf)
+        self.assertIn('test3', self.stuf)
+
+    def test_parents(self):
+        stuffed = self.stuf.parents
+        self.assertEquals(
+            stuffed.maps, [dict(test2='test2'), dict(test3=dict(e=1))]
+        )
+
+    def test_new_child(self):
+        from stuf.core import stuf
+        stuffed = self.stuf.new_child()
+        self.assertEquals(
+            stuffed.maps,
+            [stuf(), stuf([('test1', 'test1')]), stuf(test2='test2'),
+            stuf(test3=stuf(e=1))],
+        )
 
 
 if __name__ == '__main__':

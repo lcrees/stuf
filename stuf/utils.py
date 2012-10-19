@@ -150,8 +150,7 @@ def memoize(f, i=intern, z=items, r=repr, uw=update_wrapper):
     '''Memoize function.'''
     f.cache = {}.setdefault
     if func_code(f).co_argcount == 1:
-        def memoize_(arg):
-            return f.cache(i(r(arg)), f(arg))
+        memoize_ = lambda arg: f.cache(i(r(arg)), f(arg))
     else:
         def memoize_(*args, **kw):  # @IgnorePep8
             return f.setdefault(
