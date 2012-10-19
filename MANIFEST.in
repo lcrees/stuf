@@ -3,4 +3,5 @@ include MANIFEST.in
 include README.rst
 include setup.cfg
 include reqs/requires.txt
+include reqs/requires-2.6.txt
 recursive-include stuf *.py

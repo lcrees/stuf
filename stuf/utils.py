@@ -1,42 +1,52 @@
 # -*- coding: utf-8 -*-
-'''stuf utilities'''
+'''stuf utilities.'''
 
-import re
+from uuid import uuid4
 from threading import Lock
-from keyword import iskeyword
 from pickletools import genops
-from unicodedata import normalize
-from importlib import import_module
-from functools import update_wrapper
+from itertools import count, repeat
+from functools import update_wrapper, partial
 
+from stuf.base import importer, first, norm
 from stuf.six import (
-    PY3, HIGHEST_PROTOCOL, items, isstring, function_code, ld, dumps, u, b,
-    intern)
+    PY3, items, isstring, func_code, b, next, intern, rcompile, pickle, u)
 
-# check for None
-isnone = lambda x, y: x if y is None else y
-# import loader
-lazyload = lambda x: lazyimport(x) if isstring(x) and '.' in x else x
+# first slug pattern
+one = partial(rcompile(r'[^\w\s-]').sub, '')
+# second slug pattern
+two = partial(rcompile(r'[-\s]+').sub, '-')
+# counter
+count = partial(next, count())
+# light weight  range
+lrange = partial(repeat, None)
+# unique identifier selection
+unique_id = lambda: b(uuid4().hex.upper())
+# return one or all values
+oneorall = lambda value: value[0] if len(value) == 1 else value
 
 
-def lazyimport(path, attribute=None, i=import_module, g=getattr, s=isstring):
+def diff(current, past):
+    '''Difference between `past` and `current` ``dicts``.'''
+    intersect = set(current).intersection(set(past))
+    changed = set(o for o in intersect if past[o] != current[o])
+    return dict((k, v) for k, v in items(current) if k in changed)
+
+
+def lazyimport(path, attribute=None, i=importer, s=isstring):
     '''
     Deferred module loader.
 
     :argument path: something to load
     :keyword str attribute: attribute on loaded module to return
     '''
-    if s(path):
-        try:
-            dot = path.rindex('.')
-            # import module
-            path = g(i(path[:dot]), path[dot + 1:])
-        # If nothing but module name, import the module
-        except (AttributeError, ValueError):
-            path = i(path)
-        if attribute:
-            path = g(path, attribute)
-    return path
+    return importer(path, attribute) if s(path) else path
+
+# import loader
+lazyload = partial(
+    lambda y, z, x: y(x) if z(x) and '.' in x else x,
+    lazyimport,
+    isstring,
+)
 
 
 def lru(maxsize=100):
@@ -54,13 +64,7 @@ def lru(maxsize=100):
 
     By Raymond Hettinger
     '''
-
-    # Users should only access the lru through its public API:
-    #   f.__wrapped__
-    # The internals of the lru are encapsulated for thread safety and
-    # to allow the implementation to change (including a possible C version).
-
-    def decorating_function(user_function):
+    def decorator(call):
         cache = dict()
         items_ = items
         repr_ = repr
@@ -87,7 +91,7 @@ def lru(maxsize=100):
                 result = cache_get(key, root)
                 if result is not root:
                     return result
-                result = user_function(*args, **kw)
+                result = call(*args, **kw)
                 cache[intern_(key)] = result
                 return result
         else:
@@ -108,9 +112,9 @@ def lru(maxsize=100):
                         link[PREV] = last
                         link[NEXT] = root
                         return result
-                result = user_function(*args, **kw)
+                result = call(*args, **kw)
                 with lock:
-                    root = nonlocal_root[0]
+                    root = first(nonlocal_root)
                     if len_(cache) < maxsize:
                         # put result in a new link at the front of the list
                         last = root[PREV]
@@ -127,47 +131,43 @@ def lru(maxsize=100):
                         root[KEY] = None
                         root[RESULT] = None
                 return result
-
-        wrapper.__wrapped__ = user_function
+        def clear():
+            # clear the cache and cache statistics
+            with lock:
+                cache.clear()
+                root = first(nonlocal_root)
+                root[:] = [root, root, None, None]
+        wrapper.__wrapped__ = call
+        wrapper.clear = clear
         try:
-            return update_wrapper(wrapper, user_function)
+            return update_wrapper(wrapper, call)
         except AttributeError:
             return wrapper
-
-    return decorating_function
+    return decorator
 
 
 def memoize(f, i=intern, z=items, r=repr, uw=update_wrapper):
-    '''
-    memoize function
-    '''
+    '''Memoize function.'''
     f.cache = {}.setdefault
-    if function_code(f).co_argcount == 1:
-        def memoize_(arg):
-            return f.cache(i(r(arg)), f(arg))
+    if func_code(f).co_argcount == 1:
+        memoize_ = lambda arg: f.cache(i(r(arg)), f(arg))
     else:
-        def memoize_(*args, **kw): #@IgnorePep8
+        def memoize_(*args, **kw):  # @IgnorePep8
             return f.setdefault(
                 i(r(args, z(kw)) if kw else r(args)), f(*args, **kw)
             )
     return uw(f, memoize_)
 
 
-if PY3:
-    loads = memoize(lambda x: ld(x, encoding='latin-1'))
-else:
-    loads = memoize(lambda x: ld(x))
-
-
 def optimize(
     obj,
-    d=dumps,
-    p=HIGHEST_PROTOCOL,
-    s=set,
-    g=genops,
+    S=StopIteration,
     b_=b,
+    d=pickle.dumps,
+    g=genops,
     n=next,
-    S=StopIteration
+    p=pickle.HIGHEST_PROTOCOL,
+    s=set,
 ):
     '''
     Optimize a pickle string by removing unused PUT opcodes.
@@ -177,10 +177,9 @@ def optimize(
     # set of args used by a GET opcode
     this = d(obj, p)
     gets = s()
-    # (arg, startpos, stoppos) for the PUT opcodes
-    # set to pos if previous opcode was a PUT
-    def iterthing(gets=gets, this=this, g=g, n=n):  # @IgnorePep8
-        gadd = gets.add
+    # (arg, startpos, stoppos) for the PUT opcodes set to pos if previous
+    # opcode was a PUT
+    def iterthing(gadd=gets.add, this=this, g=g, n=n):  # @IgnorePep8
         prevpos, prevarg = None, None
         try:
             nextr = g(this)
@@ -195,7 +194,7 @@ def optimize(
                     gadd(arg)
         except S:
             pass
-    # Copy the pickle string except for PUTS without a corresponding GET
+    # copy the pickle string except for PUTS without a corresponding GET
     def iterthingy(iterthing=iterthing(), this=this, n=n):  # @IgnorePep8
         i = 0
         try:
@@ -206,56 +205,25 @@ def optimize(
         except S:
             pass
         yield this[i:]
-    return b_('').join(i for i in iterthingy())
+    return b_('').join(iterthingy())
 
+moptimize = memoize(optimize)
 
-class CheckName(object):
+if PY3:
+    ld = loads = memoize(lambda x: pickle.loads(x, encoding='latin-1'))
 
-    '''ensures string is legal Python name'''
-
-    # Illegal characters for Python names
-    ic = '()[]{}@,:`=;+*/%&|^><\'"#\\$?!~'
-
-    def __call__(self, name):
+    def sluggify(value, n=norm, o=one, t=two):
         '''
-        ensures string is legal python name
-
-        @param name: name to check
+        Normalize `value`, convert to lowercase, remove non-alpha characters,
+        and convert spaces to hyphens.
         '''
-        # Remove characters that are illegal in a Python name
-        name = name.strip().lower().replace('-', '_').replace(
-            '.', '_'
-        ).replace(' ', '_')
-        name = ''.join(i for i in name if i not in self.ic)
-        # Add _ if value is a Python keyword
-        return name + '_' if iskeyword(name) else name
+        return t(o(n(value)).strip().lower())
+else:
+    ld = loads = memoize(lambda x: pickle.loads(x))
 
-
-class Sluggify(object):
-
-    _first = staticmethod(re.compile('[^\w\s-]').sub)
-    _second = staticmethod(re.compile('[-\s]+').sub)
-
-    if PY3:
-        def __call__(self, value):
-            '''
-            normalizes string, converts to lowercase, removes non-alpha
-            characters, and converts spaces to hyphens
-            '''
-            return self._second('-', self._first(
-                '', normalize('NFKD', value)
-            )).strip().lower()
-    else:
-        def __call__(self, value):
-            '''
-            normalizes string, converts to lowercase, removes non-alpha
-            characters, and converts spaces to hyphens
-            '''
-            return self._second('-', u(self._first(
-                '', normalize('NFKD', u(value)).encode('ascii', 'ignore')
-            ).strip().lower()))
-
-
-lru_wrapped = lru
-sluggify = Sluggify()
-checkname = CheckName()
+    def sluggify(value, n=norm, o=one, t=two):
+        '''
+        Normalize `value`, convert to lowercase, remove non-alpha characters,
+        and convert spaces to hyphens.
+        '''
+        return t(u(o(n(u(value)).encode('ascii', 'ignore')).strip().lower()))

@@ -1,39 +1,46 @@
 # -*- coding: utf-8 -*-
-'''stuf iterable helpers'''
+'''stuf iterables.'''
 
+from functools import partial
 from itertools import starmap
 
-from stuf.six import items, map
+from stuf.six import items, map, next
 
 
-def breakcount(func, length):
-    '''
-    Run an iterator until it reaches its original length.
+def _xhaust(mapfunc, call, iterable, exception=StopIteration, n=next):
+    '''Call function `call` on an `iterable` until it's exhausted.'''
+    iterable = mapfunc(call, iterable)
+    try:
+        while 1:
+            n(iterable)
+    except exception:
+        pass
 
-    :param iterable: an iterable to exhaust
-    '''
+
+def breakcount(call, length):
+    '''Call function `call` until it reaches its original `length`.'''
     while length:
-        yield func()
+        yield call()
         length -= 1
 
 
-def count(iterable, enumerate=enumerate, next=next, S=StopIteration):
+def count(iterable, _n=next, S=StopIteration):
     '''Lazily calculate number of items in `iterable`.'''
     counter = enumerate(iterable, 1)
     idx = ()
     while 1:
         try:
-            idx = next(counter)
+            idx = _n(counter)
         except S:
             try:
-                return next(idx.__iter__())
+                return _n(iter(idx))
             except S:
                 return 0
 
 
-def deferfunc(func):
-    '''Defer running `func`.'''
-    yield func()
+def deferfunc(call):
+    '''Defer running `call`.'''
+    yield call()
 
 
 def deferiter(iterator):
@@ -42,12 +49,7 @@ def deferiter(iterator):
 
 
 def exhaust(iterable, exception=StopIteration, _n=next):
-    '''
-    Call next on an iterator until it's exhausted.
-
-    :param iterable: an iterable to exhaust
-    :param exception: exception that marks end of iteration
-    '''
+    '''Call `next` on an `iterable` until it's exhausted.'''
     try:
         while 1:
             _n(iterable)
@@ -55,19 +57,11 @@ def exhaust(iterable, exception=StopIteration, _n=next):
         pass
 
 
-def exhaustmap(mapping, call, filter=None, exception=StopIteration, _n=next):
-    '''
-    Call `next` on an iterator until it's exhausted.
-
-    :param mapping: a mapping to exhaust
-    :param call: call to handle what survives the filter
-    :param filter: a filter to apply to mapping
-    :param exception: exception sentinel
-    '''
+def exhaustmap(call, mapping, filter=None, exception=StopIteration, _n=next):
+    '''Call `call` with optional `filter` on a `mapping` until exhausted.'''
     iterable = starmap(
         call,
-        filter(filter, items(mapping)) if
-        filter is not None else items(mapping),
+        items(mapping) if filter is None else filter(filter, items(mapping)),
     )
     try:
         while 1:
@@ -76,36 +70,37 @@ def exhaustmap(mapping, call, filter=None, exception=StopIteration, _n=next):
         pass
 
 
-def exhaustcall(call, iterable, exception=StopIteration, _n=next, map=map):
+def gauntlet(throws, this):
+    '''Run sequence of callables in `thrown` on `this` object.'''
+    for thrown in throws:
+        this = thrown(this)
+    return this
+
+
+def iterexcept(call, exception, start=None):
     '''
-    Call function on an iterator until it's exhausted.
+    Call function `call` until `exception` is raised.
 
-    :param call: call that does the exhausting
-    :param iterable: iterable to exhaust
-    :param exception: exception marking end of iteration
-    '''
-    iterable = map(call, iterable)
-    try:
-        while 1:
-            _n(iterable)
-    except exception:
-        pass
-
-
-def iterexcept(func, exception, start=None):
-    '''
-    Call a function repeatedly until an exception is raised.
-
-    Converts a call-until-exception interface to an iterator interface. Like
-    `__builtin__.iter(func, sentinel)` but uses an exception instead of a
-    sentinel to end the loop.
-
-    Raymond Hettinger Python Cookbook recipe # 577155
+    from Raymond Hettinger Python Cookbook recipe # 577155
     '''
     try:
         if start is not None:
             yield start()
         while 1:
-            yield func()
+            yield call()
     except exception:
         pass
+
+
+_part = lambda m, p, c, d, *a, **k: m(p(c, *a, **k), d)
+partmap = partial(_part, map, partial,)
+partstar = partial(_part, starmap, partial)
+exhaustcall = partial(_xhaust, map)
+exhauststar = partial(_xhaust, starmap)
+xpartmap = partial(_part, exhaustcall, partial)
+xpartstar = partial(_part, exhauststar, partial)
+xpartitems = partial(
+    lambda x, p, c, i, f=None, *a, **k: x(p(c, *a, **k), i, f),
+    exhaustmap,
+    partial,
+)
