@@ -10,7 +10,7 @@ from stuf.iterable import exhaustcall
 from stuf.desc import lazy_class, lazy
 from stuf.deep import clsname, getcls, clsdict
 from stuf.six import getvalues, getitems, getkeys
-from stuf.collects import OrderedDict, recursive_repr
+from stuf.collects import Counter, ChainMap, OrderedDict, recursive_repr
 
 __all__ = 'defaultstuf fixedstuf frozenstuf orderedstuf stuf'.split()
 
@@ -150,6 +150,23 @@ class writewrapstuf(wrapstuf, writestuf, MutableMapping):
 
     def __reduce__(self):
         return (getcls(self), (wraps(self).copy(),))
+
+
+class chainstuf(writewrapstuf):
+
+    _mapping = ChainMap
+
+    @lazy
+    def maps(self):
+        return wraps(self).maps
+
+    def new_child(self):
+        return getcls(self)({}, *self.maps)
+
+
+class countstuf(writestuf, Counter):
+
+    '''Count stuf in dictionary.'''
 
 
 class defaultstuf(writestuf, defaultdict):
