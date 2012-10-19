@@ -334,7 +334,7 @@ except ImportError:
                 del first(self.maps)[key]
             except KeyError:
                 raise KeyError(
-                    'Key not found in the first mapping: {!r}'.format(key)
+                    'Key not found in the first mapping: {r}'.format(key)
                 )
 
         def popitem(self):
@@ -356,7 +356,7 @@ except ImportError:
                 return first(self.maps).pop(key, *args)
             except KeyError:
                 raise KeyError(
-                    'Key not found in the first mapping: {!r}'.format(key)
+                    'Key not found in the first mapping: {r}'.format(key)
                 )
 
         def clear(self):
