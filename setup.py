@@ -23,7 +23,8 @@ install_requires = list(l for l in open(join(getcwd(), reqs), 'r').readlines())
 setup(
     name='stuf',
     version=getversion('stuf/__init__.py'),
-    description='dictionaries with attribute-style access',
+    description='Normal, default, ordered, chained, restricted, and frozen '
+    'dictionaries with attribute-style access.',
     long_description=open(join(getcwd(), 'README.rst'), 'r').read(),
     keywords='dict attribute collection mapping dot notation access bunch',
     license='BSD',
