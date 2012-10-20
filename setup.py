@@ -14,6 +14,7 @@ def getversion(fname):
         if line.startswith('__version__'):
             return '%s.%s.%s' % eval(line[13:].rstrip())
 
+
 if float('%d.%d' % sys.version_info[:2]) < 2.7:
     reqs = 'reqs/requires-2.6.txt'
 else:
@@ -23,8 +24,8 @@ install_requires = list(l for l in open(join(getcwd(), reqs), 'r').readlines())
 setup(
     name='stuf',
     version=getversion('stuf/__init__.py'),
-    description='Normal, default, ordered, chained, restricted, and frozen '
-    'dictionaries with attribute-style access.',
+    description='Normal, default, ordered, chained, restricted, counter, and '
+    'frozen dictionaries with attribute-style access.',
     long_description=open(join(getcwd(), 'README.rst'), 'r').read(),
     keywords='dict attribute collection mapping dot notation access bunch',
     license='BSD',

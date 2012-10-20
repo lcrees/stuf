@@ -7,8 +7,8 @@ from pickletools import genops
 from itertools import count, repeat
 from functools import update_wrapper, partial
 
-from stuf.base import importer, first, norm
-from stuf.six import (
+from .base import importer, first, norm
+from .six import (
     PY3, items, isstring, func_code, b, next, intern, rcompile, pickle, u)
 
 # first slug pattern

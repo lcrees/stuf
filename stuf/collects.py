@@ -3,19 +3,18 @@
 
 import sys
 
-from stuf.deep import getcls
-from stuf.base import second, first
-from stuf.six import OrderedDict, items
+from .deep import getcls
+from .base import second, first
+from .six import OrderedDict, items
 
 try:
     from reprlib import recursive_repr  # @UnusedImport
 except ImportError:
-    from stuf.six import get_ident, getdoc, getmod, docit
+    from .six import get_ident, getdoc, getmod, docit
 
     def recursive_repr(fillvalue='...'):
         def decorating_function(user_function):
             repr_running = set()
-
             def wrapper(self):  # @IgnorePep8
                 key = id(self), get_ident()
                 if key in repr_running:
@@ -36,9 +35,10 @@ if version[0] == 3 and version[1] > 1:
     from collections import Counter
 else:
     from heapq import nlargest
-    from stuf.deep import clsname
-    from stuf.base import ismapping
     from itertools import chain, starmap, repeat
+
+    from .deep import clsname
+    from .base import ismapping
 
     class Counter(dict):
 
@@ -67,7 +67,7 @@ else:
             if elem in self:
                 super(Counter, self).__delitem__(elem)
 
-        def __repr__(self):
+        def __repr__(self): # pragma: no coverage
             if not self:
                 return '%s()' % clsname(self)
             try:
@@ -80,7 +80,7 @@ else:
         def __add__(self, other):
             '''Add counts from two counters.'''
             if not isinstance(other, getcls(self)):
-                return NotImplemented
+                return NotImplemented()
             result = getcls(self)()
             for elem, count in items(self):
                 newcount = count + other[elem]
@@ -94,7 +94,7 @@ else:
         def __sub__(self, other):
             '''Subtract count, but keep only results with positive counts.'''
             if not isinstance(other, getcls(self)):
-                return NotImplemented
+                return NotImplemented()
             result = getcls(self)()
             for elem, count in items(self):
                 newcount = count - other[elem]
@@ -108,7 +108,7 @@ else:
         def __or__(self, other):
             '''Union is the maximum of value in either of the input counters.'''
             if not isinstance(other, getcls(self)):
-                return NotImplemented
+                return NotImplemented()
             result = getcls(self)()
             for elem, count in items(self):
                 other_count = other[elem]
@@ -123,7 +123,7 @@ else:
         def __and__(self, other):
             '''Intersection is the minimum of corresponding counts.'''
             if not isinstance(other, getcls(self)):
-                return NotImplemented
+                return NotImplemented()
             result = getcls(self)()
             for elem, count in items(self):
                 other_count = other[elem]
@@ -145,47 +145,6 @@ else:
             and flips the sign on negative counts.
             '''
             return getcls(self)() - self
-
-        def _keep_positive(self):
-            '''
-            Internal method to strip elements with a negative or zero count
-            '''
-            for elem in (e for e, c in items(self) if not c > 0):
-                del self[elem]
-            return self
-
-        def __iadd__(self, other):
-            '''
-            Inplace add from another counter, keeping only positive counts.
-            '''
-            for elem, count in items(other):
-                self[elem] += count
-            return self._keep_positive()
-
-        def __isub__(self, other):
-            '''
-            Inplace subtract counter, but keep only results with positive
-            counts.
-            '''
-            for elem, count in items(other):
-                self[elem] -= count
-            return self._keep_positive()
-
-        def __ior__(self, other):
-            '''Inplace union is the maximum of value from either counter.'''
-            for elem, other_count in items(other):
-                count = self[elem]
-                if other_count > count:
-                    self[elem] = other_count
-            return self._keep_positive()
-
-        def __iand__(self, other):
-            '''Inplace intersection is the minimum of corresponding counts.'''
-            for elem, count in items(self):
-                other_count = other[elem]
-                if other_count < count:
-                    self[elem] = other_count
-            return self._keep_positive()
 
         def most_common(self, n=None, nl=nlargest, i=items, g=second):
             '''

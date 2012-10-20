@@ -1,3 +1,3 @@
-A collection of Python dictionaries supporting attribute-style access. Includes
-*defaultdict*,  *OrderedDict*, restricted, *ChainMap*, and frozen
-implementations plus miscellaneous useful utilities for writing Python software.
+A collection of Python dictionary types that support attribute-style access.
+Includes *defaultdict*,  *OrderedDict*, restricted, *ChainMap*, *Counter*, and
+frozen implementations plus miscellaneous utilities for writing Python software.

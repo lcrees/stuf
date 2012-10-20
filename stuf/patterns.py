@@ -4,11 +4,12 @@
 from os import sep
 from functools import partial
 
-from stuf.utils import lru
-from stuf.base import first
 from parse import compile as pcompile
-from stuf.six.moves import filterfalse  # @UnresolvedImport
-from stuf.six import isstring, filter, map, rcompile, rescape, rsub
+
+from .utils import lru
+from .base import first
+from .six.moves import filterfalse  # @UnresolvedImport
+from .six import isstring, filter, map, rcompile, rescape, rsub
 
 
 def globpattern(expr):

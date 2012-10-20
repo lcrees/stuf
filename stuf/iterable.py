@@ -4,7 +4,7 @@
 from functools import partial
 from itertools import starmap
 
-from stuf.six import items, map, next
+from .six import items, map, next
 
 
 def _xhaust(mapfunc, call, iterable, exception=StopIteration, n=next):

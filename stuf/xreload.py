@@ -37,8 +37,8 @@ import sys
 from marshal import load
 from inspect import getdoc, isclass, isfunction, ismethod
 
-from stuf.deep import clsdict, selfname
-from stuf.six import (
+from .deep import clsdict, selfname
+from .six import (
     method_func, func_code, _func_code, _func_defaults, func_defaults)
 
 

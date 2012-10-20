@@ -9,7 +9,7 @@ from functools import partial
 from importlib import import_module
 from operator import attrgetter, methodcaller, lt, gt
 
-from stuf.base import isfactory
+from .base import isfactory
 
 intern = backport('__builtin__.intern', 'sys.intern')
 OrderedDict = backport('collections.OrderedDict', 'ordereddict.OrderedDict')

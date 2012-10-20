@@ -3,7 +3,10 @@
 
 from stuf.iterable import (
     exhaustmap as exhaustitems, exhaustcall as exhaustmap, exhauststar)
-from stuf.core import defaultstuf, fixedstuf, frozenstuf, orderedstuf, stuf
+from stuf.core import (
+    defaultstuf, fixedstuf, frozenstuf, orderedstuf, stuf, chainstuf, countstuf)
 
-__version__ = (0, 9, 9)
-__all__ = 'defaultstuf fixedstuf frozenstuf orderedstuf stuf'.split()
+__version__ = (0, 9, 10)
+__all__ = (
+    'defaultstuf fixedstuf frozenstuf orderedstuf stuf chainstuf countstuf'
+).split()
